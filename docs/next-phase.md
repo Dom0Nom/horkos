@@ -1,12 +1,36 @@
-# Next Phase: Phase 1 in progress
+# Next Phase: Phase 2 — Rust Server Workspace
 
-Phase 1 is currently being executed. When it merges, this file will be updated
-with Phase 2 prerequisites.
+Phase 1 (`phase-1-skeleton`) is complete. Phase 2 can start once that PR merges.
 
-## Phase 2 prerequisites (to be confirmed at Phase 1 merge)
+## Prerequisites for Phase 2
 
-- Rust toolchain pinned: `rust-toolchain.toml` created in Phase 1 skeleton (or Phase 2 Step 2.0).
-- Crate split decided: telemetry, ban-engine, license-server, api.
-- `cargo` available in PATH on the executing agent's host.
-- ONNX Runtime via `ort` crate: version to pin is the latest stable at Phase 2 kick-off; record the chosen version in this file.
-- Phase 1 SDK shapes (`sdk/include/horkos/event_schema.h`, `attestation/Attestation.h`, `drm/include/horkos/drm.h`, `ac/include/horkos/ac.h`) are stable before Phase 2 starts — Phase 2 Rust structs will mirror the C99 event schema.
+### Rust toolchain
+- `rust-toolchain.toml` must pin `channel = "1.83.0"` with `components = ["clippy", "rustfmt"]`.
+  This file is created in Phase 2 Step 2.0.
+- `cargo` must be in PATH on the executing agent's host.
+- `rustup` must be installed: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+
+### Crate split (decided)
+The `server/` workspace has four crates:
+- `telemetry` — high-volume player event ingest; mirrors event schema from Phase 1.
+- `ban-engine` — rule cache, signed-bundle deserializer skeleton.
+- `license-server` — issue / revoke / verify route stubs.
+- `api` — binary entrypoint; axum app, `/healthz`, GDPR-17 deletion stub.
+
+### ONNX Runtime
+- Dependency: `ort` crate (official ONNX Runtime Rust bindings).
+- Pin the latest stable version at Phase 2 kick-off; record in `server/Cargo.toml` and here.
+- CPU provider only for Phase 2; CUDA/CoreML deferred.
+
+### Event schema contract
+- `sdk/include/horkos/event_schema.h` (Phase 1 Step 1.6) is stable.
+- Phase 2 telemetry crate must mirror each struct field-for-field in
+  `server/telemetry/src/schema.rs` with a contract test that diffs field names
+  and sizes against the C header. This diff is a merge gate.
+
+### Legal floor
+- `server/api/data-categories.md` must be created in Phase 2 Step 2.5 before
+  any telemetry route accepts data.
+- GDPR-17 deletion route (`DELETE /api/account/{id}/data`) ships as a `503` stub
+  in Phase 2; the 202 + 30-day-SLA contract flips only after a durable persistence
+  layer lands under `/tdd` in a follow-up phase.
