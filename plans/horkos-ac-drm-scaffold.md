@@ -705,4 +705,27 @@ Run `/verify` per platform. PR title `Phase 4: Linux eBPF + macOS daemon + DMA d
 
 ## Mutation log
 
-(empty — record entries here as `## YYYY-MM-DD <commit-sha>: <one-line summary>` followed by rationale and Locked-Decision impact)
+### 2026-05-07 (Phase 2 in progress): Rust toolchain pin bumped 1.83.0 → 1.95.0
+
+**Summary.** Phase 2 Step 2.0 originally pinned `rust-toolchain.toml` to 1.83.0
+per the plan's pre-flight observations. Step 2.0's own context brief, however,
+also says "use the latest stable at the time the step runs; record the version
+chosen." The two instructions are reconcilable: the 1.83.0 number was the latest
+stable when the plan was written, not a fixed contract.
+
+**Trigger.** `cargo build --workspace` failed because `ort` 2.0.0-rc.10
+transitively depends on crates that require Rust 1.85+ and the `edition2024`
+Cargo feature. 1.83.0 cannot parse `edition2024` manifests.
+
+**Action.** Bumped `rust-toolchain.toml` and `server/Cargo.toml` `rust-version`
+to 1.95.0 (latest stable on this host as of 2026-04-16). Reproducibility is
+preserved because the channel is pinned to a specific point release, not a
+floating `stable`.
+
+**Locked Decisions touched.** None of the seven Locked Decisions name a Rust
+version. Locked Decision #1 names only the Rust + axum + tokio + ONNX Runtime
+stack. The toolchain version was a Phase 0 prerequisite parameter, not a
+Locked Decision, so this mutation does not require a Locked-Decision change.
+
+**Future reviewer note.** Any Rust toolchain change must continue to be a
+specific point release, not `stable` or `nightly`, and must be recorded here.

@@ -1,0 +1,12 @@
+# Cargo profile and build defaults for the Horkos server workspace.
+
+[build]
+# Use all cores by default. Override with CARGO_BUILD_JOBS env var.
+
+[net]
+# Reproducibility: prefer the offline registry when CI primes a vendor cache.
+# offline = false  (override per-environment)
+
+[term]
+verbose = false
+color   = "auto"

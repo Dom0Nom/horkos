@@ -8,8 +8,8 @@ Client-side detection meets or exceeds Vanguard. Server-side behavioural ML beat
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Skeleton, PAL, attestation interface, console stubs | In progress |
-| 2 | Rust server workspace | Not started |
+| 1 | Skeleton, PAL, attestation interface, console stubs | Merged |
+| 2 | Rust server workspace | In progress |
 | 3 | Windows KMDF watchdog + SDK | Not started |
 | 4 | Linux eBPF + macOS daemon + DMA detection | Not started |
 | 5 | LLVM 19 obfuscation passes + bypass tests + final review | Not started |
