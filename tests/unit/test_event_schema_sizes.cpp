@@ -1,0 +1,26 @@
+/*
+ * tests/unit/test_event_schema_sizes.cpp
+ * Role: Verifies event schema struct sizes from C++ side, matching the
+ *       static_asserts in event_schema.h. Catches platform-specific padding
+ *       divergence that static_assert might miss on a different compiler.
+ * Target platforms: all.
+ */
+
+#include <gtest/gtest.h>
+#include <horkos/event_schema.h>
+
+TEST(EventSchema, HeaderSize) {
+    EXPECT_EQ(sizeof(hk_event_header), 24u);
+}
+
+TEST(EventSchema, ProcessCreateSize) {
+    EXPECT_EQ(sizeof(hk_event_process_create), 16u);
+}
+
+TEST(EventSchema, ImageLoadSize) {
+    EXPECT_EQ(sizeof(hk_event_image_load), 16u);
+}
+
+TEST(EventSchema, HandleOpenSize) {
+    EXPECT_EQ(sizeof(hk_event_handle_open), 16u);
+}
