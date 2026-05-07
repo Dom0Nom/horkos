@@ -1,0 +1,71 @@
+# Build directories
+build/
+build-*/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.make
+
+# Rust
+target/
+Cargo.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.vs/
+
+# Windows artifacts
+*.pdb
+*.exp
+*.lib
+*.dll
+*.exe
+
+# Driver artifacts
+*.sys
+*.cat
+*.inf.bak
+
+# Signing / certificates
+*.cer
+*.pfx
+*.p12
+*.key
+*.crt
+*.der
+
+# eBPF / BPF objects
+*.bpf.o
+*.skel.h
+
+# Coverage
+*.profraw
+*.profdata
+coverage.info
+coverage/
+lcov.info
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+secrets.json
+credentials.json
