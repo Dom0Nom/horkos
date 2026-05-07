@@ -9,9 +9,8 @@ cmake_install.cmake
 Makefile
 *.make
 
-# Rust
+# Rust — Cargo.lock IS committed for reproducibility (security product).
 target/
-Cargo.lock
 
 # macOS
 .DS_Store

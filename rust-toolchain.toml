@@ -1,0 +1,7 @@
+[toolchain]
+# Bumped from 1.83.0 to 1.95.0 — see Mutation log entry 2026-05-07 in
+# plans/horkos-ac-drm-scaffold.md. ort 2.0.0-rc.10 transitively pulls in
+# crates that require Rust 1.85+ and edition2024.
+channel = "1.95.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

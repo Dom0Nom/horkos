@@ -1,0 +1,48 @@
+[workspace]
+resolver = "2"
+members = [
+    "api",
+    "telemetry",
+    "ban-engine",
+    "license-server",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.95"
+license = "Proprietary"
+publish = false
+
+[workspace.dependencies]
+# Async runtime + HTTP stack.
+tokio              = { version = "1.41", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync"] }
+axum               = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "tower-log", "matched-path"] }
+tower              = { version = "0.5", features = ["util"] }
+tower-http         = { version = "0.6", features = ["trace", "limit", "timeout"] }
+http               = "1.1"
+http-body-util     = "0.1"
+hyper              = { version = "1.5", features = ["server", "http1"] }
+
+# Serialization.
+serde              = { version = "1.0", features = ["derive"] }
+serde_json         = "1.0"
+
+# Errors.
+thiserror          = "2.0"
+anyhow             = "1.0"   # binary-only — never used in library code per CLAUDE.md guardrail #8
+
+# Tracing.
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# ML inference (CPU only for Phase 2; CUDA/CoreML deferred).
+ort                = { version = "=2.0.0-rc.10", default-features = false, features = ["std", "ndarray", "download-binaries"] }
+
+[profile.release]
+codegen-units = 1
+lto           = "thin"
+strip         = "symbols"
+panic         = "abort"
+
+[profile.dev]
+debug = true

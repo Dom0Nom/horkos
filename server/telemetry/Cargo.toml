@@ -1,0 +1,25 @@
+[package]
+name        = "telemetry"
+version     = "0.1.0"
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+publish.workspace      = true
+description = "Horkos telemetry ingest. Phase 2: route stub + ort dependency proof. Real ingest path lands in a /tdd phase."
+
+[dependencies]
+axum       = { workspace = true }
+tokio      = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+thiserror  = { workspace = true }
+tracing    = { workspace = true }
+
+# ort is added as a dependency to confirm it builds on the target host.
+# No model is loaded in Phase 2.
+ort        = { workspace = true }
+
+[dev-dependencies]
+http           = { workspace = true }
+http-body-util = { workspace = true }
+tower          = { workspace = true }
