@@ -1,18 +1,22 @@
 //! src/schema.rs
 //!
-//! Role: Per-tick telemetry payload schema mirrored from the Phase 1 C99
-//! header `sdk/include/horkos/event_schema.h`. Field names and sizes MUST
-//! match the C side; the contract test in this crate diffs them.
+//! Role: The HTTP/JSON per-tick telemetry ingest contract (`TickPayload`). This
+//! is an INDEPENDENT wire plane from the C99 kernel-event schema in
+//! `sdk/include/horkos/event_schema.h` — it is a serde JSON struct (no
+//! `#[repr(C)]`, not byte-compatible with any C struct) carrying gameplay
+//! signal (player id, tick, aim deltas, input bitmask), not the kernel
+//! process/image/handle records.
 //!
 //! Target platforms: server.
 //!
-//! Versioning: every field addition bumps `schema_version`. No field renames.
-//! Deprecated fields stay as reserved padding.
+//! Versioning: `SCHEMA_VERSION` is the tick-stream version, intentionally
+//! decoupled from `HK_EVENT_SCHEMA_VERSION`. Every field addition bumps it; no
+//! field renames; deprecated fields stay reserved.
 
 use serde::{Deserialize, Serialize};
 
-/// Schema version, mirrored from `sdk/include/horkos/event_schema.h`.
-/// Bump in lockstep with the C header on every additive field change.
+/// Version of the per-tick JSON ingest contract (distinct from the kernel
+/// event schema's `HK_EVENT_SCHEMA_VERSION`). Bump on every additive change.
 pub const SCHEMA_VERSION: u32 = 1;
 
 /// One tick of player state. Fixed serialised shape.

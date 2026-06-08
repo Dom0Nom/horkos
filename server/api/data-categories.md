@@ -18,6 +18,8 @@ lands; see `docs/gdpr-17-rollout.md`.
 |---|---|---|---|---|
 | `pid` | kernel hook (KMDF on Win, eBPF on Linux, daemon on macOS) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
 | `parent_pid` | as above | 90 days | Legitimate interest | Horkos Service Operator |
+| `create_time_ns` | process-create callback (`hk_event_process_create`) | 90 days | Legitimate interest | Horkos Service Operator |
+| `exit_time_ns` | process-exit callback (`hk_event_process_exit`, schema v2) | 90 days | Legitimate interest | Horkos Service Operator |
 | `image_name` | as above | 90 days | Legitimate interest | Horkos Service Operator |
 | `image_sha256` | userspace verifier | 365 days (rule training) | Legitimate interest | Horkos Service Operator |
 
@@ -26,13 +28,22 @@ lands; see `docs/gdpr-17-rollout.md`.
 | Field | Source | Retention default | Legal basis | Operator-of-record |
 |---|---|---|---|---|
 | `image_base` | image-load callback | 90 days | Legitimate interest | Horkos Service Operator |
+| `image_flags` | image-load callback (`HK_IMAGE_FLAG_*`, e.g. BYOVD suspect; schema v2) | 90 days | Legitimate interest | Horkos Service Operator |
 | `image_path` | image-load callback | 90 days | Legitimate interest | Horkos Service Operator |
 | `image_signature_status` | userspace verifier (catalog DB) | 90 days | Legitimate interest | Horkos Service Operator |
 
+### 2a. Handle access (Windows ObRegisterCallbacks)
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `requesting_pid` | Ob pre-callback (`hk_event_handle_open`) | 90 days | Legitimate interest | Horkos Service Operator |
+| `target_pid` | Ob pre-callback | 90 days | Legitimate interest | Horkos Service Operator |
+| `access_mask` | Ob pre-callback OriginalDesiredAccess (Windows); truncated ptrace request code (Linux eBPF) | 90 days | Legitimate interest | Horkos Service Operator |
+
 ### 3. Telemetry stream (per-tick)
 
-Mirrors `server/telemetry/src/schema.rs::TickPayload` and the C99 schema in
-`sdk/include/horkos/event_schema.h`.
+Mirrors `server/telemetry/src/schema.rs::TickPayload`. This per-tick JSON stream
+is a separate wire plane from the C99 kernel-event schema (`event_schema.h`).
 
 | Field | Source | Retention default | Legal basis | Operator-of-record |
 |---|---|---|---|---|

@@ -48,6 +48,19 @@ add_subdirectory(drm)
 add_subdirectory(ac)
 
 # -------------------------------------------------------------------------
+# hk_sdk — public SDK static library + example (Phase 3)
+# Platform-neutral; driver probe backend selected per host inside sdk/.
+# -------------------------------------------------------------------------
+add_subdirectory(sdk)
+add_subdirectory(examples)
+
+# -------------------------------------------------------------------------
+# hk_dma_detect — Phase 4 Step 4.6 DMA-attack detection (detect-only)
+# Backend selected by host platform; macOS ships a stub pending IOKit path.
+# -------------------------------------------------------------------------
+add_subdirectory(dma_detect)
+
+# -------------------------------------------------------------------------
 # Windows kernel driver (Phase 3 — requires WDK)
 # -------------------------------------------------------------------------
 if(WIN32)
@@ -59,3 +72,19 @@ endif()
 # -------------------------------------------------------------------------
 enable_testing()
 add_subdirectory(tests)
+
+# Platform bypass-test merge gates (guardrail #12). Each platform builds its
+# representative test; disabled fixtures pass until enforcement lands.
+if(WIN32)
+    add_subdirectory(tests/integration/win)
+    add_subdirectory(bypass-tests/win)
+elseif(APPLE)
+    add_subdirectory(bypass-tests/macos)
+    # Phase 4 Step 4.4 — launchd/XPC daemon bring-up skeleton.
+    add_subdirectory(daemon/macos)
+    # Phase 4 Step 4.5 — EndpointSecurity client (self-gates on HORKOS_MACOS_ES).
+    add_subdirectory(kernel/macos/es)
+elseif(UNIX)
+    add_subdirectory(kernel/linux)
+    add_subdirectory(bypass-tests/linux)
+endif()

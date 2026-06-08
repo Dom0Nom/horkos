@@ -1,0 +1,129 @@
+# .github/workflows/ci.yml
+# Horkos CI.
+#   host-tests   — cross-platform C++ (CMake + ctest) on Linux + macOS + Windows
+#   macos-es     — compile the EndpointSecurity client (HORKOS_MACOS_ES=ON)
+#   rust         — server workspace (build/test/clippy/fmt) on Linux
+#   obfuscator   — LLVM-19 pass plugin + lit tests (best-effort; needs llvm@19)
+#   win-driver   — the KMDF driver compiled against a real WDK on Windows
+
+name: ci
+
+on:
+  push:
+    branches: [ main, "phase-*" ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  host-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build
+      - name: Build
+        run: cmake --build build --config Release -j
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  # Compile the EndpointSecurity client so ES-only compile errors are caught.
+  # (host-tests builds with ES OFF by default.)
+  macos-es:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure with ES on
+        run: cmake -S . -B build -DHORKOS_MACOS_ES=ON
+      - name: Build ES client
+        run: cmake --build build --target horkos_es
+
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain (pinned by rust-toolchain.toml)
+        run: rustup show
+      - name: Build
+        run: cargo build --workspace --release
+      - name: Test
+        run: cargo test --workspace
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Format
+        run: cargo fmt --all -- --check
+
+  obfuscator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM 19 + lit
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-19-dev clang-19
+          pipx install lit || pip install --user lit
+      - name: Build plugin
+        run: |
+          cmake -S obfuscator -B obfuscator/build \
+            -DLLVM_DIR=$(llvm-config-19 --cmakedir)
+          cmake --build obfuscator/build
+      - name: lit tests
+        run: |
+          # apt installs version-suffixed tools (opt-19, FileCheck-19); lit.cfg
+          # expects unsuffixed opt/FileCheck under LLVM19_BIN. Symlink them.
+          mkdir -p "$RUNNER_TEMP/llvm-bin"
+          ln -sf "$(which opt-19)" "$RUNNER_TEMP/llvm-bin/opt"
+          ln -sf "$(which FileCheck-19)" "$RUNNER_TEMP/llvm-bin/FileCheck"
+          LLVM19_BIN="$RUNNER_TEMP/llvm-bin" \
+            python3 -c "import lit.main; lit.main.main()" obfuscator/test -v
+
+  win-driver:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The windows-latest image ships VS2022 + the Windows SDK but not the WDK.
+      # Install the WDK MSI AND the WDK VS extension (.vsix) — without the vsix,
+      # the WindowsKernelModeDriver10.0 toolset will not resolve for msbuild.
+      # If this drifts, the self-contained EWDK (docs/windows-build.md) is the
+      # robust fallback.
+      - name: Install WDK
+        shell: pwsh
+        run: |
+          choco install windowsdriverkit11 --no-progress -y
+          # Best-effort: register the WDK VS project-system extension if present.
+          $vsix = Get-ChildItem -Recurse -ErrorAction SilentlyContinue `
+            "C:\Program Files (x86)\Windows Kits\10\Vsix" -Filter *.vsix |
+            Select-Object -First 1
+          if ($vsix) {
+            $installer = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+              -latest -find **\VSIXInstaller.exe | Select-Object -First 1
+            if ($installer) { & $installer /quiet $vsix.FullName }
+          }
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build driver (Release|x64)
+        shell: pwsh
+        run: |
+          msbuild kernel/win/horkos.vcxproj `
+            /p:Configuration=Release /p:Platform=x64 `
+            /p:SignMode=Off /m
+
+      - name: Upload horkos.sys
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: horkos-driver-x64
+          path: |
+            kernel/win/**/horkos.sys
+            kernel/win/**/horkos.inf
+          # A successful build that emits no .sys is a failure, not a pass.
+          if-no-files-found: error

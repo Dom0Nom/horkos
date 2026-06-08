@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.horkos.daemon.plist
+  Role: launchd service definition for the Horkos userspace daemon.
+        Declares the MachServices entry that lets XPC clients connect to
+        "com.horkos.daemon" and registers the daemon for auto-launch.
+  Target platforms: macOS only.
+  Interface: installed to /Library/LaunchDaemons/ (system-wide daemon).
+
+  Installation (requires root):
+    sudo cp com.horkos.daemon.plist /Library/LaunchDaemons/
+    sudo launchctl bootstrap system /Library/LaunchDaemons/com.horkos.daemon.plist
+
+  Removal:
+    sudo launchctl bootout system/com.horkos.daemon
+    sudo rm /Library/LaunchDaemons/com.horkos.daemon.plist
+
+  Notes:
+  - MachServices key registers "com.horkos.daemon" as a launchd-managed Mach
+    port.  launchd pre-registers the port before the daemon exec, which is
+    required for xpc_connection_create_mach_service(...LISTENER) to succeed.
+    Reference: launchd.plist(5), Technical Note TN2083.
+  - KeepAlive ensures launchd restarts the daemon if it exits unexpectedly.
+    The daemon is expected to run persistently; dispatch_main() never returns
+    under normal operation.
+  - ProgramArguments path must match the installed binary location; adjust
+    for packaging.  The placeholder /usr/local/libexec/horkosd is used here.
+-->
+<plist version="1.0">
+<dict>
+    <!-- Unique reverse-DNS label.  Must match the string passed to
+         xpc_connection_create_mach_service() in horkosd.cpp. -->
+    <key>Label</key>
+    <string>com.horkos.daemon</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/libexec/horkosd</string>
+    </array>
+
+    <!-- Declare the Mach service port that XPC clients connect to.
+         Boolean value true = routines (two-way IPC); false = simplex.
+         We set true to support xpc_dictionary_create_reply() round-trips. -->
+    <key>MachServices</key>
+    <dict>
+        <key>com.horkos.daemon</key>
+        <true/>
+    </dict>
+
+    <!-- Start the daemon immediately when launchd loads the plist.
+         Combined with KeepAlive this keeps the daemon always-running. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart the daemon automatically if it exits for any reason. -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Route daemon output to system log (visible via Console.app / log(1)). -->
+    <key>StandardOutPath</key>
+    <string>/var/log/horkosd.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/horkosd.err</string>
+</dict>
+</plist>

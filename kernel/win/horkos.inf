@@ -1,0 +1,54 @@
+;
+; horkos.inf
+; Role: Install information for the Horkos KMDF control driver. Registers a
+;       boot-start kernel service. Non-PnP (software) driver; the control device
+;       is created in DriverEntry, so there is no hardware ID match section.
+; Target platform: Windows 10/11 x64.
+; Signing: test-signed for Phase 3 acceptance; production requires an EV cert
+;          and WHQL attestation (see docs/windows-signing.md). This repo never
+;          bypasses signing.
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = ActivityMonitor
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
+Provider    = %ManufacturerName%
+CatalogFile = horkos.cat
+DriverVer   = ; set by stampinf / signing pipeline
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 12 ; %windir%\System32\drivers
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+horkos.sys = 1,,
+
+[DefaultInstall.NTamd64]
+CopyFiles = Horkos.DriverFiles
+
+[DefaultInstall.NTamd64.Services]
+AddService = horkos,0x00000002,Horkos.Service ; 0x2 = SPSVCINST_ASSOCSERVICE
+
+[Horkos.Service]
+DisplayName   = %ServiceName%
+Description   = %ServiceDesc%
+ServiceType   = 1                 ; SERVICE_KERNEL_DRIVER
+StartType     = 0                 ; SERVICE_BOOT_START (see install.ps1 for demand-start during bring-up)
+ErrorControl  = 1                 ; SERVICE_ERROR_NORMAL
+ServiceBinary = %12%\horkos.sys
+; No LoadOrderGroup: "Early-Launch" is the ELAM group and requires an ELAM
+; signing cert + MSElamCertificateInfo. A non-ELAM boot-start driver placed
+; there fails to load and can block boot. Bring-up uses demand-start (install.ps1).
+
+[Horkos.DriverFiles]
+horkos.sys
+
+[Strings]
+ManufacturerName = "Horkos"
+DiskName         = "Horkos Driver Installation Media"
+ServiceName      = "Horkos Anti-Cheat Watchdog"
+ServiceDesc      = "Horkos kernel watchdog: process/image/handle visibility."

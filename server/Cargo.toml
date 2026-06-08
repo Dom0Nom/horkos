@@ -10,7 +10,7 @@ members = [
 [workspace.package]
 edition = "2021"
 rust-version = "1.95"
-license = "Proprietary"
+license = "MIT"
 publish = false
 
 [workspace.dependencies]

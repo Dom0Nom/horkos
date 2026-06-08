@@ -17,6 +17,14 @@ TEST(EventSchema, ProcessCreateSize) {
     EXPECT_EQ(sizeof(hk_event_process_create), 16u);
 }
 
+TEST(EventSchema, ProcessExitSize) {
+    EXPECT_EQ(sizeof(hk_event_process_exit), 16u);
+}
+
+TEST(EventSchema, SchemaVersionIsTwo) {
+    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 2u);
+}
+
 TEST(EventSchema, ImageLoadSize) {
     EXPECT_EQ(sizeof(hk_event_image_load), 16u);
 }

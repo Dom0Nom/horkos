@@ -8,11 +8,15 @@ Client-side detection meets or exceeds Vanguard. Server-side behavioural ML beat
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Skeleton, PAL, attestation interface, console stubs | Merged |
-| 2 | Rust server workspace | In progress |
-| 3 | Windows KMDF watchdog + SDK | Not started |
-| 4 | Linux eBPF + macOS daemon + DMA detection | Not started |
-| 5 | LLVM 19 obfuscation passes + bypass tests + final review | Not started |
+| 1 | Skeleton, PAL, attestation interface, console stubs | Complete |
+| 2 | Rust server workspace | Complete |
+| 3 | Windows KMDF watchdog + SDK | Complete |
+| 4 | Linux eBPF + macOS daemon/ES + DMA detection | Complete |
+| 5 | LLVM 19 obfuscation passes + bypass tests + final review | Complete |
+
+Per-platform build prerequisites are listed in the build matrix below; CI is
+wired in `.github/workflows/ci.yml`. Remaining production gates (signing,
+entitlements, console SDK access) are tracked in `docs/ship-readiness.md`.
 
 ## Build Matrix
 

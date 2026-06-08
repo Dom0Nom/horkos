@@ -47,13 +47,11 @@ async fn ingest(
     Ok(axum::http::StatusCode::ACCEPTED)
 }
 
-/// Sanity check that ort is linked. Called at startup-style sites in tests
-/// to fail fast if the binary cannot find the ONNX Runtime backing library.
-/// Not part of the steady-state code path.
+/// Compile-time reference to an `ort` type so the dependency stays wired and any
+/// API drift in the pinned `ort` version surfaces as a build error here. This
+/// does NOT load or initialize the ONNX Runtime native library — that happens
+/// when the real inference path constructs a session in a later phase.
 pub fn ort_linked_marker() -> &'static str {
-    // ort 2.x exposes its environment via `ort::Environment`. We don't
-    // construct one here (that would attempt to load the library); we only
-    // reference an exported type so the linker keeps the dependency.
     let _phantom = std::marker::PhantomData::<ort::session::Session>;
     "ort: linked"
 }
