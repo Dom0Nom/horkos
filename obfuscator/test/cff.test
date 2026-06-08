@@ -1,0 +1,13 @@
+# Control-flow flattening: the annotated function is rewritten into a switch
+# dispatcher; the non-annotated function keeps its original CFG. The trailing
+# `verify` pass proves the rewrite produces valid IR.
+# RUN: %opt -load-pass-plugin=%plugin -passes='hk-cff,verify' -S %S/fixtures/fixture.ll | %FileCheck %s
+
+# CHECK-LABEL: define i32 @secret
+# CHECK: hk_cff_state = alloca i32
+# CHECK: hk_cff_dispatch:
+# CHECK: switch i32 %hk_cff_cur, label %hk_cff_default
+
+# The non-annotated function is not flattened.
+# CHECK-LABEL: define i32 @plain
+# CHECK-NOT: hk_cff_dispatch

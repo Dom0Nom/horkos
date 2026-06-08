@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  kernel/win/horkos.vcxproj
+  Role: Canonical WDK/MSBuild project for the Horkos KMDF driver. This is the
+        build path that produces a signed catalog for distribution; the
+        CMakeLists.txt mirror is for developer convenience only. Open in a
+        VS2022 + WDK environment and build Release|x64. See
+        docs/windows-build.md and docs/windows-signing.md.
+  Target platform: Windows 10/11 x64, KMDF 1.33.
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B0F1A7C2-3D4E-4F50-9A1B-2C3D4E5F6071}</ProjectGuid>
+    <TemplateGuid>{dd38f7fc-d7bd-488b-9242-7d8754cde80d}</TemplateGuid>
+    <TargetVersion>Windows10</TargetVersion>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
+    <Configuration>Release</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <RootNamespace>horkos</RootNamespace>
+    <DriverType>KMDF</DriverType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <SpectreMitigation>Spectre</SpectreMitigation>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <TargetName>horkos</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(MSBuildThisFileDirectory)..\..\sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <!-- PsSetCreateProcessNotifyRoutineEx requires IMAGE_DLLCHARACTERISTICS_
+           FORCE_INTEGRITY; SetChecksum alone does NOT set it. -->
+      <SetChecksum>true</SetChecksum>
+      <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <DriverSign>
+      <FileDigestAlgorithm>sha256</FileDigestAlgorithm>
+    </DriverSign>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\DriverEntry.c" />
+    <ClCompile Include="src\IrpDispatch.c" />
+    <ClCompile Include="src\Notify.c" />
+    <ClCompile Include="src\RingBuffer.c" />
+    <ClCompile Include="src\Callbacks.c" />
+    <ClCompile Include="src\Whitelist.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\horkos_kernel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="horkos.inf" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

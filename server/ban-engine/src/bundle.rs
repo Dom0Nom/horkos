@@ -34,7 +34,9 @@ pub struct BundleMetadata {
 pub struct RuleBundle {
     pub metadata: BundleMetadata,
     /// Hex-encoded signature over the canonical metadata + rules bytes.
-    /// Empty -> rejected by `parse`.
+    /// Missing or empty -> deserializes to "" and is rejected by `parse`
+    /// (both surface as the unsigned-bundle path, fail-closed).
+    #[serde(default)]
     pub signature: String,
     #[serde(default)]
     pub rules: Vec<serde_json::Value>,
@@ -76,14 +78,17 @@ impl BundleLoader {
         Err(BanEngineError::VerifierNotImplemented)
     }
 
-    /// Dev-only placeholder verifier. Refuses to compile in release builds.
+    /// Dev-only placeholder verifier. The authoritative fail-closed guarantee is
+    /// the CI/build-policy ban on the `unverified_bundles_dev_only` feature for
+    /// release branches (see Cargo.toml); the `debug_assertions` gate below is
+    /// defense-in-depth that fires for the usual `--release` profile.
     #[cfg(feature = "unverified_bundles_dev_only")]
     pub fn verify(&self, bundle: &RuleBundle) -> Result<(), BanEngineError> {
-        // Belt-and-suspenders: even with the feature on, release builds
-        // must not produce a binary that contains this code path.
+        // Defense-in-depth: refuse to compile under the standard release profile
+        // (debug_assertions off). The hard gate is the CI feature ban above.
         #[cfg(not(debug_assertions))]
         compile_error!(
-            "feature 'unverified_bundles_dev_only' cannot be used in --release builds; \
+            "feature 'unverified_bundles_dev_only' must not be used in release builds; \
              a release binary must use the real Ed25519 verifier."
         );
 

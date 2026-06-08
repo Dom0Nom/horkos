@@ -41,11 +41,9 @@ async fn delete_account_data(Path(id): Path<String>) -> Response {
     );
 
     let mut headers = HeaderMap::new();
-    headers.insert(
-        header::RETRY_AFTER,
-        HeaderValue::from_str(&RETRY_AFTER_SECONDS.to_string())
-            .expect("retry-after seconds always render as ASCII"),
-    );
+    // Infallible integer conversion (http impls From<_> for HeaderValue over the
+    // integer types) — no .expect() in library code (guardrail #8).
+    headers.insert(header::RETRY_AFTER, HeaderValue::from(RETRY_AFTER_SECONDS));
 
     (
         StatusCode::SERVICE_UNAVAILABLE,

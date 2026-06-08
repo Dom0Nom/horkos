@@ -50,15 +50,25 @@ fn init_tracing() {
 
 async fn shutdown_signal() {
     let ctrl_c = async {
-        signal::ctrl_c().await.expect("install ctrl-c handler");
+        // Degrade rather than panic if the handler cannot be installed: this
+        // future simply never resolves, leaving the other shutdown signal live.
+        if let Err(e) = signal::ctrl_c().await {
+            tracing::error!("failed to install ctrl-c handler: {e}");
+            std::future::pending::<()>().await;
+        }
     };
 
     #[cfg(unix)]
     let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("install SIGTERM handler")
-            .recv()
-            .await;
+        match signal::unix::signal(signal::unix::SignalKind::terminate()) {
+            Ok(mut sig) => {
+                sig.recv().await;
+            }
+            Err(e) => {
+                tracing::error!("failed to install SIGTERM handler: {e}");
+                std::future::pending::<()>().await;
+            }
+        }
     };
 
     #[cfg(not(unix))]

@@ -7,6 +7,7 @@ add_executable(hk_unit_tests
     test_sentinel.cpp
     test_attestation_create.cpp
     test_event_schema_sizes.cpp
+    test_ioctl_sizes.cpp
 )
 
 target_include_directories(hk_unit_tests PRIVATE

@@ -8,6 +8,8 @@ elseif(APPLE)
     set(attestation_backend backends/macos/AttestationSecureEnclave.cpp)
 elseif(UNIX)
     set(attestation_backend backends/linux/AttestationTpm2Linux.cpp)
+else()
+    message(FATAL_ERROR "attestation: unsupported platform (no backend)")
 endif()
 
 add_library(hk_attestation STATIC ${attestation_backend})

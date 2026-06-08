@@ -8,6 +8,7 @@
  */
 
 #include <horkos/drm.h>
+#include <cstdint>
 #include <cstdlib>
 
 /* Sentinel type used as the opaque drm_context_t in Phase 1 stubs. */
