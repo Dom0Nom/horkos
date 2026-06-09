@@ -115,6 +115,17 @@ static NTSTATUS HkHandleStatus(_In_ WDFREQUEST Request,
         st->flags |= HK_STATUS_FLAG_BYOVD_ARMED;
     }
 
+    /* Reflect the driver/module-integrity scan health through the existing flags
+     * field (the plan's decision: do NOT grow hk_status; surface scan health via
+     * status flags + the HK_INTEGRITY_OK heartbeat finding). These flag bits are
+     * kernel-private mirrors until the Schema phase moves them to ioctl.h. */
+    if (Ctx->IntegrityArmed) {
+        st->flags |= HK_STATUS_FLAG_INTEGRITY_SCAN_ACTIVE;
+    }
+    if (Ctx->IntegrityScanFaulted) {
+        st->flags |= HK_STATUS_FLAG_INTEGRITY_SCAN_FAULTED;
+    }
+
     *BytesReturned = sizeof(hk_status);
     return STATUS_SUCCESS;
 }
@@ -172,6 +183,23 @@ void HkEvtIoDeviceControl(WDFQUEUE Queue, WDFREQUEST Request,
         break;
     case HK_IOCTL_PUSH_POLICY:
         status = HkHandlePolicy(Request, ctx, InputBufferLength);
+        break;
+    case HK_IOCTL_INTEGRITY_RESCAN:
+        /* Empty input/output: queue a manual integrity rescan. Findings still
+         * flow out through HK_IOCTL_DRAIN_EVENTS as HK_EVENT_INTEGRITY_FINDING
+         * records (no new output envelope). Returns STATUS_DEVICE_NOT_READY if the
+         * scan engine is not armed. HK-TODO(schema): HK_IOCTL_INTEGRITY_RESCAN is a
+         * kernel-private mirror until the Schema phase adds it to ioctl.h. */
+        status = HkIntegrityRequestRescan(ctx);
+        break;
+    case HK_IOCTL_SELF_READ_VA:
+        /* memory-integrity-selfcheck self-read (signals 145/146/148/151/152): the AC
+         * asks the kernel to foreign-read ITS OWN image. Refuses by default — the
+         * caller-identity binding is UNCERTAIN and the reply plane is pre-Schema (see
+         * selfcheck_read.c). HK-TODO(schema): HK_IOCTL_SELF_READ_VA is a kernel-private
+         * mirror until the Schema phase adds it to ioctl.h. */
+        status = HkHandleSelfRead(Request, ctx, InputBufferLength,
+                                  OutputBufferLength, &bytesReturned);
         break;
     default:
         status = STATUS_INVALID_DEVICE_REQUEST;

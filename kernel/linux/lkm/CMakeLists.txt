@@ -1,7 +1,10 @@
 # kernel/linux/lkm/CMakeLists.txt
 # Role: CMake integration for the out-of-tree Linux LKM.
 #       Exposes HORKOS_LINUX_LKM option; when ON, adds a custom target that
-#       drives the Kbuild Makefile in this directory.
+#       drives the Kbuild Makefile in this directory. The module (horkos.ko) is a
+#       multi-object build: horkos_main.o (exec tracepoint) + module_crc.o
+#       (signal-95 read-only module-CRC debugfs export). Sources are listed in
+#       the Kbuild Makefile, not here.
 # Target platform: Linux (LKM non-Deck path).
 # Interface: Consumed by kernel/linux/CMakeLists.txt (or the top-level CMake)
 #            via add_subdirectory() when building for Linux.

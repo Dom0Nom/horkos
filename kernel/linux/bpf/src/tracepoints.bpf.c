@@ -175,4 +175,75 @@ int hk_tp_exec(struct trace_event_raw_sched_process_exec *ctx)
     return 0;
 }
 
+/* ===========================================================================
+ * Signals 98 + 99 — MSR / devmem writes via syscall tracepoints.
+ *
+ * §1.2 / §7-A split: the BPF side stays SIMPLE and verifier-friendly. It emits
+ * the RAW (pid, fd, file_offset, write_intent) for write/pwrite64/mmap on a fd;
+ * USERSPACE (Loader.cpp translate path / MsrPathResolver) resolves whether the
+ * fd is /dev/cpu/N/msr or a devmem node and whether the offset (= MSR index for
+ * msr writes) is in the sensitive set (LSTAR 0xC0000082, SYSENTER_EIP 0x176,
+ * debug/feature-control MSRs). Doing the fd→path walk in BPF (task->files->fdt->
+ * fd[fd]->f_path, dentry/inode match) risks verifier complexity blowups, so we
+ * do NOT do it here.
+ *
+ * HK-UNCERTAIN(msr-fd-identity-in-bpf): without the fd→path walk, the BPF side
+ * cannot itself know the fd is an msr node — it reports EVERY write/pwrite64 fd +
+ * offset, which would flood the ring. To bound this WITHOUT the verifier-heavy
+ * walk, the program is GATED on the protected set is NOT applicable (these are
+ * host-wide kernel-memory writes). The lower-risk shippable form: emit only
+ * pwrite64/pwrite (which carry an explicit offset = candidate MSR index) and let
+ * userspace drop non-msr fds. CONFIRM on-box whether an inexpensive CO-RE
+ * fd→i_rdev read at sys_enter is verifier-safe before widening to plain write().
+ * Until confirmed, this program covers sys_enter_pwrite64 only and tags every
+ * record for userspace fd-resolution; sys_enter_write (no offset arg) and the
+ * PROT_WRITE-mmap correlation are left as // HK-TODO below.
+ * ===========================================================================*/
+
+/* 0xA1: module-trust msr-write tag (0x31 is taken by ptrace-traceme; the
+ * module-trust domain uses the 0xA0 range — see lsm_file_open.bpf.c). */
+#define HK_BPF_MSR_WRITE    0xA1u   /* loader maps to HK_EVENT_MSR_WRITE_SENSITIVE */
+
+/* Mirrored in Loader.cpp as HkBpfMsrEvent. The device identity + MSR-index
+ * sensitivity decision lives in userspace (MsrPathResolver), not here. */
+struct hk_bpf_msr_event {
+    __u32 schema_version;
+    __u32 event_tag;        /* HK_BPF_MSR_WRITE */
+    __u64 timestamp_ns;
+    __u32 requesting_pid;
+    __u32 fd;               /* the written fd; userspace resolves to a device */
+    __u64 file_offset;      /* pwrite64 offset = candidate MSR index */
+};
+
+/* sys_enter_pwrite64 arg layout (raw syscall args):
+ *   args[0] = fd, args[1] = buf, args[2] = count, args[3] = pos (offset).
+ * We forward fd + offset; userspace decides if fd is /dev/cpu/N/msr and if the
+ * offset is a sensitive MSR index. */
+SEC("tracepoint/syscalls/sys_enter_pwrite64")
+int hk_tp_pwrite64(struct trace_event_raw_sys_enter *ctx)
+{
+    struct hk_bpf_msr_event *evt;
+
+    evt = bpf_ringbuf_reserve(&hk_ringbuf, sizeof(*evt), 0);
+    if (!evt)
+        return 0;
+
+    evt->schema_version = HK_SCHEMA_VERSION;
+    evt->event_tag      = HK_BPF_MSR_WRITE;
+    evt->timestamp_ns   = bpf_ktime_get_ns();
+    evt->requesting_pid = bpf_get_current_pid_tgid() >> 32;
+    evt->fd             = (__u32)(BPF_CORE_READ(ctx, args[0]) & 0xFFFFFFFFULL);
+    evt->file_offset    = (__u64)BPF_CORE_READ(ctx, args[3]);
+
+    bpf_ringbuf_submit(evt, 0);
+    return 0;
+}
+
+/* HK-TODO(schema): sys_enter_write (no explicit offset; the MSR index comes from
+ * the fd's current position, which BPF cannot read cheaply) and the
+ * sys_enter_mmap PROT_WRITE-of-an-msr/devmem-fd correlation (§1.2(a)) are left
+ * unimplemented pending the §7-A fd-resolution confirmation. Adding them without
+ * the fd identity would flood the ring with every write()/mmap() in the system.
+ */
+
 char _license[] SEC("license") = "GPL";

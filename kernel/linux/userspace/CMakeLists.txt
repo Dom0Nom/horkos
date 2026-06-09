@@ -35,10 +35,144 @@ endif()
 # CMakeLists by walking up from CMAKE_CURRENT_SOURCE_DIR.
 set(HK_SDK_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/../../../sdk/include")
 
+# ---- Memory-access feature flag ---------------------------------------------
+# Mirror of the bpf/ subdirectory's HORKOS_LINUX_EBPF_MEMORY option. When ON, the
+# loader compiles the signals 73-81 translation arms (guarded by the
+# HK_BPF_MEMORY_ACCESS preprocessor define) and links ProtectedSet.cpp. Default
+# ON (core AC on Linux); only effective because this whole subtree is gated
+# behind HORKOS_LINUX_EBPF in the parent CMakeLists.
+option(HORKOS_LINUX_EBPF_MEMORY
+    "Build the eBPF memory-access loader path (signals 73-81)"
+    ON)
+
+# ---- Loader/library-injection feature flag ----------------------------------
+# Mirror of the bpf/ subdirectory's HK_BPF_INJECTION_* option group. When ON the
+# loader compiles the signals 82-90 correlators + the shared ElfModel /
+# OverlayAllowlist backbone (guarded by HK_BPF_INJECTION). Default ON (low-FP
+# signals ship by default); only effective behind HORKOS_LINUX_EBPF in the parent
+# CMakeLists. Per-signal gating lives in the bpf/ option group; the userspace
+# correlators are compiled as one arm because they share ElfModel/OverlayAllowlist.
+option(HORKOS_LINUX_EBPF_INJECTION
+    "Build the eBPF loader-injection correlators (signals 82-90)"
+    ON)
+
+# ---- Proton/Wine/Steam-Deck feature flag ------------------------------------
+# Mirror of the bpf/ subdirectory's HORKOS_LINUX_EBPF_PROTON option. When ON the
+# loader compiles the signals 100-108 translation arms (guarded by the
+# HK_BPF_PROTON_WINE preprocessor define) and links the per-signal verifiers
+# (ProtonOverrideCheck / PrefixMapAudit / ContainerNsBaseline / Deck*Baseline /
+# GamescopeConsumerBaseline / WineBuiltinIntegrity / DeckInputBaseline). Default
+# OFF — this domain ships dark behind the parent HORKOS_LINUX_EBPF gate; CI
+# enables it on a BTF-capable Deck-class runner to enforce -Werror.
+option(HORKOS_LINUX_EBPF_PROTON
+    "Build the eBPF Proton/Wine/Deck loader path (signals 100-108)"
+    OFF)
+
 # ---- Build the loader library -----------------------------------------------
+set(HK_LOADER_SRC Loader.cpp)
+if(HORKOS_LINUX_EBPF_MEMORY)
+    list(APPEND HK_LOADER_SRC ProtectedSet.cpp)
+endif()
+if(HORKOS_LINUX_EBPF_PROTON)
+    list(APPEND HK_LOADER_SRC
+        ProtonOverrideCheck.cpp
+        PrefixMapAudit.cpp
+        ContainerNsBaseline.cpp
+        DeckModuleBaseline.cpp
+        DeckRootfsBaseline.cpp
+        GamescopeConsumerBaseline.cpp
+        WineBuiltinIntegrity.cpp
+        DeckInputBaseline.cpp)
+endif()
+if(HORKOS_LINUX_EBPF_INJECTION)
+    list(APPEND HK_LOADER_SRC
+        ElfModel.cpp
+        OverlayAllowlist.cpp
+        DsoProvenance.cpp
+        LinkMapOrder.cpp
+        DlopenBacking.cpp
+        PreloadWatch.cpp
+        InterpCheck.cpp
+        GotPltMap.cpp
+        RDebugCheck.cpp
+        TextPageBacking.cpp)
+endif()
+
+# The MSR fd→device resolver is part of the always-on signal-99 translate path in
+# Loader.cpp (not behind a memory/injection flag), so it compiles into the loader
+# unconditionally.
+list(APPEND HK_LOADER_SRC MsrPathResolver.cpp)
+
 add_library(hk_bpf_loader STATIC
-    Loader.cpp
+    ${HK_LOADER_SRC}
 )
+
+# ---- hk_host_integrity: periodic kernel/module-trust auditors (signals 91-99) -
+# Separate static library so the proc/sysfs/debugfs parsers (91/93/94/95-userspace/
+# 96) build and unit-test WITHOUT the BPF skeleton / libbpf dependency (impl-plan
+# §4). Only signal 97 (BpfEnumerate) needs libbpf; it is compiled here with
+# HK_HOSTINT_LIBBPF defined so its live walk links libbpf, while the pure
+# classifier stays host-testable. The Loader translate arms for 98/99 stay in
+# hk_bpf_loader.
+add_library(hk_host_integrity STATIC
+    SymbolMap.cpp
+    KallsymsAudit.cpp
+    FtraceAudit.cpp
+    KprobeAudit.cpp
+    LockdownPosture.cpp
+    ModuleViewDiff.cpp
+    ModuleDiskDrift.cpp
+    BpfEnumerate.cpp
+    MsrPathResolver.cpp
+    HostIntegritySensors.cpp
+)
+
+target_include_directories(hk_host_integrity
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"   # sensor headers + Loader.h (HkEventSink)
+        "${HK_SDK_INCLUDE}"             # horkos/event_schema.h
+)
+
+# BpfEnumerate's live walk uses libbpf; the rest of the library does not. We link
+# libbpf into the whole static lib (cheap) and flag the enumerate TU so its live
+# path is compiled in. Tests that only exercise the pure parsers do not invoke it.
+target_compile_definitions(hk_host_integrity PRIVATE HK_HOSTINT_LIBBPF)
+target_include_directories(hk_host_integrity PRIVATE "${LIBBPF_INCLUDE_DIRS}")
+target_link_libraries(hk_host_integrity PRIVATE ${LIBBPF_LIBRARIES})
+
+target_compile_options(hk_host_integrity PRIVATE -Wall -Wextra -Werror)
+target_compile_features(hk_host_integrity PRIVATE cxx_std_17)
+
+if(HORKOS_LINUX_EBPF_MEMORY)
+    target_compile_definitions(hk_bpf_loader PRIVATE HK_BPF_MEMORY_ACCESS)
+endif()
+
+if(HORKOS_LINUX_EBPF_PROTON)
+    target_compile_definitions(hk_bpf_loader PRIVATE HK_BPF_PROTON_WINE)
+endif()
+
+if(HORKOS_LINUX_EBPF_INJECTION)
+    target_compile_definitions(hk_bpf_loader PRIVATE HK_BPF_INJECTION)
+    # libelf for DT_NEEDED / section-header / build-id parsing. The current
+    # ElfModel.cpp uses a self-contained ELF64 reader (no libelf dependency yet);
+    # the link is wired now so a future libelf-backed ElfModel needs no CMake
+    # change. REQUIRED is intentionally NOT used so the loader still builds on a
+    # host lacking libelf-dev while the self-contained reader is in use.
+    pkg_check_modules(LIBELF libelf)
+    if(LIBELF_FOUND)
+        target_include_directories(hk_bpf_loader PRIVATE ${LIBELF_INCLUDE_DIRS})
+        target_link_libraries(hk_bpf_loader PRIVATE ${LIBELF_LIBRARIES})
+    else()
+        message(STATUS
+            "kernel/linux/userspace: libelf not found — using the self-contained "
+            "ELF64 reader in ElfModel.cpp. Install libelf-dev for the future "
+            "libelf-backed path.")
+    endif()
+    # HK-UNCERTAIN(allowlist-crypto): the signed-allowlist signature verifier needs
+    # an Ed25519/ECDSA backend (reuse attestation's verify, else libsodium). Not
+    # linked here yet — OverlayAllowlist takes a SignatureVerifier seam the loader
+    # supplies; the concrete crypto backend is wired in M5/ops.
+endif()
 
 target_include_directories(hk_bpf_loader
     PUBLIC

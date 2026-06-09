@@ -49,6 +49,17 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir)include;$(MSBuildThisFileDirectory)..\..\sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Driver/module-integrity production defaults: low-FP sensors ON, the
+           uncertainty-gated sensors (FLT/CALLBACKS/IMAGEHASH/NONIMAGE/BOOTLOAD)
+           stay OFF (not defined) until verified on-box. Mirrors the CMake option
+           defaults; documented in docs/windows-build.md. -->
+      <!-- Syscall/ETW surface-integrity production defaults (signals 208-216):
+           low-FP / exported-only / off-hot-path sensors ON (SSDT 208+216, LSTAR
+           210, IDT 214, ETW-TI keepalive half 212); the uncertainty-gated sensors
+           (SHADOW_SSDT 209, PROLOGUE 213, ETW_SESSION 215, INFINITYHOOK 211) stay
+           OFF until verified on-box. IDT (214) is ON *pending* __sidt/IPI on-box
+           confirmation per the plan. Mirrors the CMake option defaults. -->
+      <PreprocessorDefinitions>HK_WIN_INTEGRITY_DEBUGSTATE=1;HK_WIN_INTEGRITY_CISTATE=1;HK_WIN_INTEGRITY_SSDT=1;HK_WIN_INTEGRITY_DRVOBJ=1;HK_INTEGRITY_TIMER_MS=30000;HK_WIN_SYSCALL_SSDT=1;HK_WIN_SYSCALL_LSTAR=1;HK_WIN_SYSCALL_IDT=1;HK_WIN_ETW_TI=1;HK_ETW_KEEPALIVE_MIN_DELTA=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <!-- PsSetCreateProcessNotifyRoutineEx requires IMAGE_DLLCHARACTERISTICS_
@@ -64,12 +75,43 @@
     <ClCompile Include="src\DriverEntry.c" />
     <ClCompile Include="src\IrpDispatch.c" />
     <ClCompile Include="src\Notify.c" />
+    <ClCompile Include="src\ThreadProvenance.c" />
     <ClCompile Include="src\RingBuffer.c" />
     <ClCompile Include="src\Callbacks.c" />
+    <ClCompile Include="src\CallbackSelfCheck.c" />
+    <ClCompile Include="src\RegistryCallback.c" />
     <ClCompile Include="src\Whitelist.c" />
+    <!-- win-kernel-driver-integrity (signals 28-36). ModuleMap + HkIntegrityScan
+         are the always-compiled shared substrate; each sensor .c compiles to a
+         no-op stub unless its HK_WIN_INTEGRITY_* macro is defined. Production
+         defaults (low-FP sensors ON) are set via PreprocessorDefinitions in the
+         ItemDefinitionGroup above; OFF sensors are simply not defined. To enable
+         an uncertainty-gated sensor, add its macro to PreprocessorDefinitions and
+         (for signal 28) add fltMgr.lib to AdditionalDependencies. -->
+    <ClCompile Include="src\ModuleMap.c" />
+    <ClCompile Include="src\HkIntegrityScan.c" />
+    <ClCompile Include="src\MinifilterAudit.c" />
+    <ClCompile Include="src\ImageHashAudit.c" />
+    <ClCompile Include="src\CodeIntegrityProbe.c" />
+    <ClCompile Include="src\CallbackResidency.c" />
+    <ClCompile Include="src\NonImageCodeScan.c" />
+    <ClCompile Include="src\DebugStateProbe.c" />
+    <ClCompile Include="src\DriverObjectAudit.c" />
+    <ClCompile Include="src\SsdtIntegrity.c" />
+    <ClCompile Include="src\BootLoadAudit.c" />
+    <!-- win-kernel-syscall-etw-integrity (signals 208-216). KernelImageMap is the
+         always-compiled shared cache; SyscallIntegrity/EtwIntegrity sensors
+         compile to no-op stubs unless their HK_WIN_SYSCALL_*/HK_WIN_ETW_* macro is
+         defined (production defaults set in the ItemDefinitionGroup above). -->
+    <ClCompile Include="src\KernelImageMap.c" />
+    <ClCompile Include="src\SyscallIntegrity.c" />
+    <ClCompile Include="src\EtwIntegrity.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\horkos_kernel.h" />
+    <ClInclude Include="include\selfcheck_fpgate.h" />
+    <ClInclude Include="include\module_map_resolve.h" />
+    <ClInclude Include="include\ssdt_decode.h" />
   </ItemGroup>
   <ItemGroup>
     <Inf Include="horkos.inf" />

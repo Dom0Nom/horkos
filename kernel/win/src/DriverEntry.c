@@ -17,6 +17,10 @@
 /* Single global control-device handle (declared extern in horkos_kernel.h). */
 WDFDEVICE g_HkControlDevice = NULL;
 
+/* WDM driver object, captured at DriverEntry for CmRegisterCallbackEx (declared
+ * extern in horkos_kernel.h). */
+PDRIVER_OBJECT g_HkDriverObject = NULL;
+
 PHK_DEVICE_CONTEXT HkContext(void)
 {
     WDFDEVICE dev = g_HkControlDevice;
@@ -120,6 +124,10 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     WDFDRIVER          driver;
     PHK_DEVICE_CONTEXT ctx;
 
+    /* Capture the WDM driver object for CmRegisterCallbackEx (Driver param is a
+     * PDRIVER_OBJECT, not a WDFDEVICE). Set before any callback is armed. */
+    g_HkDriverObject = DriverObject;
+
     WDF_DRIVER_CONFIG_INIT(&config, WDF_NO_EVENT_CALLBACK);
     config.DriverInitFlags |= WdfDriverInitNonPnpDriver;
     config.EvtDriverUnload = HkEvtDriverUnload;
@@ -159,6 +167,31 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
         status = STATUS_SUCCESS;
     }
 
+    /* Arm the registry-tamper filter on Horkos's own keys (signals 5, 9).
+     * Non-fatal: an altitude collision or denied registration degrades the
+     * registry sensor but the rest of the driver runs. */
+    status = HkCmArm(ctx);
+    if (!NT_SUCCESS(status)) {
+        status = STATUS_SUCCESS;
+    }
+
+    /* Arm the self-integrity self-check timer (signals 1,3,4,7,8 + Cm census).
+     * Non-fatal: without it the callbacks still run, we just lose the self-poll.
+     * Arm LAST so the baselines it captures reflect the final armed state. */
+    status = HkSelfCheckArm(ctx);
+    if (!NT_SUCCESS(status)) {
+        status = STATUS_SUCCESS;
+    }
+
+    /* Init the driver/module-integrity scan engine (signals 28-36). Non-fatal:
+     * without it the rest of the driver runs, we just lose the periodic integrity
+     * sweep. Init captures the signal-30 CodeIntegrity baseline at DriverEntry
+     * (PASSIVE), so it must run after the device/context are live. */
+    status = HkIntegrityScanInit(ctx);
+    if (!NT_SUCCESS(status)) {
+        status = STATUS_SUCCESS;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -175,6 +208,15 @@ void HkEvtDriverUnload(_In_ WDFDRIVER Driver)
 
     UNREFERENCED_PARAMETER(Driver);
 
+    /* Stop the periodic engines FIRST: cancel timers, flush DPCs, free work
+     * items, so no worker can touch Ob/Cm/ring/module-map state after we start
+     * tearing those down. Both Disarm/Stop wait for an in-flight worker to finish
+     * before returning. */
+    if (ctx != NULL) {
+        HkIntegrityScanStop(ctx);
+        HkSelfCheckDisarm(ctx);
+    }
+
     /* Disarm in reverse order of arming, BEFORE deleting the control device,
      * so no callback can touch a freed ring. */
     HkNotifyDisarm();
@@ -188,6 +230,7 @@ void HkEvtDriverUnload(_In_ WDFDRIVER Driver)
 
     if (ctx != NULL) {
         HkObDisarm(ctx);
+        HkCmDisarm(ctx);
     }
 
     /* Control devices are NOT auto-deleted by the framework; delete explicitly

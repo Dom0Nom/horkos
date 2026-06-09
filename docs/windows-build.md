@@ -32,6 +32,75 @@ Two supported paths:
    the WDK is not found it **skips** the driver target with a warning so the
    C++/test build still works.
 
+### 3a. Driver/module-integrity sensor flags (win-kernel-driver-integrity)
+
+Signals 28–36 are read-only kernel integrity sensors. Each is gated by a CMake
+option that maps to a `target_compile_definition`; when OFF, the sensor `.c`
+compiles to a no-op stub, so the driver links with any subset. `ModuleMap.c` and
+`HkIntegrityScan.c` are always compiled (the shared scan substrate). The MSBuild
+`horkos.vcxproj` carries the same defaults via `PreprocessorDefinitions`.
+
+| Option | Signal | Default | Rationale |
+|---|---|---|---|
+| `HK_WIN_INTEGRITY_DEBUGSTATE` | 33 kernel-debug attach | **ON** | low FP, documented exports only |
+| `HK_WIN_INTEGRITY_CISTATE` | 30 code-integrity/DSE/HVCI | **ON** | low FP, delta-only |
+| `HK_WIN_INTEGRITY_SSDT` | 35 SSDT range (non-shadow) | **ON** | low FP; shadow half deferred |
+| `HK_WIN_INTEGRITY_DRVOBJ` | 34 DRIVER_OBJECT divergence | **ON** | low FP |
+| `HK_WIN_INTEGRITY_FLT` | 28 minifilter owner audit | OFF | Flt object lifetime unverified (Risk 2); links `fltMgr.lib` when ON |
+| `HK_WIN_INTEGRITY_CALLBACKS` | 31 callback residency | OFF | self-sentinel half only; full table walk OUT (Risk 1) |
+| `HK_WIN_INTEGRITY_IMAGEHASH` | 29 `.text` hash | OFF | reloc/IAT normalization unproven (Risk 4) |
+| `HK_WIN_INTEGRITY_NONIMAGE` | 32 non-image exec scan | OFF | HIGH FP (Risk 6) |
+| `HK_WIN_INTEGRITY_BOOTLOAD` | 36 boot/ELAM load order | OFF | ELAM callback timing unverified (Risk 5) |
+
+`HK_INTEGRITY_TIMER_MS` (default `30000`) sets the periodic scan interval.
+`HK_IOCTL_INTEGRITY_RESCAN` triggers a manual sweep; findings flow out through the
+existing `HK_IOCTL_DRAIN_EVENTS` ring as `HK_EVENT_INTEGRITY_FINDING` records.
+
+The default-OFF sensors carry `// HK-UNCERTAIN(...)` stubs at the exact risky
+call (FltMgr deref contract, ELAM registration timing, reloc normalization, the
+undocumented `PspCreateProcessNotifyRoutine`/`CmCallbackListHead` arrays, the
+unexported `KeServiceDescriptorTableShadow`, and big-pool executability). **Do not
+flip these ON until the flagged API contract is verified on-box** — a BSOD is
+worse than a missing signal (guardrail #13).
+
+### 3b. Syscall/ETW/PatchGuard surface-integrity sensor flags (win-kernel-syscall-etw-integrity)
+
+Signals 208–216 are read-only kernel sensors that bounds-check the x64 syscall
+dispatch surface (SSDT, LSTAR MSR, syscall prologue, IDT) and the kernel ETW
+telemetry surface (ETW-TI liveness, logger-session census, infinity-hook probe)
+against the ntoskrnl image range and a boot baseline. **No table/MSR/IDT writes,
+no hooks installed** — purely read-and-report; the server scores and bans. They
+register as additional fan-out targets of the same `HkIntegrityScan.c` PASSIVE
+work item (no second timer). `KernelImageMap.c` is always compiled (the shared
+ntoskrnl/hal range cache). The per-CPU reads (210 LSTAR, 214 IDT) run inside
+`KeIpiGenericCall` and do nothing but a register/MSR read + store at IPI level.
+
+| Option | Signal | Default | Rationale |
+|---|---|---|---|
+| `HK_WIN_SYSCALL_SSDT` | 208 entry bounds + 216 base-swap | **ON** | exported `KeServiceDescriptorTable` only; low FP; out-of-band `Limit` → UNVERIFIABLE |
+| `HK_WIN_SYSCALL_LSTAR` | 210 IA32_LSTAR per-CPU | **ON** | off-hot-path IPI; per-CPU divergence half always safe |
+| `HK_WIN_SYSCALL_IDT` | 214 IDT gate bounds | **ON** *(pending)* | off-hot-path `__sidt` IPI; **confirm the `__sidt` read path on-box (Risk 11)** |
+| `HK_WIN_SYSCALL_SHADOW_SSDT` | 209 shadow SSDT / `W32pServiceTable` | OFF | unexported shadow table + `KeStackAttachProcess` pairing (Risk 1/4) |
+| `HK_WIN_SYSCALL_PROLOGUE` | 213 `KiSystemCall64` prologue | OFF | boot self-patch stable-window unvalidated (Risk 5) |
+| `HK_WIN_ETW_TI` | 212 ETW-TI liveness | **ON** | keepalive half only; raw-handle half offset-gated → UNVERIFIABLE (Risk 1/7) |
+| `HK_WIN_ETW_SESSION` | 215 logger-session census | OFF | kernel `NtTraceControl`/`EtwQueryAllTraces` surface unconfirmed (Risk 6) |
+| `HK_WIN_ETW_INFINITYHOOK` | 211 infinity-hook probe | OFF | undocumented `WMI_LOGGER_CONTEXT` layout (Risk 8) |
+
+`HK_ETW_KEEPALIVE_MIN_DELTA` (default `0`) sets the per-interval ETW-TI keepalive
+floor; `0` means any counter advance counts as liveness. Findings reuse the same
+`HK_EVENT_INTEGRITY_FINDING` record (finding codes `0x20..0x2F`) — no new event
+type, no ring resize, no `ioctl.h` size change.
+
+Every uncertainty-gated sensor (and the ON-but-pending IDT path) carries a
+`// HK-UNCERTAIN(...)` stub at the exact risky call: the unexported
+`KiSystemCall64[Shadow]`/`EtwThreatIntProvRegHandle` resolves, the KVA-shadow
+expected-LSTAR selection, the `__sidt` IPI IDT read, the kernel logger-table
+query, the `WMI_LOGGER_CONTEXT` walk, the shadow-table `KeStackAttachProcess`
+pairing, and the ETW-TI consumer location (ETW-TI is a **protected provider** — no
+ordinary KMDF driver can consume it; the keepalive counter has no in-kernel
+bumper under current signing). **Do not flip the OFF sensors ON, and do not enable
+210/214's absolute-match halves, until the flagged contract is verified on-box.**
+
 ## 4. verifier.exe (mandatory before load)
 
 Arm Driver Verifier against the driver **before** the first load:

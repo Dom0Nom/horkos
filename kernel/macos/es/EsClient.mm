@@ -34,8 +34,19 @@
 #include <mach/mach_time.h>
 #include <os/log.h>
 #include <stdatomic.h>
+#include <string.h>   /* memcpy / memset / strncmp for the injection emitters */
 
 #include "horkos/event_schema.h"
+#include "horkos/event_schema_macos.h"   /* hk_es_* injection payloads (109-117) */
+
+/* macos-codesign-integrity (signals 121/122/123): EsClient also feeds the
+ * code-signing orchestrator's in-process ES-observation tap (Option A — these
+ * are NOT wire records, they never hit event_schema*.h). The tap is OPTIONAL and
+ * compiled in only when the CS ES-driven probes are built; without it the new
+ * NOTIFY_CS_INVALIDATED subscription is the only addition and the observations
+ * are simply not forwarded. Guardrail #4 holds: this is a userspace-to-userspace
+ * in-process struct, no kernel TU includes it. */
+#include "CsScan.h"   /* HkEsObservation, HkCsScanOnEsObservation */
 
 /* The ES framework delivers events on an internal serial queue. The kernel
  * enforces a reply deadline for AUTH events (documented as "within a few
@@ -138,6 +149,290 @@ static void emit_process_create(const es_process_t *proc)
 }
 
 /* -------------------------------------------------------------------------
+ * Injection-sensor emit helpers (signals 109/110/111/112/115).
+ *
+ * All five ride the SAME bounded-copy-then-dispatch_async discipline as
+ * emit_process_create (guardrail #7-adjacent: the ES serial queue is deadline-
+ * bound; never hash large buffers or do I/O / manifest lookups here). The
+ * es_string_token_t fields (team_id, signing_id) are pointer+len INTO the
+ * message, which is freed after the handler returns — we copy the bytes out
+ * before dispatching. Never retain the es_message_t.
+ *
+ * NOTE: client emits raw signals only; ALL false-positive gating (platform-
+ * binary / allowlist / debugger / NAME-suppression / rate threshold) is
+ * server-side (plan risk #7). Do not add trust decisions to these helpers.
+ * ------------------------------------------------------------------------- */
+
+/* Copy a (possibly truncated) es_string_token_t into a fixed NUL-padded buffer. */
+static void copy_token(uint8_t *dst, size_t dst_len, const es_string_token_t *tok)
+{
+    memset(dst, 0, dst_len);
+    if (tok == NULL || tok->data == NULL || tok->length == 0) {
+        return;
+    }
+    size_t n = tok->length;
+    if (n > dst_len - 1) {       /* always leave room for a terminator */
+        n = dst_len - 1;
+    }
+    memcpy(dst, tok->data, n);
+}
+
+/* Translate es_process_t signing attributes into HK_ESPROC_* flags. */
+static uint32_t esproc_flags(const es_process_t *proc)
+{
+    uint32_t flags = 0;
+    if (proc == NULL) {
+        return flags;
+    }
+    if (proc->is_platform_binary) {
+        flags |= HK_ESPROC_PLATFORM_BINARY;
+    }
+    /* HK-TODO(allowlist): _ALLOWLISTED is a server-side determination; the
+     * client never holds the signed-diagnostics allowlist. Left unset here. */
+    /* A non-NULL responsible/debugger relationship is not directly on
+     * es_process_t; the debugger gate is applied server-side from the
+     * P_TRACED / GET_TASK correlation. */
+    return flags;
+}
+
+static void emit_to_sink(const hk_event_header *hdr_in,
+                         const void *payload, uint32_t payload_bytes)
+{
+    dispatch_queue_t q    = sSinkQueue;
+    HKEsEventSink    sink = sSink;
+    void            *ctx  = sSinkCtx;
+    if (!sink || !q) {
+        return;
+    }
+    /* Copy header + payload by value into the block (the caller's locals go out
+     * of scope). A bare C array cannot be captured by a block, so wrap the
+     * fixed-size buffer in a struct — structs ARE captured by value. Payloads
+     * are small (<= 64B), so a stack copy is cheap. */
+    struct hk_sink_buf { uint8_t bytes[64]; };
+    hk_event_header hdr = *hdr_in;
+    if (payload_bytes > sizeof(((struct hk_sink_buf *)0)->bytes)) {
+        os_log_error(sLog, "HKEsClient: payload %u exceeds sink buffer", payload_bytes);
+        return;
+    }
+    struct hk_sink_buf sbuf;
+    memset(&sbuf, 0, sizeof(sbuf));
+    memcpy(sbuf.bytes, payload, payload_bytes);
+    dispatch_async(q, ^{
+        sink(&hdr, sbuf.bytes, payload_bytes, ctx);
+    });
+}
+
+/* Signals 109/110 — GET_TASK / GET_TASK_NAME / GET_TASK_READ. */
+static void emit_get_task(const es_message_t *msg, uint32_t flavor,
+                          const es_process_t *target)
+{
+    hk_event_header hdr = {
+        .version       = HK_EVENT_SCHEMA_VERSION,
+        .type          = HK_EVENT_ES_GET_TASK,
+        .timestamp_ns  = hk_monotonic_ns(),
+        .payload_bytes = sizeof(hk_es_get_task),
+        .reserved      = 0,
+    };
+    hk_es_get_task p;
+    memset(&p, 0, sizeof(p));
+    p.source_pid   = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    p.target_pid   = target ? (uint32_t)audit_token_to_pid(target->audit_token) : 0;
+    p.flavor       = flavor;
+    p.source_flags = esproc_flags(msg->process);
+    copy_token(p.source_team_id,    sizeof(p.source_team_id),    &msg->process->team_id);
+    copy_token(p.source_signing_id, sizeof(p.source_signing_id), &msg->process->signing_id);
+    emit_to_sink(&hdr, &p, sizeof(p));
+}
+
+/* Signal 111 — non-self executable mmap into a target. The PROT_EXEC/MAP_ANON
+ * discrimination and the path digest happen here, but the per-title baseline
+ * lookup is deferred to the daemon/server (never on the ES queue). */
+static void emit_mmap(const es_message_t *msg)
+{
+    const es_event_mmap_t *mm = &msg->event.mmap;
+    hk_event_header hdr = {
+        .version       = HK_EVENT_SCHEMA_VERSION,
+        .type          = HK_EVENT_ES_MMAP,
+        .timestamp_ns  = hk_monotonic_ns(),
+        .payload_bytes = sizeof(hk_es_mmap),
+        .reserved      = 0,
+    };
+    hk_es_mmap p;
+    memset(&p, 0, sizeof(p));
+    p.source_pid = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    p.target_pid = p.source_pid;  /* ES MMAP is the mapping process itself */
+    p.protection = (uint32_t)mm->protection;
+    p.flags      = (uint32_t)mm->flags;
+    /* baseline_match is set later by the daemon/server from HKMmapBaselineMatch;
+     * the client leaves it UNKNOWN and ships the (deferred) source-path digest as
+     * zero here — hashing a path on the ES serial queue is exactly the I/O the
+     * deadline rule forbids. HK-TODO(mmap-digest): the daemon computes
+     * source_path_sha256 off-queue from mm->source. */
+    p.baseline_match = HK_MMAP_BASELINE_UNKNOWN;
+    emit_to_sink(&hdr, &p, sizeof(p));
+}
+
+/* Signal 115 — proc_info reconnaissance. Emitted raw per-event here; the daemon
+ * aggregates per-source rate/cardinality over a window before the server scores
+ * (the plan's flood mitigation). */
+static void emit_proc_check(const es_message_t *msg)
+{
+    const es_event_proc_check_t *pc = &msg->event.proc_check;
+    hk_event_header hdr = {
+        .version       = HK_EVENT_SCHEMA_VERSION,
+        .type          = HK_EVENT_ES_PROC_CHECK,
+        .timestamp_ns  = hk_monotonic_ns(),
+        .payload_bytes = sizeof(hk_es_proc_check),
+        .reserved      = 0,
+    };
+    hk_es_proc_check p;
+    memset(&p, 0, sizeof(p));
+    p.source_pid         = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    p.target_pid         = pc->target
+                           ? (uint32_t)audit_token_to_pid(pc->target->audit_token) : 0;
+    p.flavor             = (uint32_t)pc->type;
+    p.rate_per_window    = 1;  /* daemon aggregates; single-event count here */
+    p.flavor_cardinality = 1;
+    p.source_flags       = esproc_flags(msg->process);
+    emit_to_sink(&hdr, &p, sizeof(p));
+}
+
+/* Signal 112 — DYLD_INSERT_LIBRARIES survival, derived from the EXEC env. */
+static void emit_dyld_inject(const es_message_t *msg)
+{
+    const es_event_exec_t *ex = &msg->event.exec;
+    const es_process_t    *tgt = ex->target;
+    uint32_t var_present = 0;
+
+    uint32_t env_count = es_exec_env_count(ex);
+    for (uint32_t i = 0; i < env_count; ++i) {
+        es_string_token_t e = es_exec_env(ex, i);
+        if (e.data == NULL || e.length == 0) {
+            continue;
+        }
+        /* Prefix-match the env var name up to '='. strncmp is bounded by the
+         * literal length; e.data is not NUL-terminated, so never strlen it. */
+        if (e.length >= 22 && strncmp(e.data, "DYLD_INSERT_LIBRARIES=", 22) == 0) {
+            var_present |= HK_DYLD_VAR_INSERT_LIBRARIES;
+        } else if (e.length >= 20 && strncmp(e.data, "DYLD_FRAMEWORK_PATH=", 20) == 0) {
+            var_present |= HK_DYLD_VAR_FRAMEWORK_PATH;
+        }
+    }
+
+    if (var_present == 0) {
+        return;  /* no DYLD injection vars — nothing to report */
+    }
+
+    hk_event_header hdr = {
+        .version       = HK_EVENT_SCHEMA_VERSION,
+        .type          = HK_EVENT_ES_DYLD_INJECT,
+        .timestamp_ns  = hk_monotonic_ns(),
+        .payload_bytes = sizeof(hk_es_dyld_inject),
+        .reserved      = 0,
+    };
+    hk_es_dyld_inject p;
+    memset(&p, 0, sizeof(p));
+    p.pid              = tgt ? (uint32_t)audit_token_to_pid(tgt->audit_token) : 0;
+    p.cs_flags         = tgt ? (uint32_t)tgt->codesigning_flags : 0;
+    p.dyld_var_present = var_present;
+    /* injected_load_seen requires correlating a later non-system image load;
+     * the client cannot confirm it inline. Server/daemon sets it from a
+     * follow-up image-load event. */
+    p.injected_load_seen = 0;
+    emit_to_sink(&hdr, &p, sizeof(p));
+}
+
+/* -------------------------------------------------------------------------
+ * macos-codesign-integrity ES-observation emitters (signals 121/122/123).
+ *
+ * These hand an in-process HkEsObservation to the CS orchestrator's tap. Like
+ * the wire emitters they NEVER run probe logic on the ES serial queue: the
+ * orchestrator call is dispatched onto sSinkQueue (the same async hand-off
+ * sSinkQueue provides for records) so the deadline-bound ES queue never waits on
+ * correlation work. The es_string_token_t signing-id is copied out before the
+ * es_message_t is freed — never retain the message.
+ *
+ * The CS tap is build-gated by HK_MACOS_CS_ES_TAP: it is defined only when the
+ * CS ES-driven probes (121/122/123) are compiled into the daemon the ES lib
+ * links with. When undefined, the observation is built but not forwarded (the
+ * new NOTIFY_CS_INVALIDATED subscription is harmless without a consumer).
+ * ------------------------------------------------------------------------- */
+static void emit_cs_observation(const HkEsObservation *obs)
+{
+    dispatch_queue_t q = sSinkQueue;
+    if (!q) {
+        return;
+    }
+    HkEsObservation copy = *obs;   /* by-value capture into the block */
+    dispatch_async(q, ^{
+#ifdef HK_MACOS_CS_ES_TAP
+        HkCsScanOnEsObservation(&copy);
+#else
+        (void)copy;  /* no CS consumer compiled in — drop after the bounded copy */
+#endif
+    });
+}
+
+/* Signal 121 input: a CS_INVALIDATED on a target audit_token. */
+static void cs_emit_invalidated(const es_message_t *msg)
+{
+    HkEsObservation obs;
+    memset(&obs, 0, sizeof(obs));
+    obs.kind         = HK_ES_OBS_CS_INVALIDATED;
+    obs.target_pid   = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    obs.source_pid   = obs.target_pid;
+    obs.timestamp_ns = hk_monotonic_ns();
+    obs.is_platform_src = msg->process->is_platform_binary ? 1u : 0u;
+    copy_token(obs.signing_id, sizeof(obs.signing_id), &msg->process->signing_id);
+    emit_cs_observation(&obs);
+}
+
+/* Signal 121/122 input: an exec mmap. Reuses es_event_mmap_t (already read for
+ * the wire emit_mmap); here we surface the source-FD signing-id + platform bit
+ * the correlator/team-id probes need. */
+static void cs_emit_mmap(const es_message_t *msg)
+{
+    const es_event_mmap_t *mm = &msg->event.mmap;
+    HkEsObservation obs;
+    memset(&obs, 0, sizeof(obs));
+    obs.kind         = HK_ES_OBS_MMAP;
+    obs.source_pid   = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    obs.target_pid   = obs.source_pid;   /* ES MMAP is the mapping process itself */
+    obs.protection   = (uint32_t)mm->protection;
+    obs.flags        = (uint32_t)mm->flags;
+    /* The source FD's signing attributes (es_file_t.* via mm->source) and whether
+     * it is a platform binary identify a non-platform exec page. mm->source is an
+     * es_file_t*; the signing-id lives on the mapping PROCESS for team-id, but the
+     * FD-level platform bit is the discriminant the correlator wants.
+     * HK-UNCERTAIN(es-mmap-source): the exact es_event_mmap_t source signing
+     * fields / availability across ES message versions is unverified (plan
+     * Risk 4); we conservatively copy the mapping process's platform bit + signing
+     * id, which the correlator treats as the non-platform gate input. */
+    obs.is_platform_src = msg->process->is_platform_binary ? 1u : 0u;
+    obs.timestamp_ns = hk_monotonic_ns();
+    copy_token(obs.signing_id, sizeof(obs.signing_id), &msg->process->signing_id);
+    emit_cs_observation(&obs);
+}
+
+/* Signal 123 input: a get-task on a target (the watch matches amfid by signing-id
+ * daemon-side). */
+static void cs_emit_get_task(const es_message_t *msg, const es_process_t *target)
+{
+    HkEsObservation obs;
+    memset(&obs, 0, sizeof(obs));
+    obs.kind         = HK_ES_OBS_GET_TASK;
+    obs.source_pid   = (uint32_t)audit_token_to_pid(msg->process->audit_token);
+    obs.target_pid   = target ? (uint32_t)audit_token_to_pid(target->audit_token) : 0;
+    obs.is_platform_src = msg->process->is_platform_binary ? 1u : 0u;
+    obs.timestamp_ns = hk_monotonic_ns();
+    /* The watch keys on the TARGET's signing-id (amfid); copy the target's. */
+    if (target) {
+        copy_token(obs.signing_id, sizeof(obs.signing_id), &target->signing_id);
+    }
+    emit_cs_observation(&obs);
+}
+
+/* -------------------------------------------------------------------------
  * ES event handler block.
  *
  * GUARDRAIL #7: Every ES_ACTION_TYPE_AUTH event MUST receive an
@@ -171,14 +466,50 @@ static void handle_es_message(es_client_t *client, const es_message_t *msg)
         /* Also emit a process-create record for the auth exec so the server
          * sees it on the same code path as notify execs. */
         emit_process_create(msg->event.exec.target);
+        /* Signal 112: surface DYLD_INSERT_LIBRARIES/FRAMEWORK_PATH in the env. */
+        emit_dyld_inject(msg);
         break;
     }
 
     case ES_EVENT_TYPE_NOTIFY_EXEC: {
         /* Notify events require no reply — they are informational. */
         emit_process_create(msg->event.exec.target);
+        emit_dyld_inject(msg);  /* signal 112 */
         break;
     }
+
+    /* Signals 109/110 — task-port acquisition. All NOTIFY (no reply). The three
+     * flavors are emitted RAW; the server suppresses NAME (signal 110's
+     * "must NOT be flagged") and applies the platform-binary / debugger gates. */
+    case ES_EVENT_TYPE_NOTIFY_GET_TASK:
+        emit_get_task(msg, HK_GET_TASK_CONTROL, msg->event.get_task.target);
+        cs_emit_get_task(msg, msg->event.get_task.target);  /* signal 123 input */
+        break;
+    case ES_EVENT_TYPE_NOTIFY_GET_TASK_NAME:
+        emit_get_task(msg, HK_GET_TASK_NAME, msg->event.get_task_name.target);
+        break;
+    case ES_EVENT_TYPE_NOTIFY_GET_TASK_READ:
+        emit_get_task(msg, HK_GET_TASK_READ, msg->event.get_task_read.target);
+        cs_emit_get_task(msg, msg->event.get_task_read.target);  /* signal 123 */
+        break;
+
+    /* Signal 111 — executable mmap. Also feeds the CS correlator/team-id probes
+     * (signals 121/122) via the in-process observation tap. */
+    case ES_EVENT_TYPE_NOTIFY_MMAP:
+        emit_mmap(msg);
+        cs_emit_mmap(msg);
+        break;
+
+    /* Signal 121 — code-signature invalidated. NOTIFY (no reply). Feeds the CS
+     * invalidation correlator only (no wire record of its own — Option A). */
+    case ES_EVENT_TYPE_NOTIFY_CS_INVALIDATED:
+        cs_emit_invalidated(msg);
+        break;
+
+    /* Signal 115 — proc_info reconnaissance. */
+    case ES_EVENT_TYPE_NOTIFY_PROC_CHECK:
+        emit_proc_check(msg);
+        break;
 
     default:
         /* Defensive: ES should only deliver subscribed event types. But if a
@@ -246,6 +577,23 @@ BOOL HKEsClientStart(HKEsEventSink sink, void *sink_ctx, NSError **out_err)
     es_event_type_t subscriptions[] = {
         ES_EVENT_TYPE_NOTIFY_EXEC,
         ES_EVENT_TYPE_AUTH_EXEC,
+        /* Process-inspection / injection sensors (signals 109/110/111/112/115).
+         * All NOTIFY (no reply) — guardrail #7 is not triggered by these; the
+         * AUTH_EXEC reply invariant and the default: fail-safe ALLOW stay as-is.
+         * GET_TASK_READ requires the macOS 11.3+ SDK (es_get_task_type_t); the
+         * lib targets 12.0 so it is satisfied — do NOT lower the SDK floor below
+         * 11.3 without dropping this subscription. */
+        ES_EVENT_TYPE_NOTIFY_GET_TASK,
+        ES_EVENT_TYPE_NOTIFY_GET_TASK_NAME,
+        ES_EVENT_TYPE_NOTIFY_GET_TASK_READ,
+        ES_EVENT_TYPE_NOTIFY_MMAP,
+        ES_EVENT_TYPE_NOTIFY_PROC_CHECK,
+        /* macos-codesign-integrity (signal 121): code-signature invalidation.
+         * NOTIFY (no reply) — the AUTH_EXEC reply invariant and the default:
+         * fail-safe ALLOW are unchanged (guardrail #7 not implicated). The
+         * GET_TASK{,_READ} and MMAP subscriptions above are reused for signals
+         * 122/123; only CS_INVALIDATED is a new subscription here. */
+        ES_EVENT_TYPE_NOTIFY_CS_INVALIDATED,
     };
 
     es_client_t *client = NULL;
@@ -316,7 +664,8 @@ BOOL HKEsClientStart(HKEsEventSink sink, void *sink_ctx, NSError **out_err)
     }
 
     sEsClient = client;
-    os_log(sLog, "HKEsClient: started, subscribed to NOTIFY_EXEC + AUTH_EXEC");
+    os_log(sLog, "HKEsClient: started, subscribed to NOTIFY_EXEC + AUTH_EXEC + "
+                 "GET_TASK{,_NAME,_READ} + MMAP + PROC_CHECK (signals 109-112,115)");
     return YES;
 }
 

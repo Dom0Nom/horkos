@@ -1,6 +1,9 @@
 /*
- * kernel/linux/lkm/horkos.c
+ * kernel/linux/lkm/horkos_main.c
  * Role: Linux LKM entry/exit and process-exec monitoring for the non-Deck path.
+ *       (Renamed from horkos.c so the module can be a multi-object build —
+ *       horkos.ko = horkos_main.o + module_crc.o; Kbuild forbids a same-named
+ *       source as the module object when using a <module>-y object list.)
  *       Attaches to the sched_process_exec tracepoint and emits a log line per
  *       exec (the full ring-buffer + chrdev pipeline lands later). The primary
  *       Linux path is eBPF (kernel/linux/bpf/); this LKM is gated on
@@ -32,6 +35,8 @@
 #include <linux/rcupdate.h>  /* rcu_read_lock, rcu_dereference */
 #include <linux/tracepoint.h>
 #include <trace/events/sched.h> /* sched_process_exec tracepoint + register_trace_* */
+
+#include "module_crc.h"       /* signal 95 read-only debugfs module-CRC export */
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Horkos Project");
@@ -97,12 +102,27 @@ static int __init horkos_lkm_init(void)
     }
     g_probe_registered = true;
 
+    /* Signal 95 in-memory half: create the read-only module_crcs debugfs export.
+     * A failure here is NON-FATAL — the tracepoint probe is the module's primary
+     * job and the userspace build-id half covers substitution detection without
+     * this export. Log and continue (do not unwind the successful probe). */
+    {
+        int crc_ret = horkos_module_crc_init();
+        if (crc_ret != 0) {
+            pr_info("horkos: module_crcs export unavailable (%d); continuing\n",
+                    crc_ret);
+        }
+    }
+
     pr_info("horkos: LKM loaded (sched_process_exec probe registered)\n");
     return 0;
 }
 
 static void __exit horkos_lkm_exit(void)
 {
+    /* Remove the debugfs export first (idempotent; tolerates a failed init). */
+    horkos_module_crc_exit();
+
     if (g_probe_registered) {
         unregister_trace_sched_process_exec(horkos_sched_process_exec, NULL);
         /* Ensure no probe is mid-flight on another CPU before the module text
