@@ -5,6 +5,20 @@ They apply from turn 1. Failing to follow them is a failure of the response.
 
 ---
 
+## Read this first
+
+**`docs/ARCHITECTURE.md` is the codebase orientation file — read it before
+touching code in an unfamiliar area.** It covers the directory map, the two
+wire planes and data flow (client sensors → telemetry analyzers → ban-engine
+fusion), the nine defensive design principles (no single-signal bans,
+structural FP gating, fail-closed ingest, honest `HK-UNCERTAIN` stubs, bypass
+tests as merge gate), the build/verify matrix (what compiles on this macOS
+host vs. needs the Windows box or a Linux target), and the source-of-truth
+doc index. Keep it current: structural changes (new top-level dir, new wire
+plane, changed verify matrix) update `docs/ARCHITECTURE.md` in the same PR.
+
+---
+
 ## Cross-cutting guardrails
 
 1. **No platform API outside `platform/` or a `backends/` folder.** All conditional code uses `HK_PLATFORM_WINDOWS`, `HK_PLATFORM_LINUX`, `HK_PLATFORM_MACOS`, never raw `_WIN32` / `__linux__` / `__APPLE__`.
