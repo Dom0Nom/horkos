@@ -49,6 +49,26 @@ void hk_bpf_loader_poll(int timeout_ms);
  */
 void hk_bpf_loader_stop(void);
 
+/*
+ * hk_bpf_loader_protected_map_fd — fd of the shared hk_protected gating map, so
+ * the caller (or ProtectedSet.cpp) can insert/clear protected tgids. Returns a
+ * negative value if the loader has not started or the memory-access program set
+ * was not built/loaded (HORKOS_LINUX_EBPF_MEMORY off, or runtime feature probe
+ * disabled it). The fd is owned by the loader; do not close it.
+ */
+int  hk_bpf_loader_protected_map_fd(void);
+
+/*
+ * hk_bpf_loader_trigger_vma_scan — kick the iter/task_vma iterator (signal 80)
+ * once, draining its streamed VMA rows through the same sink. Driven on a
+ * userspace timer by the caller. No-op (returns 0) when signal 80 is unavailable
+ * (kernel < 5.13 at runtime, probed at start) so callers need not special-case
+ * older kernels.
+ *
+ * @return number of VMA rows emitted (>= 0), or negative errno on a hard error.
+ */
+int  hk_bpf_loader_trigger_vma_scan(void);
+
 #ifdef __cplusplus
 }
 #endif

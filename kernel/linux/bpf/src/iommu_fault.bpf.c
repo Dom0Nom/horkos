@@ -1,0 +1,162 @@
+/*
+ * kernel/linux/bpf/src/iommu_fault.bpf.c
+ * Role: eBPF IOMMU-fault counter (catalog signal 135, Linux arm). Attaches the
+ *       `iommu:io_page_fault` tracepoint and counts DMA-remapping faults per
+ *       source-BDF, emitting a compact record to the shared hk_ringbuf. A genuine
+ *       ASIC peripheral driving DMA through a correctly-programmed IOMMU domain
+ *       does not generate a steady stream of translation faults; an FPGA/PCILeech
+ *       board probing IOVA space it was never granted does. This sensor only
+ *       COUNTS faults per faulting BDF — the server gates a fault stream on the
+ *       faulting BDF ALSO carrying a structural flag (unbound + bus-master) and on
+ *       the fault NOT being in the boot/init window. No scoring/ban here.
+ * Target platform: Linux eBPF (CO-RE, BPF_PROG_TYPE_TRACEPOINT/RAW_TRACEPOINT).
+ *       Requires CAP_BPF/CAP_SYS_ADMIN to load; absent capability => the sensor is
+ *       simply not loaded and the server treats sig-135 as "absent", never "clean".
+ * Interface: shares hk_ringbuf with lsm_file_open.bpf.c (extern here; Loader.cpp
+ *            reuses the fd before load). Maps to server sig 135
+ *            (iommu_fault_count per BDF — merged into hk_dma_device_forensics by
+ *            the loader/aggregator). Loader.cpp mirrors hk_bpf_iommu_fault_event.
+ *
+ * Guardrail compliance:
+ *   #1  No raw platform macros — Linux-only by build gating.
+ *   #3  This module comment covers role/platform/interface.
+ *   #4  Pure kernel eBPF TU — no userspace headers, no shared TU.
+ *   #6  Compiled -Wall -Wextra -Werror (enforced in CMakeLists.txt).
+ *
+ * UNCERTAINTY (impl-plan Risk #3 / guardrail #13): the `iommu:io_page_fault`
+ * tracepoint NAME and its FIELD LAYOUT have changed across kernel versions, and the
+ * `report_iommu_fault` kprobe-fallback SIGNATURE is version-sensitive. ALL kernel-
+ * struct field access here goes through BPF_CORE_READ / the CO-RE-relocated raw
+ * tracepoint ctx (never a fixed offset), and the fields are feature-probed by the
+ * loader against the target BTF before attach. The kprobe fallback is left as an
+ * explicit HK-UNCERTAIN stub below — NOT guessed — because its argument order is
+ * not confirmable off-box. Confirm the tracepoint field names and the kprobe arg
+ * layout against the target kernel BTF before relying on either at runtime.
+ *
+ * vmlinux.h MUST be generated on the target kernel (it provides the
+ * trace_event_raw_* layouts CO-RE relocates against). See CMakeLists.txt.
+ */
+
+#include "vmlinux.h"
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_core_read.h>
+#include <bpf/bpf_tracing.h>
+
+#define HK_SCHEMA_VERSION   3u
+#define HK_BPF_IOMMU_FAULT  0x90u   /* loader maps to server sig-135 fault count */
+
+/* ---- Shared ring buffer (defined in lsm_file_open.bpf.c) -----------------
+ * Same reuse pattern as tracepoints.bpf.c: declared extern here; Loader.cpp
+ * repoints this object's hk_ringbuf at the already-created fd via
+ * bpf_map__reuse_fd() before load so all sensor objects share one ring. */
+extern struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 1 << 20);
+} hk_ringbuf SEC(".maps");
+
+/* Mirrored in Loader.cpp as HkBpfIommuFaultEvent. The fault is reported with the
+ * raw source-BDF (packed domain:bus:devfn) and the faulting IOVA; the loader
+ * aggregates a per-BDF COUNT into hk_dma_device_forensics.iommu_fault_count, drops
+ * boot/init-window faults, and requires the BDF to also be a structural suspect
+ * before the server scores it (catalog gate). One ring record == one fault. */
+struct hk_bpf_iommu_fault_event {
+    __u32 schema_version;
+    __u32 event_tag;        /* HK_BPF_IOMMU_FAULT */
+    __u64 timestamp_ns;
+    __u32 source_bdf;       /* packed (domain<<16)|(bus<<8)|devfn; 0 if unknown */
+    __u32 flags;            /* fault-class flags from the tracepoint (read/write) */
+    __u64 fault_iova;       /* faulting device address; 0 if not surfaced */
+};
+
+/* ---- Tracepoint: iommu/io_page_fault --------------------------------------
+ * The tracepoint is defined in include/trace/events/iommu.h. The argument set has
+ * varied across kernels; the historically stable fields are a device identity
+ * (`dev_name` __data_loc string, the "<domain>:<bus>:<dev>.<fn>" of the faulting
+ * device) and the faulting `iova` (u64). We read BOTH CO-RE-relocatably:
+ *   - iova via BPF_CORE_READ on the raw ctx (offset relocated by BTF),
+ *   - dev_name via the __data_loc decode idiom (same as sched_process_exec in
+ *     tracepoints.bpf.c) and hash/pack it in USERSPACE — the BPF side does not
+ *     parse the BDF string (verifier-hostile); it ships the raw dev_name bytes
+ *     length-bounded and the loader parses "<dom>:<bus>:<dev>.<fn>" -> packed BDF.
+ *
+ * UNCERTAIN (do not guess): whether the field is named `iova` vs `addr` and whether
+ * a `dev_name` __data_loc field exists (vs an inline char[]) differs by kernel.
+ * BPF_CORE_FIELD_EXISTS-gating + a loader BTF probe decide which arm attaches; the
+ * loader feature-probes the tracepoint format before load. Reading a non-existent
+ * field via BPF_CORE_READ relocates to 0, so a missing field degrades to "unknown"
+ * (0), never a wrong value — consistent with the "absent != clean" requirement.
+ */
+
+#define HK_IOMMU_DEVNAME_MAX 48   /* "<dom>:<bus>:<dev>.<fn>" + slack; bounded. */
+
+SEC("tracepoint/iommu/io_page_fault")
+int hk_tp_io_page_fault(void *ctx)
+{
+    struct hk_bpf_iommu_fault_event *evt;
+
+    evt = bpf_ringbuf_reserve(&hk_ringbuf, sizeof(*evt), 0);
+    if (!evt)
+        return 0;
+
+    evt->schema_version = HK_SCHEMA_VERSION;
+    evt->event_tag      = HK_BPF_IOMMU_FAULT;
+    evt->timestamp_ns   = bpf_ktime_get_ns();
+    evt->flags          = 0;
+
+    /* CO-RE read of the iova field off the relocated tracepoint context.
+     * trace_event_raw_io_page_fault is the generated name for the
+     * iommu:io_page_fault tracepoint in vmlinux.h on kernels that surface it.
+     * BPF_CORE_READ relocates the offset; a kernel lacking the field relocates the
+     * load to 0 (=> "unknown"), it does not read garbage. */
+    struct trace_event_raw_io_page_fault *tp =
+        (struct trace_event_raw_io_page_fault *)ctx;
+    if (bpf_core_field_exists(tp->iova))
+        evt->fault_iova = (__u64)BPF_CORE_READ(tp, iova);
+    else
+        evt->fault_iova = 0;
+
+    /* dev_name (__data_loc string) -> the loader parses the BDF. The BPF side does
+     * NOT do the string->BDF parse (sscanf is not available; a hand-rolled parse is
+     * verifier-hostile). We forward 0 here and let the loader resolve the BDF from
+     * the recorded dev_name via the companion __data_loc copy below when present.
+     *
+     * HK-UNCERTAIN(iommu-tp-devname): whether the generated struct exposes
+     * `__data_loc_dev_name` (vs an inline char dev_name[]) is kernel-dependent and
+     * not confirmable off-box. Until the target-BTF probe in the loader confirms the
+     * field shape, source_bdf is shipped as 0 ("unknown") and the loader attributes
+     * the fault by other means (e.g. the device that most recently arrived) or drops
+     * it. A 0 BDF is never scored as a real device — "unknown", not "clean". */
+    evt->source_bdf = 0;
+
+    bpf_ringbuf_submit(evt, 0);
+    return 0;
+}
+
+/* ---- Fallback: kprobe on report_iommu_fault -------------------------------
+ * On kernels that do NOT define the iommu:io_page_fault tracepoint, the kernel
+ * funnel is report_iommu_fault() (drivers/iommu/iommu.c). A kprobe there would see
+ * the fault before it is delivered to a registered handler.
+ *
+ * HK-UNCERTAIN(report_iommu_fault-kprobe): the signature of report_iommu_fault has
+ * changed across versions — historically
+ *   int report_iommu_fault(struct iommu_domain *domain, struct device *dev,
+ *                          unsigned long iova, int flags);
+ * but the parameter order, the `device` vs `iommu_fault` argument, and even the
+ * function name (vs iommu_report_device_fault) are NOT confirmable off this host.
+ * Reading the wrong PT_REGS_PARM here yields silently-wrong data, NOT a compile
+ * error. Per guardrail #13 this arm is therefore left UNIMPLEMENTED — the program
+ * below is a compile-time placeholder that emits nothing. CONFIRM the exact
+ * report_iommu_fault prototype against the target kernel BTF, then fill in the
+ * PT_REGS_PARM reads (device pointer -> BDF via dev_name) before enabling. The
+ * loader must NOT attach this arm until that confirmation lands; the tracepoint arm
+ * above is the shippable path.
+ */
+SEC("kprobe/report_iommu_fault")
+int BPF_KPROBE(hk_kp_report_iommu_fault)
+{
+    /* HK-UNCERTAIN(report_iommu_fault-kprobe): intentionally empty. Do not read
+     * PT_REGS_PARM* here until the prototype is confirmed on the target kernel. */
+    return 0;
+}
+
+char _license[] SEC("license") = "GPL";

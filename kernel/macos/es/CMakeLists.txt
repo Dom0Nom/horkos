@@ -62,11 +62,31 @@ if(NOT ES_FRAMEWORK)
 endif()
 
 # ---- Static library target ------------------------------------------------
+# ExceptionPortAudit.mm (timing-side-channels signal 160) is invoked from EsClient's
+# process-handling path; it is read-only and NEVER gates the ES auth reply (guardrail
+# #7). Its foreign-task port acquisition is HK-UNCERTAIN (see the .mm) and audits only
+# the daemon's own task as a proof-of-mechanism until resolved on-box.
 add_library(horkos_es STATIC
-    EsClient.mm)
+    EsClient.mm
+    ExceptionPortAudit.mm)
 
 target_include_directories(horkos_es PRIVATE
-    ${CMAKE_SOURCE_DIR}/sdk/include)   # horkos/event_schema.h
+    ${CMAKE_SOURCE_DIR}/sdk/include    # horkos/event_schema.h
+    # macos-codesign-integrity: EsClient feeds the CS orchestrator's in-process
+    # ES-observation tap (Option A — HkEsObservation/HkCsScanOnEsObservation in
+    # CsScan.h). The CS_INVALIDATED subscription + observation emitters compile
+    # whether or not the tap is wired; HK_MACOS_CS_ES_TAP gates the forward call.
+    ${CMAKE_SOURCE_DIR}/daemon/macos/csops)
+
+# When the CS ES-driven probes (121/122/123) are built into the daemon this lib
+# links with, define HK_MACOS_CS_ES_TAP so EsClient forwards observations to
+# HkCsScanOnEsObservation. ON only when an ES-dependent CS signal is enabled.
+if(HK_MACOS_CS_INVALIDATION OR HK_MACOS_CS_DYLIB_LV OR HK_MACOS_CS_AMFID)
+    target_compile_definitions(horkos_es PRIVATE HK_MACOS_CS_ES_TAP=1)
+    message(STATUS
+        "kernel/macos/es: HK_MACOS_CS_ES_TAP ON — EsClient forwards CS "
+        "observations (signals 121/122/123).")
+endif()
 
 target_link_libraries(horkos_es PUBLIC
     ${ES_FRAMEWORK}

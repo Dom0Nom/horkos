@@ -49,6 +49,29 @@ static OB_PREOP_CALLBACK_STATUS HkObPreCallback(
 
     isProcess = (Info->ObjectType == *PsProcessType);
 
+    /* Signal 1 — Ob liveness self-poll. The self-check work item opens the
+     * System process (PID 4) with a magic reserved access bit. Recognizing that
+     * exact (opener == System, target == System, magic bit set) shape, we stamp
+     * the nonce the work item armed and suppress the normal emit so the probe
+     * never pollutes hk_event_handle_open. A real opener cannot forge this: the
+     * opener is the System process and the access bit is reserved. */
+    if (isProcess) {
+        ACCESS_MASK selfDesired = 0;
+        if (Info->Operation == OB_OPERATION_HANDLE_CREATE) {
+            selfDesired = Info->Parameters->CreateHandleInformation.OriginalDesiredAccess;
+        } else if (Info->Operation == OB_OPERATION_HANDLE_DUPLICATE) {
+            selfDesired = Info->Parameters->DuplicateHandleInformation.OriginalDesiredAccess;
+        }
+        if ((selfDesired & HK_OB_SELFPOLL_MAGIC) &&
+            PsGetCurrentProcessId() == PsGetProcessId(PsInitialSystemProcess) &&
+            (PEPROCESS)Info->Object == PsInitialSystemProcess) {
+            /* Stamp the expected nonce so the work item sees the callback fired.
+             * InterlockedExchange64 publishes the value to the PASSIVE reader. */
+            InterlockedExchange64(&ctx->ObSelfPollNonce, ctx->ObSelfPollExpected);
+            return OB_PREOP_SUCCESS;
+        }
+    }
+
     if (isProcess) {
         targetPid = PsGetProcessId((PEPROCESS)Info->Object);
         stripMask = HK_STRIP_PROCESS_RIGHTS;
@@ -75,6 +98,42 @@ static OB_PREOP_CALLBACK_STATUS HkObPreCallback(
     payload.access_mask = (uint32_t)original;
     HkRingEmit(HK_EVENT_HANDLE_OPEN, &payload, sizeof(payload));
 
+#if defined(HK_WIN_VMWATCH)
+    /* Handle provenance (#66). DuplicateHandleInformation.SourceProcessId is only
+     * present on the PRE-operation parameters (the POST-op duplicate info carries no
+     * SourceProcessId), so the dup-laundering check MUST happen here, not in the
+     * post-op. For a CREATE we record the requester as a known opener; for a
+     * DUPLICATE we look up the dup's SourceProcessId — if that source never appeared
+     * as a create-path opener, the chain is "laundered". The granted-access half (#67)
+     * is owned by the post-op (granted is not known until then). */
+    if (isProcess) {
+        if (Info->Operation == OB_OPERATION_HANDLE_CREATE) {
+            HkObRecordOpener(ctx, (uint32_t)(ULONG_PTR)PsGetCurrentProcessId());
+        } else if (Info->Operation == OB_OPERATION_HANDLE_DUPLICATE) {
+            hk_event_handle_provenance prov;
+            uint32_t source_pid = (uint32_t)(ULONG_PTR)
+                Info->Parameters->DuplicateHandleInformation.SourceProcessId;
+            RtlZeroMemory(&prov, sizeof(prov));
+            prov.requester_pid = (uint32_t)(ULONG_PTR)PsGetCurrentProcessId();
+            prov.source_pid = source_pid;
+            prov.target_pid = (uint32_t)(ULONG_PTR)targetPid;
+            prov.original_desired_access = (uint32_t)original;
+            /* granted_access stays 0 on the pre-op dup path; the post-op carries the
+             * granted mask for the create/#67 path. */
+            if (!HkObRootOpenerSeen(ctx, source_pid)) {
+                prov.flags |= HK_HND_DUP_LAUNDERED;
+            }
+#if defined(HK_VMWATCH_SCHEMA_READY)
+            /* 24-byte payload EXCEEDS HK_EVENT_PAYLOAD_MAX (16); captured but not
+             * emitted until the Schema phase grows the envelope (truncation guard). */
+            HkRingEmit(HK_EVENT_HANDLE_PROVENANCE, &prov, sizeof(prov));
+#else
+            UNREFERENCED_PARAMETER(prov);
+#endif
+        }
+    }
+#endif
+
     /* Enforcement: strip the dangerous bits only when policy enables it AND the
      * opener is not opening its own process/thread. Default policy is off. */
     if (desired != NULL && ctx->Policy.enable_ob_strip &&
@@ -84,6 +143,115 @@ static OB_PREOP_CALLBACK_STATUS HkObPreCallback(
 
     return OB_PREOP_SUCCESS;
 }
+
+#if defined(HK_WIN_VMWATCH)
+/* -------------------------------------------------------------------------
+ * Provenance ring (#66). HkObRecordOpener pushes a create-path requester PID;
+ * HkObRootOpenerSeen answers whether a given PID ever appeared as a create-path
+ * opener. Best-effort: the ring is small and wraps, so "not seen" can be a false
+ * negative under churn — that is acceptable for a provenance HINT (the server fuses
+ * it, it never bans on this alone). Guarded by ProvLock. Both run at <= DISPATCH.
+ * ------------------------------------------------------------------------- */
+_Use_decl_annotations_
+void HkObRecordOpener(PHK_DEVICE_CONTEXT Ctx, uint32_t requester_pid)
+{
+    KIRQL irql;
+    ULONG slots = (ULONG)RTL_NUMBER_OF(Ctx->ProvOpenerPids);
+    KeAcquireSpinLock(&Ctx->ProvLock, &irql);
+    Ctx->ProvOpenerPids[Ctx->ProvHead & (slots - 1)] = requester_pid;
+    Ctx->ProvHead += 1;
+    KeReleaseSpinLock(&Ctx->ProvLock, irql);
+}
+
+_Use_decl_annotations_
+BOOLEAN HkObRootOpenerSeen(PHK_DEVICE_CONTEXT Ctx, uint32_t source_pid)
+{
+    KIRQL irql;
+    ULONG i;
+    ULONG slots = (ULONG)RTL_NUMBER_OF(Ctx->ProvOpenerPids);
+    BOOLEAN seen = FALSE;
+    KeAcquireSpinLock(&Ctx->ProvLock, &irql);
+    for (i = 0; i < slots; ++i) {
+        if (Ctx->ProvOpenerPids[i] == source_pid) {
+            seen = TRUE;
+            break;
+        }
+    }
+    KeReleaseSpinLock(&Ctx->ProvLock, irql);
+    return seen;
+}
+
+/* -------------------------------------------------------------------------
+ * Ob post-operation callback (#67 granted-access delta). The DUP-laundering half
+ * (#66) lives in the PRE callback, where DuplicateHandleInformation.SourceProcessId
+ * is available (the POST-op duplicate info struct has NO SourceProcessId).
+ *
+ * HK-UNCERTAIN(ob-postop-grantedaccess): the plan flags that OB_POST_OPERATION_
+ * INFORMATION.GrantedAccess must be confirmed to be the FINAL mask after all
+ * higher-altitude callbacks, and that registering a PostOperation does not change
+ * pre-op dispatch. We read the documented field, but we do NOT diff it against a
+ * pre-op-recorded mask via any undocumented per-handle keying — the pre-op already
+ * LOGS OriginalDesiredAccess into hk_event_handle_open, and the server diffs
+ * granted-vs-requested on its side. The HK_HND_GRANT_EXCEEDS_PREOP bit is therefore
+ * NOT set here (it needs the per-handle pre/post pairing the plan flags as unverified)
+ * — confirm the CallContext pairing on-box before computing the delta in-kernel. The
+ * post-op never strips and never blocks (post-op cannot).
+ *
+ * Emit is guarded by HK_VMWATCH_SCHEMA_READY: hk_event_handle_provenance is 24 bytes,
+ * which EXCEEDS the frozen HK_EVENT_PAYLOAD_MAX (16). Until the Schema phase grows the
+ * envelope, HkRingEmit would TRUNCATE the record, so we capture-but-do-not-emit. Do
+ * NOT emit a truncated provenance record.
+ * ------------------------------------------------------------------------- */
+_Function_class_(OB_POST_OPERATION_CALLBACK)
+static VOID HkObPostCallback(_In_ PVOID RegistrationContext,
+                             _In_ POB_POST_OPERATION_INFORMATION Info)
+{
+    PHK_DEVICE_CONTEXT ctx;
+    hk_event_handle_provenance payload;
+    ACCESS_MASK granted = 0;
+    BOOLEAN isProcess;
+
+    UNREFERENCED_PARAMETER(RegistrationContext);
+
+    ctx = HkContext();
+    if (ctx == NULL) {
+        return;
+    }
+
+    /* Post-op fires only after a successful operation; a failed open carries a
+     * non-success ReturnStatus and no meaningful granted mask. */
+    if (!NT_SUCCESS(Info->ReturnStatus)) {
+        return;
+    }
+
+    isProcess = (Info->ObjectType == *PsProcessType);
+    if (!isProcess) {
+        return; /* provenance is tracked for process handles (#67). */
+    }
+
+    if (Info->Operation == OB_OPERATION_HANDLE_CREATE) {
+        granted = Info->Parameters->CreateHandleInformation.GrantedAccess;
+    } else if (Info->Operation == OB_OPERATION_HANDLE_DUPLICATE) {
+        granted = Info->Parameters->DuplicateHandleInformation.GrantedAccess;
+    }
+
+    RtlZeroMemory(&payload, sizeof(payload));
+    payload.requester_pid = (uint32_t)(ULONG_PTR)PsGetCurrentProcessId();
+    payload.source_pid = payload.requester_pid; /* post-op has no dup source; see pre-op */
+    payload.target_pid = (uint32_t)(ULONG_PTR)PsGetProcessId((PEPROCESS)Info->Object);
+    payload.granted_access = (uint32_t)granted;
+    /* HK_HND_GRANT_EXCEEDS_PREOP intentionally NOT set here — see HK-UNCERTAIN above. */
+
+#if defined(HK_VMWATCH_SCHEMA_READY)
+    /* Only reachable once the Schema phase grows HK_EVENT_PAYLOAD_MAX to >= 24 and
+     * assigns HK_EVENT_HANDLE_PROVENANCE a distinct hk_event_type value. Until then
+     * the record is captured above but NOT emitted (truncation guard). */
+    HkRingEmit(HK_EVENT_HANDLE_PROVENANCE, &payload, sizeof(payload));
+#else
+    UNREFERENCED_PARAMETER(payload);
+#endif
+}
+#endif /* HK_WIN_VMWATCH */
 
 _Use_decl_annotations_
 NTSTATUS HkObArm(PHK_DEVICE_CONTEXT Ctx)
@@ -105,7 +273,16 @@ NTSTATUS HkObArm(PHK_DEVICE_CONTEXT Ctx)
     op[0].ObjectType = PsProcessType;
     op[0].Operations = OB_OPERATION_HANDLE_CREATE | OB_OPERATION_HANDLE_DUPLICATE;
     op[0].PreOperation = HkObPreCallback;
+#if defined(HK_WIN_VMWATCH)
+    /* Granted-access delta + dup provenance (#66/#67). Wired only for the process
+     * type; thread handles keep PostOperation NULL. See HkObPostCallback's
+     * HK-UNCERTAIN(ob-postop-grantedaccess). The provenance ring lock is initialized
+     * here so the pre-op record and post-op lookup can use it. */
+    KeInitializeSpinLock(&Ctx->ProvLock);
+    op[0].PostOperation = HkObPostCallback;
+#else
     op[0].PostOperation = NULL;
+#endif
 
     op[1].ObjectType = PsThreadType;
     op[1].Operations = OB_OPERATION_HANDLE_CREATE | OB_OPERATION_HANDLE_DUPLICATE;
@@ -147,4 +324,13 @@ void HkObDisarm(PHK_DEVICE_CONTEXT Ctx)
         ObUnRegisterCallbacks(handle);
     }
     InterlockedExchange(&Ctx->ObCallbacksArmed, 0);
+}
+
+PVOID HkObPreCallbackAddress(void)
+{
+    /* Exposed so CallbackSelfCheck.c can (a) compare the registered PreOperation
+     * pointer against this baseline (signal 7 ptr-swap) and (b) locate the
+     * owning image's .text for the SHA-256 baseline (signal 8). Taking the
+     * address of a static function in its own TU is well-defined. */
+    return (PVOID)(ULONG_PTR)&HkObPreCallback;
 }

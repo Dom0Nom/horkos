@@ -36,6 +36,29 @@ static void HkBumpArmed(LONG delta)
     }
 }
 
+/* ETW-TI consumer keepalive bump (signal 212, version-independent half). The
+ * intended caller is Horkos's ETW-TI consumer: on each Threat-Intelligence event
+ * (ReadVm/WriteVm/etc.) it calls this so HkEtwTiLiveness can confirm the TI feed
+ * is alive without reading any unexported global.
+ *
+ * HK-UNCERTAIN(etw-ti-consumer): Microsoft-Windows-Threat-Intelligence is a
+ * PROTECTED provider — an ordinary KMDF driver CANNOT consume it; only a
+ * PPL/ELAM-signed user-mode process may open a real-time session on it (the kernel
+ * emits to it via EtwRegister). Horkos holds no anti-malware/ELAM cert today, so
+ * there is NO in-kernel TI consumer and this bump has no caller yet. Notify.c is a
+ * plausible home only if the consumption ends up being a kernel surface, which it
+ * is not under current signing. The function is provided so the keepalive contract
+ * is visible and a future PPL user-mode consumer can bump through an IOCTL into
+ * this counter; until then EtwKeepaliveArmed stays 0 and the keepalive check is
+ * UNVERIFIABLE-gated. Do NOT enable EtwKeepaliveArmed without a real consumer. */
+void HkEtwTiKeepaliveBump(void)
+{
+    PHK_DEVICE_CONTEXT ctx = HkContext();
+    if (ctx != NULL) {
+        (void)InterlockedIncrement64(&ctx->EtwTiKeepalive);
+    }
+}
+
 _Function_class_(PCREATE_PROCESS_NOTIFY_ROUTINE_EX)
 static VOID NTAPI HkProcessNotifyEx(_Inout_ PEPROCESS Process,
                                     _In_ HANDLE ProcessId,
@@ -60,19 +83,10 @@ static VOID NTAPI HkProcessNotifyEx(_Inout_ PEPROCESS Process,
     }
 }
 
-_Function_class_(PCREATE_THREAD_NOTIFY_ROUTINE)
-static VOID NTAPI HkThreadNotify(_In_ HANDLE ProcessId,
-                                 _In_ HANDLE ThreadId,
-                                 _In_ BOOLEAN Create)
-{
-    UNREFERENCED_PARAMETER(ProcessId);
-    UNREFERENCED_PARAMETER(ThreadId);
-    UNREFERENCED_PARAMETER(Create);
-    /* The shared event schema has no thread record yet (event_schema.h is the
-     * source of truth; adding a type bumps the schema version). The routine is
-     * armed so the path is live; a thread event type is added when the schema
-     * gains one. */
-}
+/* The thread-create notify is now the Ex/NonSystem variant implemented in
+ * ThreadProvenance.c (win-kernel-thread-injection). The non-Ex HkThreadNotify
+ * stub that used to live here is removed; HkNotifyArm/Disarm delegate to
+ * HkThreadProvenanceArm/Disarm below. */
 
 _Function_class_(PLOAD_IMAGE_NOTIFY_ROUTINE)
 static VOID NTAPI HkImageNotify(_In_opt_ PUNICODE_STRING FullImageName,
@@ -118,7 +132,10 @@ NTSTATUS HkNotifyArm(void)
     g_ProcessArmed = TRUE;
     HkBumpArmed(1);
 
-    status = PsSetCreateThreadNotifyRoutine(HkThreadNotify);
+    /* Thread-create provenance via the Ex/NonSystem notify (ThreadProvenance.c).
+     * Like the process Ex notify it needs /INTEGRITYCHECK; a STATUS_ACCESS_DENIED
+     * here on a fresh build usually means that flag was dropped from the link. */
+    status = HkThreadProvenanceArm();
     if (!NT_SUCCESS(status)) {
         HkNotifyDisarm();
         return status;
@@ -153,12 +170,15 @@ void HkNotifyDisarm(void)
     }
 
     if (g_ThreadArmed) {
-        status = PsRemoveCreateThreadNotifyRoutine(HkThreadNotify);
-        if (NT_SUCCESS(status)) {
+        /* Delegate to ThreadProvenance.c, which owns the Ex notify registration.
+         * It records its own disarm-failure; fold that into g_DisarmFailed so the
+         * unload path's bugcheck-on-failure discipline still covers it. */
+        HkThreadProvenanceDisarm();
+        if (HkThreadProvenanceDisarmFailed()) {
+            g_DisarmFailed = TRUE;
+        } else {
             g_ThreadArmed = FALSE;
             HkBumpArmed(-1);
-        } else {
-            g_DisarmFailed = TRUE;
         }
     }
 

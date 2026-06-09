@@ -8,25 +8,72 @@
 //!
 //! Target platforms: server.
 
+pub mod device_trust;
+pub mod dma_forensics;
+pub mod driver_integrity;
 pub mod error;
+pub mod input_cadence;
+pub mod input_prov;
+pub mod kernel_events;
+pub mod linux_proton;
+pub mod loader_inject;
+pub mod macos_codesign;
+pub mod macos_inject;
+pub mod pointer_model;
+pub mod render_hook;
 pub mod schema;
+pub mod self_events;
+pub mod thread_inject;
+pub mod timing;
+pub mod vm_access;
+
+// behavioral-gamestate domain (catalog signals 172-180): server-side game-state
+// knowledge analyzers replaying the authoritative snapshot stream against client
+// telemetry. Compiled under the default-on `gamestate-analyzers` feature; the live
+// shm reader is the separate default-on `gamestate-ipc-shm` feature (off in CI/tests,
+// which run the analyzers from file-backed fixtures with no game-server peer).
+#[cfg(feature = "gamestate-analyzers")]
+pub mod analyzers;
+#[cfg(feature = "gamestate-analyzers")]
+pub mod geom;
+#[cfg(feature = "gamestate-analyzers")]
+pub mod snapshot;
+#[cfg(feature = "gamestate-analyzers")]
+pub mod stats;
 
 use axum::{routing::post, Json, Router};
 use error::TelemetryError;
 use schema::{TickPayload, SCHEMA_VERSION};
 
 pub fn router() -> Router {
-    Router::new().route("/api/telemetry", post(ingest))
+    Router::new()
+        .route("/api/telemetry", post(ingest))
+        .merge(render_hook::router())
+        .merge(input_prov::router())
+        .merge(loader_inject::router())
+        .merge(device_trust::router())
+        .merge(input_cadence::router())
+        .merge(pointer_model::router())
+        .merge(timing::router())
 }
 
 #[tracing::instrument(skip_all, fields(player_id, tick))]
 async fn ingest(
     Json(payload): Json<TickPayload>,
 ) -> Result<axum::http::StatusCode, TelemetryError> {
-    if payload.schema_version != SCHEMA_VERSION {
+    // Migration window: accept every contract from v1 through the current
+    // SCHEMA_VERSION. Older clients omit later additive blocks (v2 aim-feature,
+    // v3 gamestate-binding, v4 network-anomaly), which deserialize to their
+    // `#[serde(default)]` zeros, so the server simply gets no signal from those
+    // blocks — never a fabricated anomaly. Any version above the current or
+    // below the minimum is rejected.
+    const MIN_SUPPORTED_SCHEMA_VERSION: u32 = 1;
+    if payload.schema_version < MIN_SUPPORTED_SCHEMA_VERSION
+        || payload.schema_version > SCHEMA_VERSION
+    {
         return Err(TelemetryError::InvalidPayload(format!(
-            "schema_version {} not supported; expected {}",
-            payload.schema_version, SCHEMA_VERSION
+            "schema_version {} not supported; expected {}..={}",
+            payload.schema_version, MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION
         )));
     }
 

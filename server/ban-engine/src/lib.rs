@@ -6,8 +6,11 @@
 //!
 //! Target platforms: server.
 
+pub mod aim_kinematics;
+pub mod arrival_cadence;
 pub mod bundle;
 pub mod error;
+pub mod loader_inject;
 
 use axum::{routing::get, Json, Router};
 use bundle::{placeholder_metadata, BundleMetadata};

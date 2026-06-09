@@ -15,6 +15,21 @@ pub enum TelemetryError {
     #[error("invalid payload: {0}")]
     InvalidPayload(String),
 
+    #[error("render finding schema mismatch: {0}")]
+    RenderSchema(String),
+
+    #[error("input finding schema mismatch: {0}")]
+    InputSchema(String),
+
+    #[error("device-trust finding schema mismatch: {0}")]
+    DeviceTrustSchema(String),
+
+    #[error("pointer-feature schema mismatch: {0}")]
+    PointerModel(String),
+
+    #[error("timing report schema mismatch: {0}")]
+    Timing(String),
+
     #[error("rate limit exceeded")]
     RateLimited,
 
@@ -28,6 +43,26 @@ impl IntoResponse for TelemetryError {
             TelemetryError::InvalidPayload(msg) => (
                 StatusCode::BAD_REQUEST,
                 json!({ "status": "invalid_payload", "reason": msg }),
+            ),
+            TelemetryError::RenderSchema(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "render_schema_mismatch", "reason": msg }),
+            ),
+            TelemetryError::InputSchema(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "input_schema_mismatch", "reason": msg }),
+            ),
+            TelemetryError::DeviceTrustSchema(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "device_trust_schema_mismatch", "reason": msg }),
+            ),
+            TelemetryError::PointerModel(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "pointer_model_schema_mismatch", "reason": msg }),
+            ),
+            TelemetryError::Timing(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "timing_schema_mismatch", "reason": msg }),
             ),
             TelemetryError::RateLimited => (
                 StatusCode::TOO_MANY_REQUESTS,

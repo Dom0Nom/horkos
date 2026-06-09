@@ -38,6 +38,16 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"]
 # ML inference (CPU only for Phase 2; CUDA/CoreML deferred).
 ort                = { version = "=2.0.0-rc.10", default-features = false, features = ["std", "ndarray", "download-binaries"] }
 
+# behavioral-gamestate domain (server/telemetry):
+#   libc        — POSIX shm_open/mmap + getsockopt(TCP_INFO) for the snapshot ring
+#                 backend (isolated under snapshot/backends, cfg-gated, guardrail #1).
+#   windows-sys — Win32 file-mapping for the same backend on Windows game hosts
+#                 (referenced #[cfg(windows)] only).
+#   rustfft     — FFT for the signal-178 refresh-aliasing spectral peak.
+libc               = "0.2"
+windows-sys        = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Memory"] }
+rustfft            = "6.2"
+
 [profile.release]
 codegen-units = 1
 lto           = "thin"

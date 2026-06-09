@@ -143,4 +143,94 @@ int BPF_PROG(hk_lsm_file_open, struct file *file, int ret)
     return ret;   /* audit-only: preserve the prior LSM decision */
 }
 
+/* ===========================================================================
+ * Signal 98 — /dev/mem, /dev/kmem, /dev/port write-intent opens.
+ *
+ * This is a SEPARATE lsm/file_open program from hk_lsm_file_open above; multiple
+ * BPF LSM programs may attach to the same hook and run in sequence. It is also
+ * distinct from lsm_devmem.bpf.c's signal-78 sensor: 78 reports the bare physmem
+ * OPEN (read paths into raw memory); 98 specifically carries the WRITE-INTENT
+ * flag (FMODE_WRITE) and adds /dev/port, which is the discriminator the catalog
+ * FP gate needs (flag write-intent opens, not read-only DMI scans — §6).
+ *
+ * fd→device resolution is deliberately SPLIT (§1.2 / §7-A): this program emits
+ * the raw (pid, dev major/minor, write_intent) and userspace (Loader.cpp) decides
+ * device identity/sensitivity. We read f_mode and i_rdev via CO-RE.
+ *
+ * §7-A CONFIRMED-DEFAULT: read file->f_mode (FMODE_WRITE 0x2) and the inode
+ * i_rdev via BPF_CORE_READ (CO-RE relocates the offsets); do NOT assume fixed
+ * offsets. FMODE_WRITE is a stable UAPI-adjacent bit (include/linux/fs.h) but the
+ * STRUCT FIELD offset is relocated by CO-RE.
+ *
+ * Audit-only: returns the incoming `ret` on every path (asserted by the
+ * devmem_write_open bypass test).
+ * ===========================================================================*/
+
+/* 0xA0: module-trust devmem-write-intent tag. 0x30/0x31 are already taken by the
+ * memory-access ptrace tags in Loader.cpp; the module-trust domain uses the 0xA0
+ * range to avoid a translate-arm collision. */
+#define HK_BPF_DEVMEM_ACCESS 0xA0u   /* loader maps to HK_EVENT_DEVMEM_ACCESS */
+
+/* MEM char-device major + the devmem/kmem/port minors (drivers/char/mem.c). */
+#define HK_MEM_MAJOR2   1u
+#define HK_DEVMEM_MINOR 1u   /* /dev/mem  */
+#define HK_DEVKMEM_MIN  2u   /* /dev/kmem */
+#define HK_DEVPORT_MIN  4u   /* /dev/port */
+
+/* FMODE_WRITE from include/linux/fs.h. The VALUE is stable; the f_mode FIELD
+ * offset is CO-RE-relocated. */
+#define HK_FMODE_WRITE  0x2u
+
+static __always_inline __u32 hk98_major(__u32 dev) { return (dev >> 20) & 0xfffu; }
+static __always_inline __u32 hk98_minor(__u32 dev) { return dev & 0xfffffu; }
+
+/* Mirrored in Loader.cpp as HkBpfDevmemEvent. */
+struct hk_bpf_devmem_event {
+    __u32 schema_version;
+    __u32 event_tag;        /* HK_BPF_DEVMEM_ACCESS */
+    __u64 timestamp_ns;
+    __u32 requesting_pid;
+    __u32 dev_minor;        /* opened node minor (1/2/4) */
+    __u32 write_intent;     /* 1 if FMODE_WRITE set at open */
+    __u32 reserved;
+};
+
+SEC("lsm/file_open")
+int BPF_PROG(hk_lsm_devmem_writeintent, struct file *file, int ret)
+{
+    struct hk_bpf_devmem_event *evt;
+    __u32 rdev;
+    __u32 major, minor;
+    unsigned int fmode;
+
+    if (!file)
+        return ret;
+
+    rdev = (__u32)BPF_CORE_READ(file, f_inode, i_rdev);
+    major = hk98_major(rdev);
+    minor = hk98_minor(rdev);
+
+    if (major != HK_MEM_MAJOR2 ||
+        (minor != HK_DEVMEM_MINOR && minor != HK_DEVKMEM_MIN &&
+         minor != HK_DEVPORT_MIN))
+        return ret;   /* not a physmem/port node — nothing to report */
+
+    fmode = (unsigned int)BPF_CORE_READ(file, f_mode);
+
+    evt = bpf_ringbuf_reserve(&hk_ringbuf, sizeof(*evt), 0);
+    if (!evt)
+        return ret;   /* drop on overflow — never override the prior decision */
+
+    evt->schema_version = HK_SCHEMA_VERSION;
+    evt->event_tag      = HK_BPF_DEVMEM_ACCESS;
+    evt->timestamp_ns   = bpf_ktime_get_ns();
+    evt->requesting_pid = (__u32)(bpf_get_current_pid_tgid() >> 32);
+    evt->dev_minor      = minor;
+    evt->write_intent   = (fmode & HK_FMODE_WRITE) ? 1u : 0u;
+    evt->reserved       = 0;
+
+    bpf_ringbuf_submit(evt, 0);
+    return ret;   /* audit-only: preserve the prior LSM decision */
+}
+
 char _license[] SEC("license") = "GPL";
