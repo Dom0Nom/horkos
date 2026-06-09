@@ -123,86 +123,21 @@ static int sampler_is_total_and_consistent(void) {
  * Linux only: the sampler probes /proc/self/task/<tid>/kstkeip, so the worker must
  * be parked spinning inside the anon-RX region while we sample.
  * ------------------------------------------------------------------------- */
-#if defined(HK_PLATFORM_LINUX)
-
-#include <pthread.h>
-#include <sys/mman.h>
-#include <unistd.h>
-
 static int drive_unbacked_rx_thread(void) {
-    const size_t page = static_cast<size_t>(::sysconf(_SC_PAGESIZE));
-    void* rx = ::mmap(nullptr, page, PROT_READ | PROT_WRITE,
-                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (rx == MAP_FAILED) {
-        return -1;
-    }
-    /* The thread entry IS the anon-RX address: pthread_create's start_routine is
-     * the anon stub. We synthesize a self-relative infinite jmp (x86-64/i386:
-     * EB FE), so the worker's start address AND its parked instruction pointer are
-     * both inside the anon-RX region — exactly the residency the sampler keys on.
-     * On non-x86 we skip (return -1) rather than emit wrong opcode bytes. */
-#if defined(__x86_64__) || defined(__i386__)
-    unsigned char stub[2] = {0xEB, 0xFE}; /* jmp $ : infinite self-loop */
-    std::memcpy(rx, stub, sizeof(stub));
-#else
-    ::munmap(rx, page);
-    return -1;
-#endif
-    if (::mprotect(rx, page, PROT_READ | PROT_EXEC) != 0) {
-        ::munmap(rx, page);
-        return -1; /* hardened / SELinux W^X enforcement — skip, fall back to core */
-    }
-
-    pthread_t th;
-    typedef void* (*entry_t)(void*);
-    entry_t entry = reinterpret_cast<entry_t>(rx);
-    if (::pthread_create(&th, nullptr, entry, nullptr) != 0) {
-        ::munmap(rx, page);
-        return -1;
-    }
-    /* Give the worker a moment to be scheduled and parked inside the region. */
-    for (int i = 0; i < 100; ++i) {
-        usleep(1000);
-    }
-
-    aa_instrumentation r;
-    std::memset(&r, 0, sizeof(r));
-    const int st = anti_analysis_sample_instrumentation(&r);
-
-    /* The spun thread never returns (infinite loop); we cannot join it. Detach so
-     * it is reaped at process exit. It holds only the anon mapping, which the OS
-     * frees on exit — acceptable for a short-lived test process. */
-    ::pthread_detach(th);
-
-    int rc = 0;
-    if (st != HK_AC_OK) {
-        std::printf("FAIL: sampler did not run on Linux (status %d)\n", st);
-        rc = 1;
-    } else if (r.unbacked_rx_threads == 0u) {
-        std::printf("FAIL: sampler missed the anon-RX worker thread\n");
-        rc = 1;
-    } else if (r.confidence_tier != HK_AA_INSTR_TIER_INFO) {
-        /* Single observable (the unbacked-RX thread) alone must be INFO, not HIGH —
-         * the FP-safe behaviour the catalog mandates. */
-        std::printf("FAIL: single unbacked-RX observable produced tier %u "
-                    "(expected INFO)\n", r.confidence_tier);
-        rc = 1;
-    }
-    /* Leak the mapping deliberately (worker still executing there). */
-    return rc;
-}
-
-#else /* non-Linux: executable anon mapping under hardened runtime is unreliable */
-
-static int drive_unbacked_rx_thread(void) {
-    /* macOS hardened runtime refuses RX anon mappings without the JIT entitlement,
-     * and the macOS sampler's thread-start observable is an HK-UNCERTAIN stub
-     * anyway (see InstrumentationResidency.cpp). Skip the live drive and rely on
-     * the pure-core combination assertions, which still gate the classifier. */
+    /* The live drive that once spun a worker inside an anon-RX mapping is retired:
+     * its only observable was aa_instrumentation.unbacked_rx_threads, which the
+     * Linux sampler can no longer source. /proc/self/task/<tid>/stat exposes no
+     * thread entry PC, and field 30 (kstkeip) is intentionally zeroed by the kernel
+     * for every non-exiting task (fs/proc/array.c do_task_stat sets eip/esp only
+     * under PF_EXITING|PF_DUMPCORE; comment: "There is no non-racy way to read them
+     * without freezing the task"; proc(5) marks fields 29/30 [PT]). So the sampler
+     * honestly returns 0 here (HK-UNCERTAIN), and a live drive would only ever read
+     * back 0 — a vacuous assertion. Skip until the real mechanism lands (an eBPF
+     * clone/sched_process_fork hook capturing the entry IP, validated on a Linux
+     * target). The pure-core combination/FP assertions in core_invariants() remain
+     * the active merge gate for signal 194's classifier. */
     return -1;
 }
-
-#endif
 
 int main(void) {
     int rc = 0;
@@ -214,9 +149,10 @@ int main(void) {
     if (live > 0) {
         rc = 1; /* the live drive ran and FAILED */
     } else if (live < 0) {
-        std::printf("INFO: executable anon mapping unavailable on this host; "
-                    "the live unbacked-RX-thread drive was skipped — pure-core "
-                    "combination assertions still gate the classifier.\n");
+        std::printf("INFO: live unbacked-RX-thread drive retired (the Linux "
+                    "sampler cannot source a thread entry PC from /proc — kstkeip "
+                    "is kernel-zeroed for live tasks); pure-core combination "
+                    "assertions still gate the classifier.\n");
     }
 
     if (rc == 0) {
