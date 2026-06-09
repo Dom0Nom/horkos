@@ -114,8 +114,12 @@ struct MapRange {
 
 /* PURE: is `addr` inside any file-backed mapping? If it is inside an executable
  * mapping that is NOT file-backed, it is an "unbacked RX" address. Caller passes
- * the parsed range array; this does no I/O so the classification is testable. */
-bool addr_in_unbacked_rx(uint64_t addr, const MapRange* ranges, unsigned count) noexcept {
+ * the parsed range array; this does no I/O so the classification is testable.
+ * Retained (currently unreferenced) as the classifier for the pending eBPF entry-IP
+ * path: the clone/sched_process_fork hook supplies a captured entry IP that this
+ * function classifies against /proc/self/maps — see count_unbacked_rx_threads. */
+[[maybe_unused]] bool addr_in_unbacked_rx(uint64_t addr, const MapRange* ranges,
+                                          unsigned count) noexcept {
     if (ranges == nullptr || count == 0u) {
         return false;
     }
@@ -174,62 +178,24 @@ unsigned read_self_maps(MapRange* out, unsigned cap, bool* any_jit_path) {
     return n;
 }
 
-/* Read each thread's start address from /proc/self/task/<tid>/stat field 28
- * (startstack) — NOTE: the kernel-reported per-thread start is field "startstack"
- * for the stack; the thread entry PC is not directly in stat. We therefore use the
- * thread's CURRENT instruction pointer (field 30, "kstkeip") as the residency
- * probe: a worker thread spun out of an anon-RX agent will be executing inside that
- * mapping. This is a conservative, read-only proxy that does not require ptrace. */
+/* HK-UNCERTAIN: the unbacked-RX-thread residency observable is NOT implementable
+ * via /proc/self/task/<tid>/stat. The thread entry PC is not in stat at all, and
+ * the live instruction pointer (field 30, "kstkeip") is intentionally zeroed by the
+ * kernel for every non-exiting task: do_task_stat() in fs/proc/array.c only sets
+ *   eip = KSTK_EIP(task); esp = KSTK_ESP(task);
+ * when (permitted && (task->flags & (PF_EXITING|PF_DUMPCORE))), with the comment
+ * "esp and eip are intentionally zeroed out. There is no non-racy way to read them
+ * without freezing the task." proc(5) marks fields 29/30 [PT] for the same reason.
+ * A prior version walked field 30 as a "conservative proxy" — it reads 0 for every
+ * live thread, so it detected nothing while appearing functional. Returning 0 here
+ * honestly until the real mechanism lands (an eBPF clone/sched_process_fork hook
+ * capturing the entry IP at thread creation — Horkos has the eBPF layer; needs a
+ * Linux target to build/attach/validate CO-RE reads, per ARCHITECTURE build matrix).
+ * Refs: fs/proc/array.c do_task_stat; man proc_pid_stat(5) fields 28-30. */
 unsigned count_unbacked_rx_threads(const MapRange* ranges, unsigned range_count) {
-    DIR* d = ::opendir("/proc/self/task");
-    if (d == nullptr) {
-        return 0u;
-    }
-    unsigned hits = 0u;
-    struct dirent* e;
-    while ((e = ::readdir(d)) != nullptr) {
-        if (e->d_name[0] < '0' || e->d_name[0] > '9') {
-            continue;
-        }
-        char p[64];
-        std::snprintf(p, sizeof(p), "/proc/self/task/%s/stat", e->d_name);
-        std::FILE* f = std::fopen(p, "re");
-        if (f == nullptr) {
-            continue;
-        }
-        char buf[1024];
-        size_t rd = std::fread(buf, 1, sizeof(buf) - 1, f);
-        std::fclose(f);
-        if (rd == 0) {
-            continue;
-        }
-        buf[rd] = '\0';
-        /* stat fields after comm are space-separated; comm (field 2) is wrapped in
-         * parentheses and may contain spaces, so scan past the closing paren. */
-        char* after = std::strrchr(buf, ')');
-        if (after == nullptr) {
-            continue;
-        }
-        ++after;
-        /* Fields from here, 1-indexed at field 3 (state). kstkeip is field 30,
-         * i.e. the 28th token after the closing paren. Walk tokens. */
-        uint64_t eip = 0;
-        unsigned field = 3u;
-        char* tok = std::strtok(after, " ");
-        while (tok != nullptr) {
-            if (field == 30u) {
-                eip = std::strtoull(tok, nullptr, 10);
-                break;
-            }
-            ++field;
-            tok = std::strtok(nullptr, " ");
-        }
-        if (eip != 0 && addr_in_unbacked_rx(eip, ranges, range_count)) {
-            ++hits;
-        }
-    }
-    ::closedir(d);
-    return hits;
+    (void)ranges;
+    (void)range_count;
+    return 0u;
 }
 
 /* Frida's documented default control port (gadget/agent listen port). The client
