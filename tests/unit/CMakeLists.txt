@@ -17,6 +17,10 @@ add_executable(hk_unit_tests
     # hk_ac (timing_logic.cpp); this test exercises them with synthetic vectors — no
     # debugger, no VM, no OS hook.
     test_timing_logic.cpp
+    # anti-analysis-environment pure decision cores (signals 194 + 197). The cores
+    # live in hk_ac (anti_analysis_logic.cpp); this test exercises them with synthetic
+    # observable sets — no live tooling, no kernel, no OS API.
+    test_anti_analysis_logic.cpp
     test_minifilter_altitude.cpp
     test_thread_start_mismatch.cpp
     # win-kernel-driver-integrity pure-logic tests (no WDK; headers are plain C99).

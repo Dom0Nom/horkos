@@ -388,6 +388,38 @@ This plane is **server-internal** (game server → AC server shared-memory ring)
 | `occluder[].born_tick` | game server — tick the occluder volume started (`snapshot_schema.h`) | session lifetime | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
 | `occluder[].expire_tick` | game server — tick the occluder volume expires (exclusive) (`snapshot_schema.h`) | session lifetime | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
 
+### 11. Analysis-tooling presence (`anti_analysis_signals.h`)
+
+Source: per-signal usermode anti-analysis sensor
+(`ac/include/horkos/anti_analysis/anti_analysis_signals.h`). These mirror the
+`aa_instrumentation` (catalog signal 194 — dynamic-instrumentation/DBI residency)
+and `aa_host_tools` (catalog signal 197 — memory-editor/debugger host fingerprint)
+sub-structs and ride the `TickPayload` v5 plane (`schema.rs`) as the optional
+`anti_analysis` sub-payload. Each is a raw observable count/flag plus an advisory
+tier; all classification is server-side. The other anti-analysis catalog signals
+(190-193, 195, 196, 198) ride the selfcheck/timing/eBPF/daemon planes and are
+documented under their own categories, not here. Retention 90 days. Legal basis:
+Legitimate interest — anti-cheat enforcement. Operator: Horkos Service Operator.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `instr.unbacked_rx_threads` | usermode signal-194 sensor (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `instr.runtime_export_match` | usermode signal-194 sensor (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `instr.control_port_listener` | usermode signal-194 sensor (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `instr.jit_module_present` | usermode signal-194 sensor — FP context for server allowlisting (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `instr.confidence_tier` | usermode signal-194 sensor — advisory tier, server may override (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.debugger_window_classes` | usermode signal-197 sensor, Windows (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.known_device_objects` | usermode signal-197 sensor, Windows (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.suspicious_drivers` | usermode signal-197 sensor, Windows (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.byovd_driver_match` | usermode signal-197 sensor — cross-checks kernel driver whitelist (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.opened_handle_to_game` | usermode signal-197 sensor — from kernel ObRegisterCallbacks handle records (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `host.severity_tier` | usermode signal-197 sensor — advisory tier, server may override (`anti_analysis_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `sensors_ok` | aggregator (`anti_analysis_signals.h`) — bitmask of samplers that ran; a clear bit reads as "not collected", never "clean" | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+
+Note: `instr.reserved` is padding and carries no data (n/a). The `confidence_tier`
+(0..=2) and `severity_tier` (0..=3) are validated against their enum range on
+ingest (`server/telemetry/src/anti_analysis.rs`).
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`
@@ -399,5 +431,6 @@ This plane is **server-internal** (game server → AC server shared-memory ring)
 - Render-hook wire format: `sdk/include/horkos/render_hook_schema.h`
 - Device trust wire format: `sdk/include/horkos/device_trust_schema.h`
 - Game-state snapshot wire format: `sdk/include/horkos/snapshot_schema.h`
+- Anti-analysis sensor surface (194 + 197): `ac/include/horkos/anti_analysis/anti_analysis_signals.h`; server mirror `server/telemetry/src/anti_analysis.rs`
 - GDPR-17 rollout plan: `docs/gdpr-17-rollout.md`
 - Risk register entry: R10 in `plans/horkos-ac-drm-scaffold.md`

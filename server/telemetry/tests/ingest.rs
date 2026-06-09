@@ -127,11 +127,11 @@ async fn v1_payload_still_accepted_during_migration() {
 }
 
 #[test]
-fn schema_version_is_four() {
+fn schema_version_is_five() {
     // v2 added the aim-feature block; v3 added the three game-state binding
-    // fields (`client_mono_ns`, `client_refresh_hz`, `fired`); v4 adds the
-    // network-anomaly fields.
-    assert_eq!(SCHEMA_VERSION, 4);
+    // fields (`client_mono_ns`, `client_refresh_hz`, `fired`); v4 added the
+    // network-anomaly fields; v5 adds the optional anti-analysis sub-payload.
+    assert_eq!(SCHEMA_VERSION, 5);
 }
 
 #[test]

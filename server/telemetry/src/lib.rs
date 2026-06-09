@@ -8,6 +8,7 @@
 //!
 //! Target platforms: server.
 
+pub mod anti_analysis;
 pub mod device_trust;
 pub mod dma_forensics;
 pub mod driver_integrity;
@@ -75,6 +76,12 @@ async fn ingest(
             "schema_version {} not supported; expected {}..={}",
             payload.schema_version, MIN_SUPPORTED_SCHEMA_VERSION, SCHEMA_VERSION
         )));
+    }
+
+    // The optional anti-analysis sub-payload (v5) is range-validated when present;
+    // an out-of-range tier yields a typed error (never a panic). Absent = no signal.
+    if let Some(aa) = &payload.anti_analysis {
+        aa.validate()?;
     }
 
     tracing::Span::current()
