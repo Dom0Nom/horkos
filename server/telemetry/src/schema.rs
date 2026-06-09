@@ -15,6 +15,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::anti_analysis::AntiAnalysisPayload;
+
 /// Version of the per-tick JSON ingest contract (distinct from the kernel
 /// event schema's `HK_EVENT_SCHEMA_VERSION`). Bump on every additive change.
 ///
@@ -43,7 +45,18 @@ use serde::{Deserialize, Serialize};
 /// JSON struct (no `#[repr(C)]`, no C byte-mirror) — these network reads ride this
 /// HTTP `TickPayload` plane, NOT the C99 kernel-event ring in `event_schema.h`/
 /// `ioctl.h`, so no `hk_event_type`/IOCTL/`HK_STATIC_ASSERT` change is required.
-pub const SCHEMA_VERSION: u32 = 4; // was 3; v4 adds the network-anomaly fields.
+/// v5 adds the OPTIONAL anti-analysis-environment sub-payload (catalog signals
+/// 194 — dynamic-instrumentation/DBI residency, and 197 — memory-editor/debugger
+/// host fingerprint ONLY; the other anti-analysis signals ride the
+/// selfcheck/timing/eBPF/daemon planes). It mirrors `anti_analysis_report` in
+/// `ac/include/horkos/anti_analysis/anti_analysis_signals.h`. Following the v4
+/// network-anomaly optional-field precedent, the field is
+/// `Option<AntiAnalysisPayload>` + `#[serde(default)]`, so a v1..=v4 client
+/// omitting it deserializes to `None` (read by the server as "no anti-analysis
+/// signal", never a fabricated anomaly); the ingest handler accepts `1..=5`
+/// during the migration window. Serde JSON, no `#[repr(C)]`, no C byte-mirror, no
+/// `HK_STATIC_ASSERT` (this never rides the kernel `event_schema.h`/IOCTL plane).
+pub const SCHEMA_VERSION: u32 = 5; // was 4; v5 adds the anti-analysis sub-payload.
 
 /// One tick of player state. Fixed serialised shape.
 ///
@@ -317,6 +330,28 @@ pub struct TickPayload {
     /// catalog (the 189 FP gate).
     #[serde(default)]
     pub owner_image_hash: String,
+
+    // ---------------------------------------------------------------------
+    // anti-analysis-environment sub-payload (schema v5, catalog signals 194 +
+    // 197 ONLY).
+    //
+    // Mirrors `anti_analysis_report` in
+    // `ac/include/horkos/anti_analysis/anti_analysis_signals.h`: the
+    // dynamic-instrumentation/DBI residency fingerprint (194) and the
+    // memory-editor/debugger host fingerprint (197). The other anti-analysis
+    // catalog signals (190-193, 195, 196, 198) ride the selfcheck/timing/eBPF/
+    // daemon planes, not this field.
+    //
+    // OPTIONAL per the v4 network-anomaly precedent: `Option<_>` + `#[serde(
+    // default)]`, so a v1..=v4 client omitting it deserializes to `None` — read
+    // as "no anti-analysis signal", never a fabricated positive. The client ships
+    // raw observable counts/flags + an advisory tier; ALL scoring (allowlist
+    // matching, combined-confidence, severity tiering) is server-side. Serde JSON,
+    // no `#[repr(C)]`, no C byte-mirror, no `HK_STATIC_ASSERT` (never rides the
+    // kernel `event_schema.h`/IOCTL plane).
+    // ---------------------------------------------------------------------
+    #[serde(default)]
+    pub anti_analysis: Option<AntiAnalysisPayload>,
 }
 
 #[cfg(test)]
@@ -371,7 +406,55 @@ mod tests {
         let json = serde_json::to_string(&original).expect("serialize");
         let back: TickPayload = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(original, back);
-        assert_eq!(SCHEMA_VERSION, 4);
+        assert_eq!(SCHEMA_VERSION, 5);
+    }
+
+    /// A payload with no anti-analysis sub-payload deserializes with the field
+    /// `None` (optional-sub-payload precedent), and a v5 payload carrying it
+    /// round-trips through serde.
+    #[test]
+    fn v5_anti_analysis_sub_payload_round_trips() {
+        use crate::anti_analysis::{
+            AaHostTools, AaInstrumentation, AntiAnalysisPayload, ANTI_ANALYSIS_SCHEMA_VERSION,
+        };
+
+        // Omitted -> None.
+        let v4 = r#"{
+            "schema_version": 4,
+            "player_id": 1,
+            "tick": 1,
+            "aim_delta_x": 0.0,
+            "aim_delta_y": 0.0,
+            "input_state": 0
+        }"#;
+        let p: TickPayload = serde_json::from_str(v4).expect("v4 deserializes");
+        assert!(p.anti_analysis.is_none());
+
+        // Present -> round-trips.
+        let original = TickPayload {
+            schema_version: SCHEMA_VERSION,
+            player_id: 5,
+            tick: 77,
+            anti_analysis: Some(AntiAnalysisPayload {
+                schema_version: ANTI_ANALYSIS_SCHEMA_VERSION,
+                instr: AaInstrumentation {
+                    unbacked_rx_threads: 1,
+                    runtime_export_match: 1,
+                    confidence_tier: 2,
+                    ..AaInstrumentation::default()
+                },
+                host: AaHostTools {
+                    suspicious_drivers: 1,
+                    severity_tier: 2,
+                    ..AaHostTools::default()
+                },
+                sensors_ok: 0x3,
+            }),
+            ..TickPayload::default()
+        };
+        let json = serde_json::to_string(&original).expect("serialize");
+        let back: TickPayload = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original, back);
     }
 
     /// The `i64::MIN` no-data sentinel for signal 181 survives the round-trip

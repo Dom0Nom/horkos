@@ -30,6 +30,9 @@ pub enum TelemetryError {
     #[error("timing report schema mismatch: {0}")]
     Timing(String),
 
+    #[error("anti-analysis payload invalid: {0}")]
+    AntiAnalysis(String),
+
     #[error("rate limit exceeded")]
     RateLimited,
 
@@ -63,6 +66,10 @@ impl IntoResponse for TelemetryError {
             TelemetryError::Timing(msg) => (
                 StatusCode::BAD_REQUEST,
                 json!({ "status": "timing_schema_mismatch", "reason": msg }),
+            ),
+            TelemetryError::AntiAnalysis(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "anti_analysis_invalid", "reason": msg }),
             ),
             TelemetryError::RateLimited => (
                 StatusCode::TOO_MANY_REQUESTS,

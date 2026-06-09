@@ -194,6 +194,20 @@ foreach(_t IN LISTS HK_AIM_BYPASS_TESTS)
     add_test(NAME hk_bypass_${_t} COMMAND hk_bypass_${_t})
 endforeach()
 
+# anti-analysis-environment merge gate (guardrail #12, signal 197 — memory-editor/
+# debugger host fingerprint, Windows-only). Ships DISABLED
+# (HK_ANTI_ANALYSIS_BYPASS_ENABLED undefined): a compiled no-op that passes,
+# exactly like byovd_load.cpp. Its assertions activate when the /tdd host-tool
+# sampler + the kernel whitelist / Ob handle-record folding land. The enabled body
+# needs the AC anti-analysis surface (ac/include) + the kernel-private mirrors
+# (kernel/win/include). The repo never commits a real memory editor or BYOVD driver.
+add_executable(hk_bypass_host_memory_editor host_memory_editor.cpp)
+target_include_directories(hk_bypass_host_memory_editor PRIVATE
+    ${CMAKE_SOURCE_DIR}/sdk/include
+    ${CMAKE_SOURCE_DIR}/ac/include
+    ${CMAKE_SOURCE_DIR}/kernel/win/include)
+add_test(NAME hk_bypass_host_memory_editor COMMAND hk_bypass_host_memory_editor)
+
 # timing-side-channels merge gate (guardrail #12, signals 154/155/157/159/161). One
 # bypass test per merge-gated timing sensor group. See timing/CMakeLists.txt.
 add_subdirectory(timing)

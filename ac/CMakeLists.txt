@@ -68,6 +68,35 @@ if(HORKOS_TIMING_SENSORS)
     # in the source list on every host so the AC links identically across platforms.
 endif()
 
+# -------------------------------------------------------------------------
+# Anti-analysis environment sensors — usermode analysis-tooling presence,
+# catalog signals 194 (dynamic-instrumentation/DBI residency) and 197 (memory-
+# editor/debugger host fingerprint) ONLY. The other anti-analysis catalog signals
+# (190-193/195/196/198) live in the selfcheck/timing/eBPF/daemon domains and are
+# NOT built here. Default ON — these are core PC sensors (plan §Build wiring). The
+# cross-platform core TUs (InstrumentationResidency / anti_analysis_logic /
+# anti_analysis_collect) compile on every host with the platform-specific bodies
+# behind platform.h (guardrail #1); the Windows-only HostToolFingerprint.cpp (197)
+# compiles only when targeting Windows, exactly like the selfcheck/timing win-only
+# sources. The pure tier cores in anti_analysis_logic.cpp are host-unit-tested
+# (tests/unit/test_anti_analysis_logic.cpp). No obfuscation of these sampling
+# loops (guardrail #9).
+# -------------------------------------------------------------------------
+option(HORKOS_ANTI_ANALYSIS_SENSORS
+       "Build the anti-analysis-environment usermode sensors (194 + 197)"
+       ON)
+
+if(HORKOS_ANTI_ANALYSIS_SENSORS)
+    list(APPEND hk_ac_src
+        src/anti_analysis/InstrumentationResidency.cpp # 194 (cross sampler)
+        src/anti_analysis/anti_analysis_logic.cpp      # pure tier cores (host-tested)
+        src/anti_analysis/anti_analysis_collect.cpp)   # aggregator (+ non-Win 197 stub)
+    if(WIN32)
+        list(APPEND hk_ac_src
+            src/anti_analysis/HostToolFingerprint.cpp) # 197 (Windows-only sampler)
+    endif()
+endif()
+
 add_library(hk_ac STATIC ${hk_ac_src})
 target_include_directories(hk_ac PUBLIC include)
 # The selfcheck TUs route platform reads through platform.h (guardrail #1) and
