@@ -17,14 +17,19 @@
 
 /* Read a field of width sizeof(T) at byte offset `off` from base `p`, into `out`,
  * SEH-guarded. Returns FALSE (and leaves out untouched) on a fault or an
- * unconfirmed (sentinel) offset. */
+ * unconfirmed (sentinel) offset.
+ * HK_VAD_OFF_ZERO encodes a confirmed offset of 0 (e.g. LeftChild on 26100);
+ * it is translated to 0 here before the dereference.  A raw value of 0 is
+ * treated as unpopulated (HK_VAD_OFF_UNKNOWN) and rejected. */
 static BOOLEAN HkReadAt(const void* p, ULONG off, void* out, SIZE_T width)
 {
-    if (off == HK_VAD_OFF_UNKNOWN || p == NULL) {
+    ULONG real_off;
+    if (off == HK_VAD_OFF_UNKNOWN || off == 0u || p == NULL) {
         return FALSE;
     }
+    real_off = (off == HK_VAD_OFF_ZERO) ? 0u : off;
     __try {
-        RtlCopyMemory(out, (const UCHAR*)p + off, width);
+        RtlCopyMemory(out, (const UCHAR*)p + real_off, width);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         return FALSE;
     }
@@ -107,6 +112,14 @@ static BOOLEAN HkNormalizeVad(const HK_VAD_LAYOUT* L, const void* vad, HK_VAD_NO
 
     start_vpn = ((ULONG64)start_hi << 32) | start_lo;
     end_vpn = ((ULONG64)end_hi << 32) | end_lo;
+
+    /* A torn node under concurrent target-process mutation can produce an
+     * end_vpn that is less than start_vpn.  The resulting region_size would
+     * wrap to ~2^64 and feed wildly out-of-range values to the classifiers.
+     * Reject the node rather than propagate garbage. */
+    if (end_vpn < start_vpn) {
+        return FALSE;
+    }
 
     mm_protect = HkBits(flags, L->VadFlags_ProtectionShift, L->VadFlags_ProtectionWidth);
     vad_type_raw = HkBits(flags, L->VadFlags_VadTypeShift, L->VadFlags_VadTypeWidth);

@@ -57,14 +57,22 @@ TEST(IntegrityFinding, RecordAndStatusEnvelopeUnchanged)
 
 TEST(IntegrityFinding, RescanIoctlUsesNextVendorFunction)
 {
-    // HK_IOCTL_INTEGRITY_RESCAN is function 0x803, the next free vendor code
-    // after DRAIN(0x800)/STATUS(0x801)/POLICY(0x802). Reproduce the expected
-    // CTL_CODE value so a clash with an existing code is caught host-side.
-    // HK-TODO(schema): this macro is a kernel-private mirror until ioctl.h gains
-    // it; define the expected value locally for the pin.
+    // HK_IOCTL_INTEGRITY_RESCAN will be the next free vendor code after the
+    // currently assigned codes:
+    //   0x800 = HK_IOCTL_DRAIN_EVENTS
+    //   0x801 = HK_IOCTL_GET_STATUS
+    //   0x802 = HK_IOCTL_PUSH_POLICY
+    //   0x803 = HK_IOCTL_DRAIN_MEM_EVENTS  (schema v3 — NOT free)
+    //   0x804 = HK_IOCTL_SCAN_PROCESS       (schema v3 — NOT free)
+    // The next free function code is therefore 0x805.
+    // HK-TODO(schema): once HK_IOCTL_INTEGRITY_RESCAN is added to ioctl.h,
+    // replace this local expected value with the macro and add it to the
+    // NE checks below.
     const uint32_t expected =
-        HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x803, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS);
+        HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x805, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS);
     EXPECT_NE(expected, HK_IOCTL_DRAIN_EVENTS);
     EXPECT_NE(expected, HK_IOCTL_GET_STATUS);
     EXPECT_NE(expected, HK_IOCTL_PUSH_POLICY);
+    EXPECT_NE(expected, HK_IOCTL_DRAIN_MEM_EVENTS);
+    EXPECT_NE(expected, HK_IOCTL_SCAN_PROCESS);
 }

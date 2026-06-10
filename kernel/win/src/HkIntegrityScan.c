@@ -131,6 +131,13 @@ void HkIntegrityScanAll(PHK_DEVICE_CONTEXT Ctx)
     HkIntegrityEmit(0u, HK_INTEGRITY_OK, 0ull);
 }
 
+/* Guards against double-queueing the single shared IO_WORKITEM from both the
+ * timer DPC and HkIntegrityRequestRescan.  A double-queue of one IO_WORKITEM
+ * is undefined behavior per WDK documentation.  Both call sites CAS 0->1
+ * before calling IoQueueWorkItem; the worker resets to 0 on exit so the next
+ * fire or rescan can re-arm. */
+static volatile LONG g_ScanQueued;
+
 _Function_class_(IO_WORKITEM_ROUTINE)
 static VOID HkIntegrityWorker(_In_ PDEVICE_OBJECT DeviceObject, _In_opt_ PVOID Context)
 {
@@ -140,9 +147,11 @@ static VOID HkIntegrityWorker(_In_ PDEVICE_OBJECT DeviceObject, _In_opt_ PVOID C
     NT_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     if (ctx == NULL || ctx->IntegrityArmed == 0) {
+        InterlockedExchange(&g_ScanQueued, 0);
         return;
     }
     HkIntegrityScanAll(ctx);
+    InterlockedExchange(&g_ScanQueued, 0);
 }
 
 _Function_class_(KDEFERRED_ROUTINE)
@@ -160,8 +169,12 @@ static VOID HkIntegrityDpc(_In_ struct _KDPC* Dpc,
     if (ctx == NULL || ctx->IntegrityArmed == 0 || ctx->IntegrityWorkItem == NULL) {
         return;
     }
-    /* DISPATCH_LEVEL: queue only, never walk lists here. */
-    IoQueueWorkItem(ctx->IntegrityWorkItem, HkIntegrityWorker, DelayedWorkQueue, ctx);
+    /* DISPATCH_LEVEL: queue only, never walk lists here.  The CAS ensures the
+     * shared work item is not queued while already in flight (double-queue is
+     * undefined behavior per WDK). */
+    if (InterlockedCompareExchange(&g_ScanQueued, 1, 0) == 0) {
+        IoQueueWorkItem(ctx->IntegrityWorkItem, HkIntegrityWorker, DelayedWorkQueue, ctx);
+    }
 }
 
 _Use_decl_annotations_
@@ -244,8 +257,11 @@ NTSTATUS HkIntegrityRequestRescan(PHK_DEVICE_CONTEXT Ctx)
     if (Ctx == NULL || Ctx->IntegrityArmed == 0 || Ctx->IntegrityWorkItem == NULL) {
         return STATUS_DEVICE_NOT_READY;
     }
-    /* Queue the same worker the timer uses. Callable at <= DISPATCH_LEVEL; the
-     * IOCTL path is PASSIVE but this stays DISPATCH-safe for symmetry. */
+    /* Queue the same worker the timer DPC uses.  The CAS prevents double-queueing
+     * the shared work item when the periodic fire and an IOCTL rescan race. */
+    if (InterlockedCompareExchange(&g_ScanQueued, 1, 0) != 0) {
+        return STATUS_SUCCESS; /* scan already queued or in flight — no-op. */
+    }
     IoQueueWorkItem(Ctx->IntegrityWorkItem, HkIntegrityWorker, DelayedWorkQueue, Ctx);
     return STATUS_SUCCESS;
 }

@@ -29,6 +29,14 @@
  * left at this value MUST NOT be dereferenced; the table is rejected wholesale. */
 #define HK_VAD_OFF_UNKNOWN ((ULONG)0xFFFFFFFFu)
 
+/* Sentinel: confirmed offset whose numeric value is 0.  Needed because 0 is a
+ * legitimate struct offset (e.g. VadShort_LeftChild on build 26100) but is also
+ * the zero-initialised default of an unpopulated table entry.  Set a field to
+ * HK_VAD_OFF_ZERO to assert "this is really offset 0"; the accessor in VadWalk.c
+ * translates it back to 0 before the dereference, and HkVadLayoutComplete treats
+ * raw 0 as unpopulated (== HK_VAD_OFF_UNKNOWN for the completeness check). */
+#define HK_VAD_OFF_ZERO    ((ULONG)0xFFFFFFFEu)
+
 /* Per-build offset table. All offsets are byte offsets from the start of the
  * named structure. A field at HK_VAD_OFF_UNKNOWN invalidates the whole table. */
 typedef struct _HK_VAD_LAYOUT {
@@ -100,7 +108,7 @@ static const HK_VAD_LAYOUT kHkVadLayouts[] = {
         /* VadShort_StartingVpnHigh */ 0x20,
         /* VadShort_EndingVpnHigh   */ 0x21,
         /* VadShort_VadFlags        */ 0x30,
-        /* VadShort_LeftChild       */ 0x00,
+        /* VadShort_LeftChild       */ HK_VAD_OFF_ZERO,
         /* VadShort_RightChild      */ 0x08,
         /* VadFlags_ProtectionShift */ 7,
         /* VadFlags_ProtectionWidth */ 5,
@@ -108,7 +116,7 @@ static const HK_VAD_LAYOUT kHkVadLayouts[] = {
         /* VadFlags_VadTypeShift    */ 4,
         /* VadFlags_VadTypeWidth    */ 3,
         /* Vad_Subsection           */ 0x48,
-        /* Subsection_ControlArea   */ 0x00,
+        /* Subsection_ControlArea   */ HK_VAD_OFF_ZERO,
         /* ControlArea_FilePointer  */ 0x40,
         /* PebLdr_InLoadOrder       */ 0x10,
         /* PebLdr_InMemoryOrder     */ 0x20,
@@ -120,19 +128,39 @@ static const HK_VAD_LAYOUT kHkVadLayouts[] = {
     },
 };
 
-/* TRUE only if every offset in the table is a confirmed (non-sentinel) value. A
- * single HK_VAD_OFF_UNKNOWN rejects the whole table — partial layouts are unsafe. */
+/* TRUE only if every field in the table is a confirmed (non-sentinel) value.
+ * HK_VAD_OFF_UNKNOWN rejects the whole table — partial layouts are unsafe.
+ * Raw 0 in a byte-offset field also rejects: it is indistinguishable from a
+ * zero-initialised (unpopulated) entry.  Legitimate offset 0 must be expressed
+ * as HK_VAD_OFF_ZERO (which != 0 and != HK_VAD_OFF_UNKNOWN).
+ * Note: shift/width fields (VadFlags_*Shift, VadFlags_*Width) live after the
+ * byte-offset block; a shift of 0 is legitimate, so the loop uses HK_VAD_OFF_UNKNOWN
+ * as the sole sentinel for those fields.  Byte-offset fields that need offset 0
+ * must use HK_VAD_OFF_ZERO — HkReadAt translates it before the dereference. */
 static __forceinline BOOLEAN HkVadLayoutComplete(const HK_VAD_LAYOUT* L)
 {
-    const ULONG* p = (const ULONG*)&L->Eprocess_VadRoot;
-    const ULONG* end = (const ULONG*)((const UCHAR*)L + sizeof(HK_VAD_LAYOUT));
+    const ULONG* p;
+    const ULONG* end;
+
     if (L == NULL) {
         return FALSE;
     }
+    p   = (const ULONG*)&L->Eprocess_VadRoot;
+    end = (const ULONG*)((const UCHAR*)L + sizeof(HK_VAD_LAYOUT));
     for (; p < end; ++p) {
         if (*p == HK_VAD_OFF_UNKNOWN) {
             return FALSE;
         }
+    }
+    /* Separately verify that every byte-offset field that could legitimately be 0
+     * uses HK_VAD_OFF_ZERO, not the zero-initialisation default.  The only fields
+     * in this struct whose confirmed value is 0 are byte offsets, not shifts/widths
+     * (shifts of 0 are legitimate; the check below covers only the known-problematic
+     * structural offsets). */
+    if (L->VadShort_LeftChild == 0u  ||
+        L->VadShort_RightChild == 0u ||
+        L->Subsection_ControlArea == 0u) {
+        return FALSE;
     }
     return TRUE;
 }

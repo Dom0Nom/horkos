@@ -51,7 +51,6 @@ void HkSsdtIntegrityScan(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
     ULONG     i;
     uint64_t  tableBase;
 
-    UNREFERENCED_PARAMETER(Ctx);
     NT_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     if (Map == NULL || Map->Count == 0) {
@@ -59,8 +58,16 @@ void HkSsdtIntegrityScan(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
     }
 
     desc = &KeServiceDescriptorTable[0];
-    table = desc->Base;
-    limit = desc->Limit;
+    /* Guard the descriptor field reads with __try, matching the pattern in the
+     * sibling SyscallIntegrity.c (HkSyscallEtwArm and HkSsdtValidate): a tampered
+     * descriptor pointer could make Base or Limit land in unmapped memory. */
+    __try {
+        table = desc->Base;
+        limit = desc->Limit;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        InterlockedExchange(&Ctx->IntegrityScanFaulted, 1);
+        return;
+    }
     if (table == NULL || limit == 0) {
         return;
     }
