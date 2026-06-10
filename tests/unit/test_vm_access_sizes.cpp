@@ -76,21 +76,22 @@ TEST(VmAccessSchema, PayloadSizesMatchWireLayout)
 
 TEST(VmAccessSchema, LargePayloadsExceedCurrentEnvelope)
 {
-    // The flagged blocker (HK_VMWATCH_SCHEMA_READY): the two larger payloads do NOT
-    // fit the current 16-byte payload max, so they cannot cross the existing drain
-    // envelope until the Schema phase grows HK_EVENT_PAYLOAD_MAX and re-pins the
-    // record. Asserting the mismatch documents WHY the kernel emit sites are gated.
-    EXPECT_EQ(HK_EVENT_PAYLOAD_MAX, 16u);
+    // Schema v5 (process-genealogy) grew HK_EVENT_PAYLOAD_MAX 16->24. The 24-byte
+    // handle-provenance payload now fits the main-ring envelope; the 32-byte
+    // vm_access payload still exceeds it and must ride a large-record plane (like
+    // the mem-injection plane) when its domain lands. Asserting the boundary
+    // documents which vm-access payloads can cross the 16-byte ring and which cannot.
+    EXPECT_EQ(HK_EVENT_PAYLOAD_MAX, 24u);
     EXPECT_GT(sizeof(hk_event_vm_access_replica),
               static_cast<size_t>(HK_EVENT_PAYLOAD_MAX));
-    EXPECT_GT(sizeof(hk_event_handle_provenance_replica),
+    EXPECT_LE(sizeof(hk_event_handle_provenance_replica),
               static_cast<size_t>(HK_EVENT_PAYLOAD_MAX));
 }
 
 TEST(VmAccessSchema, EnvelopeUnchangedPreSchema)
 {
-    // No record/status growth has happened in THIS domain (the Schema phase owns the
-    // envelope edit). Re-pin so an accidental local change is caught host-side.
-    EXPECT_EQ(sizeof(hk_event_record), 40u);
+    // The record grew 40->48 with the v5 payload-max bump (process-genealogy);
+    // hk_status is unchanged. Re-pin so an accidental further change is caught.
+    EXPECT_EQ(sizeof(hk_event_record), 48u);
     EXPECT_EQ(sizeof(hk_status), 32u);
 }

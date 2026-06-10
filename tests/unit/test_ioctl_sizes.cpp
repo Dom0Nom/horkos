@@ -12,7 +12,7 @@
 #include <horkos/ioctl.h>
 
 TEST(IoctlWire, EventRecordSize) {
-    EXPECT_EQ(sizeof(hk_event_record), 40u);
+    EXPECT_EQ(sizeof(hk_event_record), 48u); /* v5: payload max grew 16->24. */
 }
 
 TEST(IoctlWire, DrainHeaderSize) {
