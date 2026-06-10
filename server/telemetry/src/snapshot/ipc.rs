@@ -97,6 +97,38 @@ pub const RECORD_HEAD_BYTES: usize = core::mem::size_of::<HkSnapshotRecord>();
 /// Bytes per occluder trailer entry.
 pub const OCCLUDER_BYTES: usize = core::mem::size_of::<HkOccluderVolume>();
 
+/// Mirrors `HK_SNAP_RING_MAGIC` ('HKSP').
+pub const SNAP_RING_MAGIC: u32 = 0x484B_5350;
+
+/// `#[repr(C)]` mirror of `HkSnapshotSlotHeader` (per-slot seqlock + payload len).
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct HkSnapshotSlotHeader {
+    pub seq: u64,
+    pub payload_len: u32,
+    pub _pad: u32,
+}
+
+/// `#[repr(C)]` mirror of `HkSnapshotRingHeader` (shm object header at offset 0).
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct HkSnapshotRingHeader {
+    pub magic: u32,
+    pub schema_version: u32,
+    pub slot_count: u32,
+    pub slot_stride: u32,
+    pub write_seq: u64,
+    pub _reserved: u64,
+}
+
+const _: () = assert!(core::mem::size_of::<HkSnapshotSlotHeader>() == 16);
+const _: () = assert!(core::mem::size_of::<HkSnapshotRingHeader>() == 32);
+
+/// Byte size of the ring-header prefix.
+pub const RING_HEADER_BYTES: usize = core::mem::size_of::<HkSnapshotRingHeader>();
+/// Byte size of the per-slot seqlock header.
+pub const SLOT_HEADER_BYTES: usize = core::mem::size_of::<HkSnapshotSlotHeader>();
+
 /// Backend-agnostic interface to attach a published snapshot ring. The two
 /// implementations (`backends/posix.rs`, `backends/win.rs`) own the only platform
 /// syscalls (guardrail #1) and are selected by `cfg`. A backend hands the reader a
@@ -109,12 +141,182 @@ pub const OCCLUDER_BYTES: usize = core::mem::size_of::<HkOccluderVolume>();
 /// flag. The trait and parse below are the stable surface; the backends ship behind
 /// the `gamestate-ipc-shm` feature and remain stubbed until the per-title integration
 /// contract is fixed with the user. Do NOT wire a live ring to production without that.
-pub trait SnapshotRingAttach: Send {
-    /// Attach the named ring read-only. Returns a handle that yields successive raw
-    /// slot byte-views via `next_slot`.
-    fn attach(name: &str) -> Result<Self, TelemetryError>
-    where
-        Self: Sized;
+pub trait SnapshotRingAttach: Send + Sized {
+    /// Attach the named ring read-only.
+    fn attach(name: &str) -> Result<Self, TelemetryError>;
+
+    /// Copy the next published frame's payload into `buf`, returning `true` if a
+    /// fresh, untorn frame was delivered (else `false` — no new frame, or every
+    /// new generation was torn and skipped). Never blocks; never parses.
+    fn next_frame(&mut self, buf: &mut Vec<u8>) -> Result<bool, TelemetryError>;
+}
+
+/// Volatile read of the ring header. SAFETY: `base` must point at a readable
+/// mapping of at least `RING_HEADER_BYTES`, valid for the call's duration.
+///
+/// # Safety
+/// See above — caller guarantees `base` is a live read-only mapping.
+pub unsafe fn read_ring_header(base: *const u8) -> HkSnapshotRingHeader {
+    core::ptr::read_volatile(base as *const HkSnapshotRingHeader)
+}
+
+/// Seqlock-read one slot's payload into `buf`. Returns `Ok(true)` on a stable
+/// (even-sequence, unchanged-across-copy) frame, `Ok(false)` if the slot was
+/// torn (producer mid-write or lapped). Bounds every read against `map_len`.
+///
+/// # Safety
+/// `base` must point at a live read-only mapping of exactly `map_len` bytes for
+/// the call's duration; `slot_stride`/`slot_count` are the validated ring
+/// geometry. The function never forms a `&[u8]` over the live mapping; it reads
+/// the seqlock words volatile and copies the payload with `copy_nonoverlapping`,
+/// with acquire fences around the copy so the payload read cannot be reordered
+/// past the sequence checks.
+pub unsafe fn seqlock_read_slot(
+    base: *const u8,
+    map_len: usize,
+    slot_count: u32,
+    slot_stride: u32,
+    slot_idx: u32,
+    buf: &mut Vec<u8>,
+) -> Result<bool, TelemetryError> {
+    use core::sync::atomic::{fence, Ordering};
+
+    if slot_idx >= slot_count {
+        return Err(TelemetryError::InvalidPayload(
+            "ring slot index out of range".into(),
+        ));
+    }
+    let slot_off = RING_HEADER_BYTES
+        .checked_add(
+            (slot_idx as usize)
+                .checked_mul(slot_stride as usize)
+                .ok_or_else(|| {
+                    TelemetryError::InvalidPayload("ring slot offset overflow".into())
+                })?,
+        )
+        .ok_or_else(|| TelemetryError::InvalidPayload("ring slot offset overflow".into()))?;
+    let slot_end = slot_off
+        .checked_add(slot_stride as usize)
+        .ok_or_else(|| TelemetryError::InvalidPayload("ring slot end overflow".into()))?;
+    if slot_end > map_len {
+        return Err(TelemetryError::InvalidPayload(
+            "ring slot exceeds mapping".into(),
+        ));
+    }
+
+    let slot_ptr = base.add(slot_off);
+    let hdr: HkSnapshotSlotHeader =
+        core::ptr::read_volatile(slot_ptr as *const HkSnapshotSlotHeader);
+    // Odd sequence = producer is mid-write. Torn.
+    if hdr.seq & 1 == 1 {
+        return Ok(false);
+    }
+    let payload_cap = slot_stride as usize - SLOT_HEADER_BYTES;
+    let payload_len = hdr.payload_len as usize;
+    if payload_len > payload_cap {
+        return Err(TelemetryError::InvalidPayload(
+            "ring slot payload_len exceeds stride".into(),
+        ));
+    }
+
+    fence(Ordering::Acquire);
+    buf.clear();
+    buf.reserve(payload_len);
+    let payload_ptr = slot_ptr.add(SLOT_HEADER_BYTES);
+    core::ptr::copy_nonoverlapping(payload_ptr, buf.as_mut_ptr(), payload_len);
+    buf.set_len(payload_len);
+    fence(Ordering::Acquire);
+
+    // Re-read the sequence: a change (or odd) means the producer touched the
+    // slot during our copy — the bytes we hold are torn, discard them.
+    let seq2 = core::ptr::read_volatile(slot_ptr as *const u64);
+    if seq2 != hdr.seq {
+        buf.clear();
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+/// Validate a ring header's geometry against the mapped size. Returns the
+/// validated `(slot_count, slot_stride)` or a typed error (fail-closed — a
+/// forged/short header never yields a reader that indexes out of bounds).
+pub fn validate_ring_geometry(
+    hdr: &HkSnapshotRingHeader,
+    map_len: usize,
+) -> Result<(u32, u32), TelemetryError> {
+    if hdr.magic != SNAP_RING_MAGIC {
+        return Err(TelemetryError::InvalidPayload(format!(
+            "snapshot ring bad magic {:#x}",
+            hdr.magic
+        )));
+    }
+    if hdr.schema_version != SNAPSHOT_SCHEMA_VERSION {
+        return Err(TelemetryError::InvalidPayload(format!(
+            "snapshot ring schema_version {} != {}",
+            hdr.schema_version, SNAPSHOT_SCHEMA_VERSION
+        )));
+    }
+    if hdr.slot_count < 2 {
+        return Err(TelemetryError::InvalidPayload(
+            "snapshot ring needs >= 2 slots".into(),
+        ));
+    }
+    if (hdr.slot_stride as usize) < SLOT_HEADER_BYTES + RECORD_HEAD_BYTES {
+        return Err(TelemetryError::InvalidPayload(
+            "snapshot ring slot_stride too small for a frame head".into(),
+        ));
+    }
+    let need = (hdr.slot_count as usize)
+        .checked_mul(hdr.slot_stride as usize)
+        .and_then(|s| s.checked_add(RING_HEADER_BYTES))
+        .ok_or_else(|| TelemetryError::InvalidPayload("snapshot ring size overflow".into()))?;
+    if need > map_len {
+        return Err(TelemetryError::InvalidPayload(format!(
+            "snapshot ring claims {} bytes, mapping is {}",
+            need, map_len
+        )));
+    }
+    Ok((hdr.slot_count, hdr.slot_stride))
+}
+
+/// Run a blocking reader loop on the calling (dedicated std) thread: poll the
+/// attached ring, parse each fresh frame, and hand each `Snapshot` to `sink`.
+/// `sink` returns `false` to stop the loop (e.g. the pipeline receiver closed).
+/// Returns when `sink` asks to stop or `stop` is set. The blocking shm polling
+/// lives here, OFF the tokio workers (guardrail #8); the sink applies natural
+/// backpressure (a `blocking_send` into the pipeline channel).
+pub fn run_reader<A, F>(
+    mut ring: A,
+    mut sink: F,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    idle_poll: std::time::Duration,
+) where
+    A: SnapshotRingAttach,
+    F: FnMut(Snapshot) -> bool,
+{
+    let mut buf: Vec<u8> = Vec::with_capacity(RECORD_HEAD_BYTES);
+    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+        match ring.next_frame(&mut buf) {
+            Ok(true) => match parse_slot(&buf) {
+                Ok(snap) => {
+                    if !sink(snap) {
+                        return; // pipeline receiver gone / asked to stop
+                    }
+                }
+                Err(e) => {
+                    // A frame that passed the seqlock but fails content
+                    // validation is a forged/corrupt publisher — count via log,
+                    // never crash the reader (shm trust boundary).
+                    tracing::warn!(error = %e, "snapshot ring frame rejected by parse_slot");
+                }
+            },
+            Ok(false) => std::thread::sleep(idle_poll),
+            Err(e) => {
+                tracing::error!(error = %e, "snapshot ring reader stopping");
+                return;
+            }
+        }
+    }
 }
 
 /// Parse a raw ring-slot byte buffer into a safe `Snapshot`. This is the trust

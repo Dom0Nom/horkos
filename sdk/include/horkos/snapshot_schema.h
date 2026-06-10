@@ -123,3 +123,52 @@ typedef struct HkOccluderVolume {
  * Max align 8, 40 % 8 == 0, no tail pad. */
 HK_STATIC_ASSERT(sizeof(HkOccluderVolume) == 40,
     "HkOccluderVolume size mismatch — update snapshot/ipc.rs HkOccluderVolume in lockstep");
+
+/* -------------------------------------------------------------------------
+ * Shared-memory ring transport (the publish/sequence handshake that was the
+ * HK-UNCERTAIN(ipc-contract) gap). This is HORKOS-OWNED protocol, not a
+ * proprietary engine API: a game server links this header and publishes frames;
+ * Horkos telemetry attaches the same shm object read-only.
+ *
+ * Single-producer (the game server), single-consumer (the telemetry reader).
+ * The ring is a header followed by `slot_count` fixed-stride slots. Each slot
+ * begins with a u64 SEQLOCK word, then the slot payload (one HkSnapshotRecord
+ * head + its HkOccluderVolume[occluder_count] trailer, both within the stride).
+ *
+ * Publish protocol (producer, per frame):
+ *   slot = ring->write_seq % slot_count;
+ *   slot->seq = odd  (write_seq*2+1)   // mark "writing"  (store, then fence)
+ *   memcpy(slot->payload, frame, payload_len);
+ *   slot->seq = even (write_seq*2+2)   // mark "stable, generation write_seq+1"
+ *   ring->write_seq += 1;              // publish (store, release)
+ *
+ * Read protocol (consumer): track the last consumed write_seq; when the ring's
+ * write_seq advances, for each new generation seqlock-read the slot — read seq,
+ * copy the payload, re-read seq; accept only if seq is EVEN and unchanged
+ * across the copy, else the frame was torn (producer mid-write or lapped) and
+ * is skipped, never parsed. parse_slot then re-validates the payload contents.
+ * ------------------------------------------------------------------------- */
+#define HK_SNAP_RING_MAGIC 0x484B5350u /* 'HKSP' little-endian. */
+
+/* Per-slot seqlock+payload header. The payload (HkSnapshotRecord + occluder
+ * trailer) follows in the slot's stride bytes. */
+typedef struct HkSnapshotSlotHeader {
+    uint64_t seq;          /* seqlock: even = stable generation, odd = writing. */
+    uint32_t payload_len;  /* bytes of valid payload after this header. */
+    uint32_t _pad;         /* must be zero; keeps payload 8-aligned. */
+} HkSnapshotSlotHeader;
+HK_STATIC_ASSERT(sizeof(HkSnapshotSlotHeader) == 16,
+    "HkSnapshotSlotHeader size mismatch — update snapshot/ipc.rs in lockstep");
+
+/* Ring header at offset 0 of the shm object. The slots begin at sizeof(this)
+ * and are `slot_stride` bytes apart (stride includes the slot header). */
+typedef struct HkSnapshotRingHeader {
+    uint32_t magic;          /* == HK_SNAP_RING_MAGIC. */
+    uint32_t schema_version; /* == HK_SNAPSHOT_SCHEMA_VERSION. */
+    uint32_t slot_count;     /* number of ring slots (>= 2 so a reader never reads the slot being written). */
+    uint32_t slot_stride;    /* bytes per slot: sizeof(HkSnapshotSlotHeader) + max payload. */
+    uint64_t write_seq;      /* monotonic published-frame count; slot = (write_seq-1) % slot_count. */
+    uint64_t _reserved;      /* must be zero. */
+} HkSnapshotRingHeader;
+HK_STATIC_ASSERT(sizeof(HkSnapshotRingHeader) == 32,
+    "HkSnapshotRingHeader size mismatch — update snapshot/ipc.rs in lockstep");

@@ -141,6 +141,13 @@ impl PipelineHandle {
         self.tick_txs.clone()
     }
 
+    /// Sharded snapshot senders, indexed by `local_player_id % len`. A live
+    /// ring reader routes each frame to its player's shard via these (mirrors
+    /// the tick sharding so one player's tick + snapshot land on one task).
+    pub fn snapshot_senders(&self) -> Vec<mpsc::Sender<Snapshot>> {
+        self.snap_txs.clone()
+    }
+
     /// Route one authoritative snapshot to its player's shard. Returns false
     /// if the shard backlog dropped it (counted).
     pub async fn send_snapshot(&self, snap: Snapshot) -> bool {

@@ -57,6 +57,13 @@ pub fn build_app() -> Result<(Router, PipelineHandle), ApiError> {
     let handle = pipeline::spawn(PipelineConfig::default(), Arc::new(store));
     let sink = Arc::new(TickSink::new(handle.tick_senders()));
 
+    // Live authoritative-snapshot source: attach the shm ring named by
+    // HORKOS_SNAPSHOT_RING and run a dedicated reader thread that routes each
+    // frame to its player's shard. Absent/unattachable = no live snapshots
+    // (the gamestate analyzers then only see fixture/test traffic and
+    // unpaired sessions surface as the Review-tier pairing anomaly).
+    spawn_snapshot_reader(&handle);
+
     let router = Router::new()
         .merge(routes::healthz::router_with_pipeline(handle.alive.clone()))
         .merge(routes::account::router())
@@ -65,4 +72,51 @@ pub fn build_app() -> Result<(Router, PipelineHandle), ApiError> {
         .merge(license_server::router())
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES));
     Ok((router, handle))
+}
+
+/// Attach the live snapshot ring (if `HORKOS_SNAPSHOT_RING` is set) and spawn a
+/// dedicated reader thread that forwards frames into the pipeline's sharded
+/// snapshot channels. A blocking `try_send` on a full shard drops that frame
+/// (counted by the pipeline); snapshots are high-rate, and a dropped one just
+/// means that tick goes unpaired — never a crash, never silent unbounded growth.
+fn spawn_snapshot_reader(handle: &PipelineHandle) {
+    let Some(name) = std::env::var_os("HORKOS_SNAPSHOT_RING") else {
+        return;
+    };
+    let name = name.to_string_lossy().into_owned();
+    let senders = handle.snapshot_senders();
+    if senders.is_empty() {
+        return;
+    }
+    use telemetry::snapshot::ipc::SnapshotRingAttach as _;
+    let ring = match telemetry::snapshot::backends::DefaultRingAttach::attach(&name) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::warn!(%name, error = %e, "snapshot ring attach failed; no live snapshots");
+            return;
+        }
+    };
+    tracing::info!(%name, "snapshot ring attached; starting reader thread");
+    std::thread::Builder::new()
+        .name("horkos-snapshot-reader".into())
+        .spawn(move || {
+            let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let n = senders.len() as u64;
+            telemetry::snapshot::ipc::run_reader(
+                ring,
+                move |snap| {
+                    let idx = (snap.local_player_id % n) as usize;
+                    // try_send: drop on a full shard (counted downstream), never
+                    // block the reader on one slow shard.
+                    match senders[idx].try_send(snap) {
+                        Ok(()) => true,
+                        Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => true,
+                        Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => false,
+                    }
+                },
+                stop,
+                std::time::Duration::from_millis(1),
+            );
+        })
+        .ok();
 }
