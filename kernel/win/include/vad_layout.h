@@ -66,25 +66,57 @@ typedef struct _HK_VAD_LAYOUT {
     /* _ETHREAD — only used if the documented Zw path is unavailable (see
      * ExecOrigin.c); preferred path is ZwQueryInformationThread. */
     ULONG Ethread_Win32StartAddress;
+
+    /* _PEB.Ldr pointer offset (to reach _PEB_LDR_DATA from PsGetProcessPeb). */
+    ULONG Peb_Ldr;
 } HK_VAD_LAYOUT, *PHK_VAD_LAYOUT;
 
 /*
- * The allow-list. EMPTY by design (HK-UNCERTAIN) — populate on the Windows box
- * once offsets are confirmed per build. Keeping a single all-UNKNOWN exemplar so
- * the table's shape is documented; it is rejected by the validity check below.
+ * The allow-list. Offsets are PDB-derived (Vergilius Project,
+ * vergiliusproject.com) for the listed build; any build NOT present here fails
+ * closed (HkVadLayoutForCurrentBuild returns NULL). Append confirmed builds here.
+ *
+ * HK-UNCERTAIN (still load-bearing): these values are from a community PDB
+ * database, not run-time-verified on this host. Before ENABLING emit on the box,
+ * confirm each against `dt nt!_MMVAD`, `dt nt!_EPROCESS VadRoot`, etc. on the
+ * exact running build; the SEH guards in VadWalk.c and the per-build gate remain
+ * the safety net (a wrong/changed offset degrades to "skip node", not a bugcheck).
+ *
+ * Windows 11 24H2 (NtBuildNumber 26100) — the dominant build as of 2026.
+ *   _EPROCESS.VadRoot 0x558; _MMVAD_SHORT {VadNode@0x0 (Left 0x0/Right 0x8),
+ *   StartingVpn 0x18, EndingVpn 0x1C, StartingVpnHigh 0x20, EndingVpnHigh 0x21,
+ *   LongFlags 0x30}; _MMVAD_FLAGS {VadType bit4 w3, Protection bit7 w5,
+ *   PrivateMemory bit21 w1}; _MMVAD.Subsection 0x48; _SUBSECTION.ControlArea 0x0;
+ *   _CONTROL_AREA.FilePointer 0x40; _PEB.Ldr 0x18; _PEB_LDR_DATA {InLoadOrder
+ *   0x10, InMemoryOrder 0x20, InInitOrder 0x30}; _LDR_DATA_TABLE_ENTRY {DllBase
+ *   0x30, FullDllName 0x48}; _ETHREAD.Win32StartAddress 0x560.
  */
 static const HK_VAD_LAYOUT kHkVadLayouts[] = {
     {
-        /* BuildNumber */ 0,
-        /* every offset UNKNOWN -> table invalid -> fails closed. */
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN, HK_VAD_OFF_UNKNOWN,
-        HK_VAD_OFF_UNKNOWN,
+        /* BuildNumber              */ 26100,
+        /* Eprocess_VadRoot         */ 0x558,
+        /* VadShort_StartingVpn     */ 0x18,
+        /* VadShort_EndingVpn       */ 0x1C,
+        /* VadShort_StartingVpnHigh */ 0x20,
+        /* VadShort_EndingVpnHigh   */ 0x21,
+        /* VadShort_VadFlags        */ 0x30,
+        /* VadShort_LeftChild       */ 0x00,
+        /* VadShort_RightChild      */ 0x08,
+        /* VadFlags_ProtectionShift */ 7,
+        /* VadFlags_ProtectionWidth */ 5,
+        /* VadFlags_PrivateMemShift */ 21,
+        /* VadFlags_VadTypeShift    */ 4,
+        /* VadFlags_VadTypeWidth    */ 3,
+        /* Vad_Subsection           */ 0x48,
+        /* Subsection_ControlArea   */ 0x00,
+        /* ControlArea_FilePointer  */ 0x40,
+        /* PebLdr_InLoadOrder       */ 0x10,
+        /* PebLdr_InMemoryOrder     */ 0x20,
+        /* PebLdr_InInitOrder       */ 0x30,
+        /* LdrEntry_DllBase         */ 0x30,
+        /* LdrEntry_FullDllName     */ 0x48,
+        /* Ethread_Win32StartAddress*/ 0x560,
+        /* Peb_Ldr                  */ 0x18,
     },
 };
 

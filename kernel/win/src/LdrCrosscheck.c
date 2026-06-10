@@ -101,25 +101,16 @@ ULONG HkCollectLdrBases(PHK_MEM_SCAN_CTX Ctx)
     if (peb == NULL) {
         return 0;
     }
-    /* PEB.Ldr is at the documented PEB offset; read the Ldr pointer. We use the
-     * InLoadOrder head offset as the Ldr struct base reference. HK-UNCERTAIN: PEB
-     * layout is documented but the Ldr field offset is build-stable yet confirmed
-     * on the box. Read Ldr via the well-known PEB+0x18 (x64) is avoided here in
-     * favour of the layout table once it carries Peb_Ldr; for now, fail closed if
-     * the InLoadOrder head cannot be resolved. */
-    __try {
-        /* PEB->Ldr pointer: layout offset not yet modelled => treat peb-relative
-         * InLoadOrder list directly is unsafe; require the offsets table. */
-        ldr = NULL;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        ldr = NULL;
+    /* Read the PEB.Ldr pointer at the build-specific offset (SEH-guarded). */
+    if (!HkReadField(peb, L->Peb_Ldr, &ldr, sizeof(ldr)) || ldr == NULL) {
+        return 0; /* fail closed if Ldr cannot be resolved. */
     }
-    if (ldr == NULL) {
-        return 0; /* fail closed until the PEB.Ldr offset is confirmed. */
-    }
+    /* Walk ONLY InLoadOrderModuleList: the three PEB.Ldr lists share identical
+     * membership (they differ only in ordering), so the in-load-order set is the
+     * complete loaded-module base set — and its in-entry link is at
+     * LDR_DATA_TABLE_ENTRY+0 (the entry base), which HkWalkLdrList assumes. The
+     * other two lists would need their own in-entry link offsets and add nothing. */
     HkWalkLdrList(Ctx, ldr, L->PebLdr_InLoadOrder);
-    HkWalkLdrList(Ctx, ldr, L->PebLdr_InMemoryOrder);
-    HkWalkLdrList(Ctx, ldr, L->PebLdr_InInitOrder);
     return Ctx->LdrBaseCount;
 }
 
