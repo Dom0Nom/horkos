@@ -86,6 +86,9 @@
     <ClCompile Include="src\HvEptProbe.c" />
     <ClCompile Include="src\HvSecureKernelLiveness.c" />
     <ClCompile Include="src\HvApicIdtResidue.c" />
+    <ClCompile Include="src\proc_genealogy.c" />
+    <ClCompile Include="src\launch_timing.c" />
+    <ClCompile Include="src\module_reconcile.c" />
     <ClCompile Include="src\Notify.c" />
     <ClCompile Include="src\ThreadProvenance.c" />
     <ClCompile Include="src\RingBuffer.c" />

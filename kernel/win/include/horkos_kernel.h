@@ -772,6 +772,20 @@ _IRQL_requires_max_(PASSIVE_LEVEL) void HkHvSecureKernelSample(void);   /* 41 */
 _IRQL_requires_max_(PASSIVE_LEVEL) void HkHvApicIdtSample(void);        /* 44 */
 _IRQL_requires_max_(PASSIVE_LEVEL) void HkHvKernelSample(void);
 
+/* ---- process-genealogy kernel sensors (signals 199/200/202) ----
+ * Called from the create-process / image-load notify routines. Read-only;
+ * emit via HkRingEmit (the 199 path uses the v5 24-byte create-ex record). */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void HkGenealogyClassify(_In_ HANDLE ProcessId, _In_ HANDLE ParentProcessId,
+                         _In_ LONG64 CreateTimeNs);                       /* 199 */
+_IRQL_requires_max_(PASSIVE_LEVEL) NTSTATUS HkLaunchTimingArm(void);
+_IRQL_requires_max_(PASSIVE_LEVEL) void     HkLaunchTimingDisarm(void);
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void HkLaunchTimingOnImage(_In_ HANDLE ProcessId, _In_ PVOID ImageBase);  /* 200 */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void HkModuleReconcileOnImage(_In_ HANDLE ProcessId, _In_ PVOID ImageBase,
+                              _In_ SIZE_T ImageSize, _In_ BOOLEAN HasBackingFile); /* 202 */
+
 /* ---- Notify.c ---- */
 _IRQL_requires_max_(PASSIVE_LEVEL) NTSTATUS HkNotifyArm(void);
 _IRQL_requires_max_(PASSIVE_LEVEL) void     HkNotifyDisarm(void);
