@@ -35,6 +35,13 @@ add_executable(hk_unit_tests
     test_mem_vad_logic.cpp
     test_mem_image_logic.cpp
     test_mem_stomp_logic.cpp
+    # win-hypervisor-detection pure structural-consistency cores (signals
+    # 37/40/42/44/45). The cores are header-only inline functions in
+    # ac/include/horkos/hv_logic.h over the hv_signals.h POD surface; these tests
+    # exercise them with synthetic leaf vectors / MSR flags / TSC samples — no
+    # CPUID, no MSR, no Windows runner. The ac/src/hv/*.cpp samplers + kernel HV
+    # sensors that fill these inputs are Windows-only and not built here.
+    test_hv_logic.cpp
     test_integrity_finding_size.cpp
     # macos-codesign-integrity schema pin + pure FP-gate cores (signals 118-126).
     # The probe TUs split a PURE decision core from the impure csops()/Sec*/ES

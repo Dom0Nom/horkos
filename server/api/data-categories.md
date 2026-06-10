@@ -458,6 +458,40 @@ process and handle categories (§1/§2a). Per-signal `reserved` words are paddin
 (`server/telemetry/src/mem_events.rs`) — an out-of-range `*_len` is rejected as a
 typed `MemEventError`, never sliced.
 
+### 13. Hypervisor / virtualization state (`hv_signals.h`)
+
+Source: the usermode hypervisor sensors (`ac/src/hv/*.cpp`, win-hypervisor-detection,
+catalog signals 37/38/40/42/43/44/45) plus the four kernel HV records
+(signals 39/41/42/44) folded usermode into the report. Mirrors `hv_report`
+(`ac/include/horkos/hv_signals.h`) and rides the `TickPayload` v6 plane
+(`schema.rs`) as the optional `hv` sub-payload. Each field is a raw vector /
+histogram / tuple / counter plus a raw structural class; ALL classification
+(population modeling, per-SKU TSC skew, known-good nested-Hyper-V vectors,
+attested-fleet allowlists) is server-side — every signal here is medium/high FP.
+Retention 90 days. Legal basis: Legitimate interest — anti-cheat enforcement.
+Operator: Horkos Service Operator.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `tlfs.leaf` | CPUID 0x40000000–0x4000000A leaf vector (signal 37, `hv_signals.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `tlfs.cpuid1_ecx31_hv` / `os_vbs_running` / `os_hv_present` | CPUID + NtQuerySystemInformation posture (signal 37) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `vmexit.hist` | CPUID vmexit round-trip latency histogram (signal 38) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `vmexit.qpc_span` / `shared_interrupt_dt` | independent-clock spans for the vmexit loop (signal 38) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `vbs.*` | Win32_DeviceGuard WMI + IUM posture + attestation contradiction (signal 40) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `identity.*` | SMBIOS / device-tree / vTPM-EK markers + structural class (signal 43) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `tsc.*` | per-vCPU RDTSCP skew + invariant-TSC capability (signal 45) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `kern.synth_msr_flags` | kernel signal 42 — Hyper-V synthetic-MSR coherence (`event_schema.h` v4) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `kern.ept_flags` | kernel signal 39 — EPT exec/read split (`event_schema.h` v4) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `kern.sk_flags` | kernel signal 41 — secure-kernel liveness, observe-only (`event_schema.h` v4) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `kern.apic_idt_flags` | kernel signal 44 — APIC/IDT residue, observe-only (`event_schema.h` v4) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `sensors_ok` | aggregator — bitmask of samplers that ran; a clear bit reads as "not collected", never "bare-metal" | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+
+Note: the vTPM EK digest (signal 43) overlaps §4 (Hardware identifiers) — reuse
+`tpm_ek_pubkey_sha256` semantics; only `identity.classification` (0..=3, validated
+on ingest in `server/telemetry/src/hv.rs`) is new here. Signal 40 (`vbs.*`) is
+report-only until a real Attestation backend lands; the kernel `kern.sk_flags` /
+`kern.apic_idt_flags` are observe-only, low-weight corroborators.
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`

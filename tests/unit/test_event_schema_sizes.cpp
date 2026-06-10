@@ -21,9 +21,10 @@ TEST(EventSchema, ProcessExitSize) {
     EXPECT_EQ(sizeof(hk_event_process_exit), 16u);
 }
 
-TEST(EventSchema, SchemaVersionIsThree) {
-    /* v3 added the memory/image-anomaly event family (types 5..13). */
-    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 3u);
+TEST(EventSchema, SchemaVersionIsFour) {
+    /* v3 added the memory/image-anomaly event family (types 5..13);
+     * v4 added the hypervisor/virtualization kernel-event family (types 14..17). */
+    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 4u);
 }
 
 TEST(EventSchema, ImageLoadSize) {

@@ -16,6 +16,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::anti_analysis::AntiAnalysisPayload;
+use crate::hv::HvReport;
 
 /// Version of the per-tick JSON ingest contract (distinct from the kernel
 /// event schema's `HK_EVENT_SCHEMA_VERSION`). Bump on every additive change.
@@ -56,7 +57,12 @@ use crate::anti_analysis::AntiAnalysisPayload;
 /// signal", never a fabricated anomaly); the ingest handler accepts `1..=5`
 /// during the migration window. Serde JSON, no `#[repr(C)]`, no C byte-mirror, no
 /// `HK_STATIC_ASSERT` (this never rides the kernel `event_schema.h`/IOCTL plane).
-pub const SCHEMA_VERSION: u32 = 5; // was 4; v5 adds the anti-analysis sub-payload.
+/// v6 adds the OPTIONAL hypervisor/virtualization-state sub-payload
+/// (`Option<HvReport>` + `#[serde(default)]`, win-hypervisor-detection signals
+/// 37/38/40/42/43/44/45), mirroring `hv_report` in `ac/include/horkos/hv_signals.h`;
+/// a v1..=v5 client omitting it deserializes to `None`. The ingest handler accepts
+/// `1..=6` during the migration window. Same serde-JSON, server-classifies posture.
+pub const SCHEMA_VERSION: u32 = 6; // was 5; v6 adds the hypervisor-state sub-payload.
 
 /// One tick of player state. Fixed serialised shape.
 ///
@@ -352,6 +358,23 @@ pub struct TickPayload {
     // ---------------------------------------------------------------------
     #[serde(default)]
     pub anti_analysis: Option<AntiAnalysisPayload>,
+
+    // ---------------------------------------------------------------------
+    // v6: OPTIONAL hypervisor/virtualization-state sub-payload (win-hypervisor-
+    // detection, catalog signals 37/38/40/42/43/44/45).
+    //
+    // Mirrors `hv_report` in `ac/include/horkos/hv_signals.h`: TLFS leaf vectors,
+    // vmexit latency histogram, VBS/HVCI posture, VM identity, cross-vCPU TSC
+    // coherence, and the kernel-record summary (signals 39/41/42/44 folded
+    // usermode). OPTIONAL per the same precedent: `Option<_>` + `#[serde(default)]`,
+    // so a v1..=v5 client omitting it deserializes to `None` — read as "no HV
+    // signal", never a fabricated positive. The client ships raw vectors/
+    // histograms/tuples + a raw structural class; ALL classification (population
+    // modeling, per-SKU skew, attested-fleet allowlists) is server-side. Serde
+    // JSON, no `#[repr(C)]`, no C byte-mirror.
+    // ---------------------------------------------------------------------
+    #[serde(default)]
+    pub hv: Option<HvReport>,
 }
 
 #[cfg(test)]
@@ -406,7 +429,48 @@ mod tests {
         let json = serde_json::to_string(&original).expect("serialize");
         let back: TickPayload = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(original, back);
-        assert_eq!(SCHEMA_VERSION, 5);
+        assert_eq!(SCHEMA_VERSION, 6);
+    }
+
+    /// A payload with no HV sub-payload deserializes with the field `None`
+    /// (optional-sub-payload precedent), and a v6 payload carrying it round-trips.
+    #[test]
+    fn v6_hv_sub_payload_round_trips() {
+        use crate::hv::{HvReport, HvVmIdentity, HV_SCHEMA_VERSION};
+
+        // Omitted -> None.
+        let v5 = r#"{
+            "schema_version": 5,
+            "player_id": 1,
+            "tick": 1,
+            "aim_delta_x": 0.0,
+            "aim_delta_y": 0.0,
+            "input_state": 0
+        }"#;
+        let p: TickPayload = serde_json::from_str(v5).expect("v5 deserializes");
+        assert!(p.hv.is_none());
+
+        // Present -> round-trips.
+        let original = TickPayload {
+            schema_version: SCHEMA_VERSION,
+            player_id: 5,
+            tick: 77,
+            hv: Some(HvReport {
+                schema_version: HV_SCHEMA_VERSION,
+                identity: HvVmIdentity {
+                    cpuid_hv_present: 1,
+                    classification: 2,
+                    ..Default::default()
+                },
+                sensors_ok: 0x3F,
+                ..Default::default()
+            }),
+            ..TickPayload::default()
+        };
+        let json = serde_json::to_string(&original).expect("serialize");
+        let back: TickPayload = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original, back);
+        assert!(back.hv.is_some());
     }
 
     /// A payload with no anti-analysis sub-payload deserializes with the field

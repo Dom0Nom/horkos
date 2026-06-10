@@ -36,6 +36,9 @@ pub enum TelemetryError {
     #[error("memory-event record invalid: {0}")]
     MemEvent(String),
 
+    #[error("hypervisor payload invalid: {0}")]
+    Hv(String),
+
     #[error("rate limit exceeded")]
     RateLimited,
 
@@ -77,6 +80,10 @@ impl IntoResponse for TelemetryError {
             TelemetryError::MemEvent(msg) => (
                 StatusCode::BAD_REQUEST,
                 json!({ "status": "mem_event_invalid", "reason": msg }),
+            ),
+            TelemetryError::Hv(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "hv_invalid", "reason": msg }),
             ),
             TelemetryError::RateLimited => (
                 StatusCode::TOO_MANY_REQUESTS,

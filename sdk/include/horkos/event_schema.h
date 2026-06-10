@@ -38,8 +38,11 @@
  * Phase 2 server in lockstep. v2 added hk_event_process_exit and the image
  * flags field. v3 added the memory/image-anomaly event family (types 5..13),
  * which rides a separate large-record wire plane (see ioctl.h
- * hk_event_mem_record) — the 16-byte hk_event_record plane is unchanged. */
-#define HK_EVENT_SCHEMA_VERSION 3u
+ * hk_event_mem_record) — the 16-byte hk_event_record plane is unchanged. v4
+ * added the hypervisor/virtualization kernel-event family (types 14..17), four
+ * compact 16-byte payloads that ride the existing hk_event_record ring; the
+ * bulky raw HV vectors/histograms ride the usermode JSON report plane instead. */
+#define HK_EVENT_SCHEMA_VERSION 4u
 
 /* -------------------------------------------------------------------------
  * Event type enumeration.
@@ -63,6 +66,14 @@ typedef enum hk_event_type {
     HK_EVENT_MEM_HOLLOW_BACKING   = 11, /* signal 16: backing name/state mismatch. */
     HK_EVENT_MEM_EXEC_ORIGIN_ANON = 12, /* signal 17: thread/TLS origin unbacked. */
     HK_EVENT_MEM_UNSIGNED_IMAGE   = 13, /* signal 18: backing lacks signing prov. */
+    /* Hypervisor/virtualization family (schema v4). Four compact 16-byte kernel
+     * records on the existing hk_event_record ring; the bulky raw HV data rides
+     * the usermode JSON report plane (hv_signals.h). Kernel emits raw evidence;
+     * the server classifies (population modeling, per-SKU baselines). */
+    HK_EVENT_HV_SYNTH_MSR   = 14, /* signal 42: Hyper-V synthetic MSR coherence. */
+    HK_EVENT_HV_EPT_SPLIT   = 15, /* signal 39: EPT exec/read view split. */
+    HK_EVENT_HV_SK_LIVENESS = 16, /* signal 41: secure-kernel liveness (observe). */
+    HK_EVENT_HV_APIC_IDT    = 17, /* signal 44: APIC/IDT virtualization residue. */
 } hk_event_type;
 
 /* -------------------------------------------------------------------------
@@ -207,6 +218,75 @@ typedef struct hk_event_mem_unsigned_image {
 
 HK_STATIC_ASSERT(sizeof(hk_event_mem_unsigned_image) == 264,
     "hk_event_mem_unsigned_image wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Hypervisor/virtualization kernel-event family (schema v4). Each payload is
+ * pinned at 16 bytes so it rides the existing 16-byte hk_event_record ring with
+ * no change to HK_EVENT_PAYLOAD_MAX or hk_event_record. The kernel ships only a
+ * compact verdict-input summary + correlation flags; the bulky raw leaf
+ * vectors / latency histograms ride the usermode JSON report plane.
+ * ------------------------------------------------------------------------- */
+
+/* hk_event_hv_synth_msr.flags bits (signal 42). */
+#define HK_HV_MSR_CPUID_CLAIMS_HV 0x1u /* CPUID leaf 0x40000000 claims a hypervisor. */
+#define HK_HV_MSR_GUEST_OS_ID_OK  0x2u /* HV_X64_MSR_GUEST_OS_ID readable + nonzero. */
+#define HK_HV_MSR_HYPERCALL_OK    0x4u /* HV_X64_MSR_HYPERCALL readable. */
+#define HK_HV_MSR_REF_TSC_COHERENT 0x8u /* reference-TSC vs rdtsc within tolerance. */
+#define HK_HV_MSR_GP_FAULTED      0x10u /* at least one synthetic MSR read #GP'd. */
+
+/* Payload: HK_EVENT_HV_SYNTH_MSR (signal 42). 16 bytes. */
+typedef struct hk_event_hv_synth_msr {
+    uint32_t flags;            /* HK_HV_MSR_*. */
+    uint32_t gp_fault_mask;    /* bit per synthetic MSR whose read #GP'd. */
+    uint64_t ref_tsc_vs_rdtsc; /* signed reference-TSC vs rdtsc skew sample, ns. */
+} hk_event_hv_synth_msr;
+
+HK_STATIC_ASSERT(sizeof(hk_event_hv_synth_msr) == 16,
+    "hk_event_hv_synth_msr wire size drift");
+
+/* hk_event_hv_ept_split.flags bits (signal 39). */
+#define HK_HV_EPT_SPLIT_DETECTED 0x1u /* exec-view checksum != read-view checksum. */
+#define HK_HV_EPT_HVCI_MANAGED   0x2u /* region is an HVCI-managed range (FP gate). */
+#define HK_HV_EPT_VE_ARMED       0x4u /* #VE expectation was armed for this section. */
+
+/* Payload: HK_EVENT_HV_EPT_SPLIT (signal 39). 16 bytes. */
+typedef struct hk_event_hv_ept_split {
+    uint32_t exec_view_crc; /* checksum of the section read through the exec view. */
+    uint32_t read_view_crc; /* checksum of the section read through the data view. */
+    uint32_t flags;         /* HK_HV_EPT_*. */
+    uint32_t section_id;    /* which signed section this sample covers. */
+} hk_event_hv_ept_split;
+
+HK_STATIC_ASSERT(sizeof(hk_event_hv_ept_split) == 16,
+    "hk_event_hv_ept_split wire size drift");
+
+/* hk_event_hv_sk_liveness.flags bits (signal 41, observe-only). */
+#define HK_HV_SK_IUM_RUNNING     0x1u /* isolated-user-mode reports running. */
+#define HK_HV_SK_IMAGE_LOADED    0x2u /* securekernel.exe/skci.dll seen loaded. */
+
+/* Payload: HK_EVENT_HV_SK_LIVENESS (signal 41). 16 bytes. */
+typedef struct hk_event_hv_sk_liveness {
+    uint32_t flags;                  /* HK_HV_SK_*. */
+    uint32_t transition_count_bucket;/* bucketed secure-kernel transition count. */
+    uint64_t reserved;               /* must be zero. */
+} hk_event_hv_sk_liveness;
+
+HK_STATIC_ASSERT(sizeof(hk_event_hv_sk_liveness) == 16,
+    "hk_event_hv_sk_liveness wire size drift");
+
+/* hk_event_hv_apic_idt.flags bits (signal 44, observe-only). */
+#define HK_HV_APIC_IDT_MISMATCH  0x1u /* __sidt base != KPCR-authoritative IDT base. */
+
+/* Payload: HK_EVENT_HV_APIC_IDT (signal 44). 16 bytes. */
+typedef struct hk_event_hv_apic_idt {
+    uint32_t sidt_base_low;     /* low 32 bits of the __sidt-reported IDT base. */
+    uint32_t kpcr_idt_base_low; /* low 32 bits of the KPCR-authoritative IDT base. */
+    uint32_t flags;             /* HK_HV_APIC_IDT_*. */
+    uint32_t apic_exit_bucket;  /* bucketed local-APIC access-exit timing. */
+} hk_event_hv_apic_idt;
+
+HK_STATIC_ASSERT(sizeof(hk_event_hv_apic_idt) == 16,
+    "hk_event_hv_apic_idt wire size drift");
 
 /* -------------------------------------------------------------------------
  * Common event header — present at the start of every event payload.
