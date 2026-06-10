@@ -300,6 +300,49 @@ without compiling). Severity: 🔴 = bug/security, 🟡 = risk, ❓ = design que
 - ❓ `platform/platform.h:71` — macOS-only seams (`csr_active_config` etc.)
   declared unconditionally; confirm non-macOS links never reference them.
 
+## 8. Decisions taken 2026-06-10 (post-review session)
+
+- **Attestation plan (two-agent consult, adopted):** Linux backend gets a
+  real tpm2-tss ESAPI quote (EK+AK provisioning, nonce as qualifyingData,
+  RSAPSS-SHA256) tested against swtpm in CI (~2 days). Windows reuses the
+  same ESAPI sequence via the tcti-tbs TCTI on the Windows box (+1 day;
+  building tpm2-tss for Windows is the hard part). macOS implements real SE
+  signing (`SecKeyCreateSignature` over the nonce; key created at enrolment,
+  NOT per-quote) — remote attestability needs the DCAppAttest entitlement,
+  which a PoC does not buy; the gap is documented instead (~4 h). Server
+  gets a minimal honest verifier: parse TPMS_ATTEST, check magic/type, nonce
+  binding via extraData, AK signature, AK attributes
+  (restricted/sign/fixedTPM/fixedParent) at enrolment; the no-EK-cert-chain
+  gap is the documented limit of the PoC (~1 day). ES entitlement: do NOT
+  apply; stay on the daemon path and document what the entitlement would
+  unlock. Console stubs stay as-is. Pre-work: `AttestationQuote::data[512]`
+  is too small for TPM2B_ATTEST + TPMT_SIGNATURE + AK public — resize before
+  writing the verifier.
+- **data-categories legal pass (§6): dropped.** Project is an open-source
+  proof of concept; no production data collection, no legal review needed.
+- **Push/PR:** branch pushed; PR #3 open against `main`
+  (https://github.com/Dom0Nom/horkos/pull/3).
+- **HK-UNCERTAIN doc triage (two agents, public docs):** 361 → **340**
+  markers; 24 now `HK-VERIFIED` with citations. Resolved: vad_layout gained
+  three build rows (Win11 25H2/26200 — identical to 24H2; Win11 23H2/22631 —
+  VadRoot 0x7D8; Win10 22H2/19045 — VadRoot 0x7D8 and **PrivateMemory bit 20
+  not 21**), all Vergilius PDB-derived; APERF/MPERF readable ring-0 any IRQL
+  (Intel SDM); ThreadProvenance VERIFIED-FALSE confirmed by MS docs (non-Ex
+  signature has no start address — code correctly ships 0);
+  KeFlushQueuedDpcs ordering documented; SystemHypervisorDetail=0x9F /
+  SystemIsolatedUserMode=0xA5 info classes; BPF-LSM ptrace hook arities
+  correct as written (lsm_hook_defs.h); SteamOS linux-neptune ships
+  CONFIG_BPF_LSM=y with bpf in default LSM list; iommu tracepoint field is
+  `iova`, report_iommu_fault signature stable through v6.8;
+  es_event_mmap_t.source is es_file_t (no signing fields — existing code
+  correct); es_process_t.cdhash available since 10.15; task_for_pid needs
+  cs.debugger + get-task-allow (foreign-task stub correctly fail-closed);
+  own-task mach_vm_*/thread_get_state need no entitlement. Still uncertain
+  (correctly fail-closed): Ob callback list layout (undocumented anywhere),
+  PS re-arm lock (internal design gap), PsLoadedModuleList text-hash base,
+  hw-breakpoint BPF attach point, mem_open BTF attachability, DPC busy-loop
+  duration for signal 155 — all need on-box/on-target verification.
+
 ## Suggested order of attack
 
 1. Windows build on `192.168.178.80` — compiles `kernel/win/` + win backends,
