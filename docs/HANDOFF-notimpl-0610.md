@@ -142,6 +142,151 @@ The merge-gate suite is only partially armed:
 - `.claude/scheduled_tasks.lock` is untracked junk in `git status`; no
   recurring cron remains from the 0609 run.
 
+## 7. Code-review findings (2026-06-10 full-codebase review)
+
+Six parallel subsystem reviews (read-only; Windows/Linux kernel code reviewed
+without compiling). Severity: 🔴 = bug/security, 🟡 = risk, ❓ = design question.
+
+### kernel/win (KMDF)
+
+- 🔴 `MemScanWorker.c:243` — if `ObReferenceObjectByHandle` fails after
+  `PsCreateSystemThread` succeeds, `g_WorkerThread` is NULL but the thread
+  runs and `g_Armed` is TRUE; Disarm skips the wait → driver can unload under
+  a live worker thread (executes freed pages). Fail the arm or wait on an
+  event the worker signals.
+- 🔴 `VadWalk.c:117` — no guard for torn VAD node with `end_vpn < start_vpn`;
+  `region_size` underflows to ~2^64 and `ExecOrigin.c:31` range math wraps to
+  empty. Return FALSE from `HkNormalizeVad` on inversion.
+- 🔴 `HkIntegrityScan.c:249` — manual rescan IOCTL re-queues the same
+  `IO_WORKITEM` the periodic timer DPC queues; double-queue of one work item
+  is UB. Second work item or interlocked in-flight guard.
+- 🟡 `SsdtIntegrity.c:61` — `desc->Base/Limit` read outside `__try` (the
+  sibling `SyscallIntegrity.c` guards the same reads). Tampered descriptor →
+  BSOD.
+- 🟡 `ModuleMap.c:81` — 32-bit `bufLen = needed + needed/4 + 4096` can wrap;
+  cap `needed` or widen before arithmetic.
+- 🟡 `MemScanWorker.c:111` — `g_Armed` plain non-volatile BOOLEAN read from
+  notify routines; make `volatile` like `g_Stop`.
+- 🟡 `vad_layout.h:103` — offset `0x00` (legit for `Left`) is
+  indistinguishable from an uninitialized table entry; add a distinct
+  confirmed-zero sentinel.
+
+### kernel/linux (eBPF + loader)
+
+- 🔴 `genealogy.bpf.c:31` + `loader_trust.bpf.c:31` vs `Loader.cpp` —
+  `HK_EVENT_LAUNCH_TRACED` (0x22) and `HK_EVENT_LOADER_TAINT` (0x23) have NO
+  translate arm in `on_ringbuf_sample`; **all signal-205/206 events are
+  silently dropped**. Add the arms.
+- 🔴 `genealogy.bpf.c:68` — `tracer_pid = (u32)bpf_get_current_pid_tgid()`
+  records TID, not TGID; use `>> 32`. Wrong value for multi-threaded tracers.
+- 🔴 `fentry_proc_mem.bpf.c:103` — manual `container_of` via
+  `offsetof(task_struct, pid_links)` is wrong unless PIDTYPE_PID is element 0
+  at array base; use `bpf_task_from_pid` (already used in
+  `fexit_process_vm.bpf.c`).
+- 🟡 `proton_env.bpf.c:102` — strict `<` boundary misses `WINEDLLOVERRIDES=`
+  keys starting in the last 16 bytes of a 256-byte chunk.
+- 🟡 `Loader.cpp:645` — `memfd_join` map unbounded under memfd flood; O(n)
+  eviction per insert → O(n²). Cap size before insert.
+- 🟡 `Loader.cpp:848` — `ResolveFdIsMsr` readlinks `/proc/<pid>/fd/<fd>`
+  post-event; PID/fd reuse TOCTOU → possible false positive (report-only).
+- 🟡 `hw_breakpoint_census.bpf.c:109` — always-false keepalive call may be
+  DCE'd by some clang-bpf versions, breaking the "referenced" guarantee.
+- 🟡 `hk_bpf_shared.h:80` — `hk_fnv64` verifier-safe only with constant
+  `len`; document or enforce.
+
+### server (Rust)
+
+- 🟡 `telemetry/src/lib.rs:54` — **no HTTP body size limit** on the router;
+  axum 0.8 doesn't impose one and `tower_http::limit` is unwired. Unbounded
+  `Vec<f32>`/`String` fields in TickPayload = memory DoS. Add
+  `DefaultBodyLimit::max(N)`.
+- 🟡 `stats.rs:250` — `dominant_peak` can return `snr = +∞` (single nonzero
+  bin); passes `snr < FLOOR` gate and propagates into `SuspicionEvent.zscore`.
+  Require `is_finite()`.
+- 🟡 `analyzers/mod.rs:107` — `feed` aborts on first analyzer error with `?`,
+  desyncing per-analyzer tick state. Run all, aggregate errors.
+- 🟡 `schema.rs:297` — `tx_cadence_skew_ns` serde-defaults to 0 but doc says
+  sentinel is `i64::MIN`; absent field becomes "genuine zero skew". Default
+  to the sentinel.
+- 🟡 `ban-engine/src/aim_kinematics.rs:315` — `(to_ns - from_ns) as f32`
+  loses precision beyond ~16 ms gaps; compute in f64.
+- ❓ analyzers — no reset path between sessions/matches; confirm
+  one-instance-per-session lifecycle or add reset.
+
+### ac/ + sdk/
+
+- 🔴 `ac/src/hv/hv_vbs_attest.cpp:40` — BSTRs allocated before
+  `CoInitializeEx` check; every `FAILED(hr)` path leaks `ns`/`query`/`lang`.
+  Also `RPC_E_CHANGED_MODE` is treated as fatal though COM is usable. Per-call
+  CoInit+ConnectServer ×2 should be one cached session.
+- 🔴 `ac/src/selfcheck/pe_parse.cpp:134` — `e_lfanew`-derived `sect_table`
+  pointer math unchecked for wrap before per-section guards; add explicit
+  `e_lfanew + 4 + 20 + opt_size <= len` check.
+- 🟡 `pe_parse.cpp:161,177` — `rva + virtual_size` and `raw_ptr + delta`
+  uint32 overflow in `section_for_rva`/`rva_to_file_offset`.
+- 🟡 `ac/src/timing/shared_data_clock_win.cpp:98` — unbounded
+  `hi1 != hi2` seqlock spin in `read_ksystem_time`; infinite spin on
+  suspended/migrating VM. Cap retries.
+- 🟡 `sdk/src/backends/win/ancestry_walker.cpp:29` — one Toolhelp snapshot
+  per ancestry level (≤32); widens PID-reuse window. Snapshot once, walk
+  in-memory.
+- 🟡 `MinifilterCensusWin.cpp:162` — `ERROR_INSUFFICIENT_BUFFER` ends the
+  whole enumeration instead of skipping the oversized instance; census can
+  miss a suspect filter.
+- 🟡 `selfcheck.cpp:48` — `arm()` arms unconditionally even with
+  `baseline.valid == false`; add the guard now.
+- 🟡 `self_logic.cpp:164` — `tls_table_tampered` conflates "compared clean"
+  with "could not compare" when a table pointer is null.
+- 🟡 `token_check.cpp:37` — `HANDLE token` used uninitialized on the
+  short-circuit failure path (benign with CloseHandle(NULL) but UB-shaped);
+  initialize.
+- ❓ `event_schema.h` — `hk_event_hv_synth_msr.ref_tsc_vs_rdtsc` declared
+  `uint64_t` but commented "signed skew"; pick one before the server decoder
+  pins it.
+
+### macOS + dma_detect
+
+- 🔴 `daemon/macos/horkosd.cpp:40` — **no audit-token / code-signing check on
+  XPC connections**; any local process can talk to `com.horkos.daemon`.
+  Validate `xpc_connection_get_audit_token` + SecTask requirement before
+  resume.
+- 🟡 `HKThreadIntegrity.cpp:150` — `task_threads` thread-port send rights
+  never `mach_port_deallocate`d; leaks one right per thread per poll.
+- 🟡 `EsClient.mm:553,649` — `sSinkQueue`/`sLog` leaked on both
+  `es_new_client` and `es_subscribe` failure paths.
+- 🟡 `dma_detect/.../ConfigSpaceForensics.cpp:177` —
+  `dsn_oui_matches_vendor` polarity inverted vs name ("not provably wrong"
+  encoded as 1); rename or flip before server logic consumes it.
+- 🟡 `HotplugMonitor.cpp:54,86` — `strlen` past token boundary on NUL-free
+  uevent; `recv` retry loop with no backoff can spin at 100% CPU.
+- 🟡 `TlpLatencyProbe.cpp:87` — upper-median bias on even sample count;
+  document or average the two middles.
+- ❓ `forensics_report.cpp:99` — serializer field walk appears to produce 98
+  bytes vs `DEVICE_WIRE_BYTES=100`; verify before the Rust decoder pins it.
+
+### Cross-cutting (schema/obfuscator/PAL/tests)
+
+- 🔴 `server/telemetry/src/kernel_events.rs:41` — Linux module-trust
+  discriminants 5–14 collide with the now-frozen Windows mem-injection (5–13)
+  + HV (14) ranges in `event_schema.h`. Second discriminant collision besides
+  self_wire (§3). Rebase to ≥19.
+- 🔴 `tests/unit/test_integrity_finding_size.cpp:60` — IOCTL test claims
+  0x803 is free but `HK_IOCTL_DRAIN_MEM_EVENTS` already occupies 0x803 and
+  the test never checks against it; collision invisible. Next free is 0x805.
+- 🔴 `sdk/src/sdk_backend.h:19` — raw `_WIN32` outside `platform/`/
+  `backends/` (guardrail #1 violation, self-acknowledged in comment).
+- 🟡 `obfuscator StringEncryption.cpp:151` — ctor priority 0 has no defined
+  order vs other priority-0 ctors; an earlier ctor reading an annotated
+  string sees ciphertext. `usedOnlyInAnnotated` doesn't exclude
+  ctor-reachable functions. Also single-byte XOR 0x5A is known-weak (accepted).
+- 🟡 `ControlFlowFlattening.cpp:122` — pool blocks ending in `ReturnInst`
+  silently bypass the dispatcher (correct but unflattened); document or handle.
+- 🟡 `attestation/Attestation.h:42` — `quote()` has no nonce/freshness
+  parameter → replayable quotes; add before the interface freeze bites
+  (guardrail #10 makes later change expensive).
+- ❓ `platform/platform.h:71` — macOS-only seams (`csr_active_config` etc.)
+  declared unconditionally; confirm non-macOS links never reference them.
+
 ## Suggested order of attack
 
 1. Windows build on `192.168.178.80` — compiles `kernel/win/` + win backends,
