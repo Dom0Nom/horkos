@@ -74,6 +74,14 @@
   <ItemGroup>
     <ClCompile Include="src\DriverEntry.c" />
     <ClCompile Include="src\IrpDispatch.c" />
+    <ClCompile Include="src\MemScanWorker.c" />
+    <ClCompile Include="src\VadWalk.c" />
+    <ClCompile Include="src\MemScanVad.c" />
+    <ClCompile Include="src\LdrCrosscheck.c" />
+    <ClCompile Include="src\HollowDetect.c" />
+    <ClCompile Include="src\ExecOrigin.c" />
+    <ClCompile Include="src\MemScanPte.c" />
+    <ClCompile Include="src\ModuleStomp.c" />
     <ClCompile Include="src\Notify.c" />
     <ClCompile Include="src\ThreadProvenance.c" />
     <ClCompile Include="src\RingBuffer.c" />

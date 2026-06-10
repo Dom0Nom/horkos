@@ -12,6 +12,7 @@
 #include <wdf.h>
 
 #include "horkos_kernel.h"
+#include "mem_scan.h"
 
 static NTSTATUS HkHandleDrain(_In_ WDFREQUEST Request,
                               _In_ PHK_DEVICE_CONTEXT Ctx,
@@ -66,6 +67,69 @@ static NTSTATUS HkHandleDrain(_In_ WDFREQUEST Request,
     *BytesReturned = sizeof(hk_drain_header) +
                      (size_t)written * sizeof(hk_event_record);
     return STATUS_SUCCESS;
+}
+
+/* HK_IOCTL_DRAIN_MEM_EVENTS — same hk_drain_header envelope as HkHandleDrain but
+ * strides the 344-byte hk_event_mem_record and drains the mem ring
+ * (MemScanWorker.c). Memory/image-anomaly events (types 5..13) ride this plane. */
+static NTSTATUS HkHandleMemDrain(_In_ WDFREQUEST Request,
+                                 _In_ size_t OutputBufferLength,
+                                 _Out_ size_t* BytesReturned)
+{
+    NTSTATUS             status;
+    PVOID                outBuf = NULL;
+    hk_drain_header*     hdr;
+    hk_event_mem_record* records;
+    ULONG                capacity;
+    ULONG                written;
+    ULONG                remaining = 0;
+    ULONG                dropped = 0;
+
+    *BytesReturned = 0;
+    if (OutputBufferLength < sizeof(hk_drain_header)) {
+        *BytesReturned = sizeof(hk_drain_header);
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+    status = WdfRequestRetrieveOutputBuffer(Request, sizeof(hk_drain_header), &outBuf, NULL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+    hdr = (hk_drain_header*)outBuf;
+    records = (hk_event_mem_record*)(hdr + 1);
+    capacity = (ULONG)((OutputBufferLength - sizeof(hk_drain_header)) /
+                       sizeof(hk_event_mem_record));
+
+    written = HkMemRingDrain(capacity > 0 ? records : NULL, capacity, &remaining, &dropped);
+
+    RtlZeroMemory(hdr, sizeof(*hdr));
+    hdr->records_written = written;
+    hdr->records_remaining = remaining;
+    hdr->records_dropped = dropped;
+
+    *BytesReturned = sizeof(hk_drain_header) + (size_t)written * sizeof(hk_event_mem_record);
+    return STATUS_SUCCESS;
+}
+
+/* HK_IOCTL_SCAN_PROCESS — validate the hk_scan_request input and enqueue the
+ * target for the scan worker (returns immediately; the worker attaches). */
+static NTSTATUS HkHandleScanProcess(_In_ WDFREQUEST Request, _In_ size_t InputBufferLength)
+{
+    NTSTATUS         status;
+    PVOID            inBuf = NULL;
+    hk_scan_request* req;
+
+    if (InputBufferLength < sizeof(hk_scan_request)) {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+    status = WdfRequestRetrieveInputBuffer(Request, sizeof(hk_scan_request), &inBuf, NULL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+    req = (hk_scan_request*)inBuf;
+    if (req->target_pid == 0) {
+        return STATUS_INVALID_PARAMETER;
+    }
+    return HkMemScanEnqueueTarget((HANDLE)(ULONG_PTR)req->target_pid, req->signal_mask);
 }
 
 static NTSTATUS HkHandleStatus(_In_ WDFREQUEST Request,
@@ -183,6 +247,12 @@ void HkEvtIoDeviceControl(WDFQUEUE Queue, WDFREQUEST Request,
         break;
     case HK_IOCTL_PUSH_POLICY:
         status = HkHandlePolicy(Request, ctx, InputBufferLength);
+        break;
+    case HK_IOCTL_DRAIN_MEM_EVENTS:
+        status = HkHandleMemDrain(Request, OutputBufferLength, &bytesReturned);
+        break;
+    case HK_IOCTL_SCAN_PROCESS:
+        status = HkHandleScanProcess(Request, InputBufferLength);
         break;
     case HK_IOCTL_INTEGRITY_RESCAN:
         /* Empty input/output: queue a manual integrity rescan. Findings still

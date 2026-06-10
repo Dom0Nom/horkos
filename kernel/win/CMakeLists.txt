@@ -96,7 +96,21 @@ set(HK_DRIVER_SRC
     # unresolved — a BSOD is worse than an unfinished function, guardrail #13); only
     # the migration-safe nominal/HV-present CPUID half runs. The wire emit is further
     # gated by HK_TIMING_SCHEMA_READY (undefined until the Schema phase lands the type).
-    src/TimingProbe.c)
+    src/TimingProbe.c
+    # win-kernel-memory-injection scan plane (signals 10-18). Read-only VAD/PEB/PTE
+    # sampling from a PASSIVE_LEVEL worker that attaches per-target. The pure
+    # decision cores are host-tested (kernel/win/include/mem_logic_*.h); these TUs
+    # are the sampling shells. Layout-dependent reads are fenced behind
+    # vad_layout.h's allow-list, which ships EMPTY (HK-UNCERTAIN) so the plane fails
+    # closed and emits nothing until per-build offsets are confirmed on the box.
+    src/MemScanWorker.c
+    src/VadWalk.c
+    src/MemScanVad.c
+    src/LdrCrosscheck.c
+    src/HollowDetect.c
+    src/ExecOrigin.c
+    src/MemScanPte.c
+    src/ModuleStomp.c)
 
 # memory-integrity-selfcheck self-read IOCTL (signals 145/146/148/151/152). Default
 # OFF: the caller-identity binding that makes a self-foreign-read safe is unsettled,
