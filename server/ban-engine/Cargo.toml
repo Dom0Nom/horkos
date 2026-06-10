@@ -24,6 +24,7 @@ axum       = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 thiserror  = { workspace = true }
+tokio      = { workspace = true }
 tracing    = { workspace = true }
 # The aim-kinematics segmenters (signals 166-169) consume the per-tick aim-
 # feature block defined on telemetry's `TickPayload`. No cycle: telemetry does
@@ -35,3 +36,11 @@ http           = { workspace = true }
 http-body-util = { workspace = true }
 tokio          = { workspace = true }
 tower          = { workspace = true }
+
+# fusion/pipeline merge-gate bypass tests (guardrail #12). Live under
+# `bypass-tests/server/` with the other domains' bypass tests; registered here
+# so `cargo test -p ban-engine` (the server CI gate) runs them. Pure Rust,
+# fixture-driven, no game-server peer.
+[[test]]
+name = "fusion_bypass"
+path = "../../bypass-tests/server/fusion_bypass.rs"

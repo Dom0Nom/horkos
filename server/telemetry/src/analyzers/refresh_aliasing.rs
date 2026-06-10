@@ -32,6 +32,12 @@ const SNR_FLOOR: f64 = 6.0;
 /// Harmonic-exclusion tolerance (normalized cycles-per-sample).
 const HARMONIC_TOL: f64 = 0.01;
 
+/// Hard cap on the latency series. Without it a long session grows the series
+/// without bound — a memory DoS, and the per-score FFT cost grows with it.
+/// When full, the OLDEST half is discarded (sliding-window semantics); the FFT
+/// then runs over the most recent play only.
+pub const MAX_SERIES: usize = 4096;
+
 pub struct RefreshAliasing {
     player_id: u64,
     /// Reaction-latency series (ms) onto occluded-knowledge events. Each entry is one
@@ -64,6 +70,9 @@ impl RefreshAliasing {
     /// per-tick proxy sample below.
     pub fn push_latency_ms(&mut self, ms: f64) {
         if ms.is_finite() {
+            if self.series.len() >= MAX_SERIES {
+                self.series.drain(..MAX_SERIES / 2);
+            }
             self.series.push(ms);
         }
     }
@@ -126,7 +135,7 @@ impl Analyzer for RefreshAliasing {
         if tick.client_mono_ns != 0 && snap.mono_ns != 0 {
             let lag_ms = (tick.client_mono_ns as i128 - snap.mono_ns as i128).unsigned_abs() as f64
                 / 1_000_000.0;
-            self.series.push(lag_ms);
+            self.push_latency_ms(lag_ms);
         }
         Ok(())
     }

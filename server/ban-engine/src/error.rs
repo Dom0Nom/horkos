@@ -22,6 +22,15 @@ pub enum BanEngineError {
 
     #[error("verifier not implemented")]
     VerifierNotImplemented,
+
+    #[error("invalid fusion parameter: {0}")]
+    InvalidFusionParams(&'static str),
+
+    #[error("decision store I/O: {0}")]
+    StoreIo(#[from] std::io::Error),
+
+    #[error("decision store serialization: {0}")]
+    StoreSerde(#[from] serde_json::Error),
 }
 
 impl IntoResponse for BanEngineError {
@@ -37,6 +46,14 @@ impl IntoResponse for BanEngineError {
             BanEngineError::VerifierNotImplemented => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 json!({ "status": "verifier_not_implemented" }),
+            ),
+            BanEngineError::InvalidFusionParams(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({ "status": "fusion_params_invalid", "reason": msg }),
+            ),
+            BanEngineError::StoreIo(_) | BanEngineError::StoreSerde(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({ "status": "decision_store_error" }),
             ),
         };
         (status, Json(body)).into_response()

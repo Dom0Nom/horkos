@@ -42,6 +42,9 @@ pub enum TelemetryError {
     #[error("rate limit exceeded")]
     RateLimited,
 
+    #[error("ingest pipeline overloaded")]
+    Overloaded,
+
     #[error("internal telemetry error")]
     Internal,
 }
@@ -88,6 +91,10 @@ impl IntoResponse for TelemetryError {
             TelemetryError::RateLimited => (
                 StatusCode::TOO_MANY_REQUESTS,
                 json!({ "status": "rate_limited" }),
+            ),
+            TelemetryError::Overloaded => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                json!({ "status": "overloaded" }),
             ),
             TelemetryError::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,

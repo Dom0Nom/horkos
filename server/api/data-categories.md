@@ -566,6 +566,33 @@ the OUI prefix — it carries no unique-identifier weight. The sig-132 TLP-laten
 fields are LOW WEIGHT and cannot by themselves produce a verdict
 (`bypass_latency_only` merge-gate).
 
+### 16. Ban-decision audit records (`server/ban-engine/src/store.rs`)
+
+Server-side derived data, written by the fusion pipeline — not a client wire
+plane. One append-only `DecisionRecord` per verdict TRANSITION (Clean→Review→
+Ban) or session end with live suspicion state. Persisted to JSONL when
+`HORKOS_DECISION_LOG` is set; in-memory otherwise (PoC default). Records carry
+both inculpatory (contributing signals) and exculpatory (skipped events,
+pairing-miss counts) evidence so a decision is defensible — and overturnable —
+without replaying the session.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `seq`, `kind`, `decided_at_ns` | store-assigned sequence + record kind + server clock (`store.rs`) | Life of the enforcement action + appeal window (longer than telemetry — appeals need it) | Legitimate interest — anti-cheat enforcement & appeals | Horkos Service Operator |
+| `player_id`, `session_start_ns` | session identity (`pipeline.rs`) | same | same | Horkos Service Operator |
+| `prev_verdict`, `verdict`, `score` | fusion output (`fusion.rs`) | same | same | Horkos Service Operator |
+| `contributions[]` (signal id, z, samples, window, tier, weight) | analyzer `SuspicionEvent`s that counted | same | same | Horkos Service Operator |
+| `skipped[]` (signal id, z, samples, reason) | events rejected by fusion gates (exculpatory) | same | same | Horkos Service Operator |
+| `cadence` | signal-186 arrival-cadence observation, when present | same | same | Horkos Service Operator |
+| `params` | exact `FusionParams` values used for THIS decision (inlined, not a version pointer) | same | same | Horkos Service Operator |
+| `window_first_tick`, `window_last_tick`, `ticks_received`, `ticks_paired`, `pairing_misses`, `pairing_anomaly` | evidence-quality accounting (`pipeline.rs`) | same | same | Horkos Service Operator |
+| `schema_versions_seen` | payload contract versions observed this session | same | same | Horkos Service Operator |
+
+Note: these records are derived from categories already declared above; they
+introduce no new client-collected field. Retention deliberately exceeds the
+telemetry stream's: a ban outlives the telemetry that produced it, and the
+record is the only artifact an appeal can audit.
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`

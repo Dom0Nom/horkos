@@ -15,7 +15,7 @@ publish = false
 
 [workspace.dependencies]
 # Async runtime + HTTP stack.
-tokio              = { version = "1.41", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync"] }
+tokio              = { version = "1.41", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync", "fs", "io-util"] }
 axum               = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "tower-log", "matched-path"] }
 tower              = { version = "0.5", features = ["util"] }
 tower-http         = { version = "0.6", features = ["trace", "limit", "timeout"] }

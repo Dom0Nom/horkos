@@ -30,6 +30,12 @@ const TIGHT_LOCK_RAD: f32 = 0.0175;
 /// Minimum qualifying engagements before a score is emitted (recurrence gate).
 const MIN_ENGAGEMENTS: u32 = 8;
 
+/// Hard cap on the per-session engagement buffer. Without it a long (or
+/// adversarially endless) session grows `lock_errors` without bound — a memory
+/// DoS on the pipeline task. When full, the OLDEST half is discarded so the
+/// score reflects the most recent play (sliding-window semantics).
+pub const MAX_SAMPLES: usize = 4096;
+
 /// Population baseline of the per-engagement minimum-lock-error onto occluded enemies
 /// for honest players. Placeholder until the baseline store lands; the value object
 /// keeps the gate pure and testable. Honest players essentially never tight-lock a
@@ -92,6 +98,9 @@ impl Analyzer for OcclusionPreaim {
 
         if let Some(err) = best {
             if err <= TIGHT_LOCK_RAD {
+                if self.lock_errors.len() >= MAX_SAMPLES {
+                    self.lock_errors.drain(..MAX_SAMPLES / 2);
+                }
                 self.lock_errors.push(err as f64);
             }
         }

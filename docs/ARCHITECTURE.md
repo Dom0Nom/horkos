@@ -47,7 +47,13 @@ client sensors (kernel + usermode, per OS)
    │  headers: event_schema_macos.h, event_schema_cs.h, device_trust_schema.h,
    │  input_prov_schema.h, net_timing.h, render_hook_schema.h)
    ▼
-per-tick JSON plane: server/telemetry/src/schema.rs::TickPayload  (v4)
+per-tick JSON plane: server/telemetry/src/schema.rs::TickPayload  (v6)
+   ▼
+HTTP ingest (telemetry/src/lib.rs) — validate, stamp server_received_ts,
+   per-player token bucket; forwarded via telemetry/src/sink.rs into
+   ▼
+pipeline shards (ban-engine/src/pipeline.rs — one tokio task per shard owns
+   its players' sessions; consume-once tick↔snapshot merge-join)
    ▼
 telemetry analyzers (server/telemetry/src/analyzers/ — signals scored
    individually, z-scored against honest-population baselines)
@@ -55,12 +61,22 @@ telemetry analyzers (server/telemetry/src/analyzers/ — signals scored
 game-state snapshot plane (snapshot_schema.h — server-internal, game server →
    AC server; the authoritative truth the client never sees)
    ▼
-ban-engine fusion (server/ban-engine/) — fail-closed ban path
+ban-engine fusion (ban-engine/src/fusion.rs) — fail-closed ban path; verdicts
+   latch upward per session (Clean→Review→Ban, transitions only)
+   ▼
+decision store (ban-engine/src/store.rs — append-only audit records, JSONL
+   via HORKOS_DECISION_LOG or in-memory) + GET /api/decisions/{player_id}
 ```
+
+This pipeline runs end-to-end: `api::build_app()` spawns the shards and wires
+ingest into them (`/healthz` turns 503 if a shard dies). The live snapshot
+source is still the unimplemented shm ring (HK-UNCERTAIN ipc-contract);
+until it lands, only fixture/test traffic exercises the gamestate analyzers,
+and unpaired sessions surface as a Review-tier pairing-integrity anomaly.
 
 Two wire planes, deliberately decoupled: the C99 kernel-event schema
 (`HK_EVENT_SCHEMA_VERSION`) and the per-tick JSON stream
-(`schema::SCHEMA_VERSION`, currently 4). Bump on every additive change.
+(`schema::SCHEMA_VERSION`, currently 6). Bump on every additive change.
 
 ## Defensive design principles
 

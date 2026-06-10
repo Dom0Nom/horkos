@@ -23,6 +23,9 @@ pub enum ApiError {
 
     #[error("internal error")]
     Internal,
+
+    #[error("decision log unavailable: {0}")]
+    DecisionLog(String),
 }
 
 impl IntoResponse for ApiError {
@@ -40,6 +43,10 @@ impl IntoResponse for ApiError {
             ApiError::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 json!({ "status": "error" }),
+            ),
+            ApiError::DecisionLog(msg) => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                json!({ "status": "decision_log_unavailable", "reason": msg }),
             ),
         };
         (status, Json(body)).into_response()

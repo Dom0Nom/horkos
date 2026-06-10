@@ -27,6 +27,7 @@ pub mod pointer_model;
 pub mod render_hook;
 pub mod schema;
 pub mod self_events;
+pub mod sink;
 pub mod thread_inject;
 pub mod timing;
 pub mod vm_access;
@@ -45,9 +46,13 @@ pub mod snapshot;
 #[cfg(feature = "gamestate-analyzers")]
 pub mod stats;
 
-use axum::{extract::DefaultBodyLimit, routing::post, Json, Router};
+use std::sync::{Arc, OnceLock};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+use axum::{extract::DefaultBodyLimit, extract::State, routing::post, Json, Router};
 use error::TelemetryError;
 use schema::{TickPayload, SCHEMA_VERSION};
+use sink::TickSink;
 
 /// Maximum accepted request body for any telemetry route. Telemetry ticks are
 /// compact JSON; 256 KiB is generous headroom while capping unbounded uploads.
@@ -56,6 +61,22 @@ const MAX_BODY_BYTES: usize = 256 * 1024;
 pub fn router() -> Router {
     Router::new()
         .route("/api/telemetry", post(ingest))
+        .merge(domain_routers())
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
+}
+
+/// `router()` plus a live pipeline: validated ticks are stamped and forwarded
+/// into the sink's pipeline shards instead of dropped.
+pub fn router_with_sink(sink: Arc<TickSink>) -> Router {
+    Router::new()
+        .route("/api/telemetry", post(ingest_to_pipeline))
+        .with_state(sink)
+        .merge(domain_routers())
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
+}
+
+fn domain_routers() -> Router {
+    Router::new()
         .merge(render_hook::router())
         .merge(input_prov::router())
         .merge(loader_inject::router())
@@ -63,13 +84,14 @@ pub fn router() -> Router {
         .merge(input_cadence::router())
         .merge(pointer_model::router())
         .merge(timing::router())
-        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
 }
 
-#[tracing::instrument(skip_all, fields(player_id, tick))]
-async fn ingest(
-    Json(payload): Json<TickPayload>,
-) -> Result<axum::http::StatusCode, TelemetryError> {
+/// Validate one tick against the supported schema window and its optional
+/// sub-payloads, then stamp `server_received_ts`. The stamp is UNCONDITIONAL:
+/// `server_received_ts` is a server-authored field ("clients send 0"), and a
+/// client-supplied nonzero value would otherwise ride `#[serde(default)]`
+/// straight into the arrival-cadence clock — a forgeable signal-186 input.
+fn validate_and_stamp(payload: &mut TickPayload) -> Result<(), TelemetryError> {
     // Migration window: accept every contract from v1 through the current
     // SCHEMA_VERSION. Older clients omit later additive blocks (v2 aim-feature,
     // v3 gamestate-binding, v4 network-anomaly), which deserialize to their
@@ -99,6 +121,32 @@ async fn ingest(
         hv.validate()?;
     }
 
+    payload.server_received_ts = unix_now_ns();
+    Ok(())
+}
+
+/// Wall-clock ns since UNIX epoch, anchored once at first use and advanced by
+/// the MONOTONIC clock. A raw `SystemTime::now()` per tick steps under NTP;
+/// a backward step silently blinds the arrival-cadence detector (it discards
+/// non-monotone samples), so the stamp must never go backward.
+fn unix_now_ns() -> u64 {
+    static ANCHOR: OnceLock<(u64, Instant)> = OnceLock::new();
+    let (epoch_ns, anchor) = ANCHOR.get_or_init(|| {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_nanos() as u64)
+            .unwrap_or(0);
+        (now, Instant::now())
+    });
+    epoch_ns.saturating_add(anchor.elapsed().as_nanos() as u64)
+}
+
+#[tracing::instrument(skip_all, fields(player_id, tick))]
+async fn ingest(
+    Json(mut payload): Json<TickPayload>,
+) -> Result<axum::http::StatusCode, TelemetryError> {
+    validate_and_stamp(&mut payload)?;
+
     tracing::Span::current()
         .record("player_id", payload.player_id)
         .record("tick", payload.tick);
@@ -110,9 +158,25 @@ async fn ingest(
         "telemetry tick accepted"
     );
 
-    // Phase 2 stub: log only, no storage, no ML inference yet.
+    // No-sink router: validate-then-drop (kept for tools/tests that mount the
+    // route surface without a pipeline). The live binary uses `router_with_sink`.
     let _ = payload;
 
+    Ok(axum::http::StatusCode::ACCEPTED)
+}
+
+#[tracing::instrument(skip_all, fields(player_id, tick))]
+async fn ingest_to_pipeline(
+    State(sink): State<Arc<TickSink>>,
+    Json(mut payload): Json<TickPayload>,
+) -> Result<axum::http::StatusCode, TelemetryError> {
+    validate_and_stamp(&mut payload)?;
+
+    tracing::Span::current()
+        .record("player_id", payload.player_id)
+        .record("tick", payload.tick);
+
+    sink.send(payload)?;
     Ok(axum::http::StatusCode::ACCEPTED)
 }
 

@@ -175,7 +175,7 @@ impl CadenceParams {
 /// path). `conserved_repeats` is how many gap-then-burst pairs in the window
 /// conserved their gap within tolerance; `worst_conservation` is the closest
 /// observed ratio to the ideal 1.0 (informational).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize)]
 pub struct CadenceObservation {
     pub conserved_repeats: u32,
     pub worst_conservation: f32,

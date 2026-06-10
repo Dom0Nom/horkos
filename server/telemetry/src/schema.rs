@@ -83,6 +83,16 @@ pub struct TickPayload {
     pub player_id: u64,
 
     /// Monotonic tick counter from the client.
+    ///
+    /// CONTRACT (pipeline pairing): the SDK MUST echo the server simulation
+    /// tick it is acting on (the `tick` of the last authoritative snapshot it
+    /// consumed), NOT a free-running client counter. The server pipeline pairs
+    /// this value against `snapshot_schema.h` `HkSnapshotRecord.tick` within a
+    /// small tolerance window; a client that drifts or offsets this counter is
+    /// never paired, which starves the gamestate analyzers and is surfaced as
+    /// a pairing-integrity anomaly (Review-tier, never bannable alone).
+    /// HK-UNCERTAIN(tick-domain): the SDK side does not ship this echo yet —
+    /// until it does, only fixture/test traffic satisfies the contract.
     pub tick: u64,
 
     /// Aim delta on the X axis since the previous tick.

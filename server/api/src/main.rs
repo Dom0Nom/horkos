@@ -21,7 +21,10 @@ async fn main() -> Result<()> {
         .parse()
         .context("HORKOS_BIND must be a valid socket address")?;
 
-    let app = api::build_router();
+    // build_app spawns the analysis pipeline (ingest -> analyzers -> fusion ->
+    // persisted decisions); the handle keeps the liveness flag and decision
+    // map alive for the process lifetime.
+    let (app, _pipeline) = api::build_app().context("failed to build application")?;
 
     let listener = TcpListener::bind(bind_addr)
         .await
