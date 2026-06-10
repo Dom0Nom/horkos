@@ -100,6 +100,11 @@ constexpr uint16_t HK_SELF_FRAME_NONE = 0xFFFFu; /* unsigned_frame_idx sentinel 
  * ------------------------------------------------------------------------- */
 struct ImageBaseline;
 
+/* Returns true if the baseline was successfully parsed and is usable. Callers
+ * that hold only a forward-declared reference use this rather than accessing the
+ * struct's valid field directly. Implemented in image_baseline.cpp. */
+bool image_baseline_valid(const ImageBaseline& bl) noexcept;
+
 /* -------------------------------------------------------------------------
  * 147 critical-function entry guard. Annotated for obfuscation (guardrail #9):
  * this is exactly an init/integrity/attestation symbol, NOT the game hot loop.
@@ -215,14 +220,24 @@ uint32_t iat_target_flags(uint64_t slot_target_va,
 bool veh_handler_ordered_ahead(uint32_t our_handler_index,
                                bool foreign_handler_ahead) noexcept;
 
-/* 153: TLS/init table compare. Returns true (tampered) when the live callback
- * count differs from disk, OR any live rebased pointer != the expected rebased
- * pointer, OR any live callback PC falls outside our text range. */
-bool tls_table_tampered(uint32_t live_count, uint32_t disk_count,
-                        const uint64_t* live_rebased,
-                        const uint64_t* expected_rebased,
-                        uint32_t compare_count,
-                        const uint8_t* live_pc_in_text) noexcept;
+/* 153: TLS/init table compare result. Distinguishes "clean" from "unavailable"
+ * so callers can apply the correct evidence rule: absence of data is NEVER
+ * evidence of tampering (Unavailable is never escalated as a detection signal). */
+enum class TlsTamperResult : uint32_t {
+    Clean       = 0, /* all checks passed */
+    Tampered    = 1, /* a pointer mismatch or count delta was found */
+    Unavailable = 2, /* comparison tables were null — no data, not a verdict */
+};
+
+/* 153: TLS/init table compare. Returns Clean when all pointer and count checks
+ * pass, Tampered when the live count differs from disk or any pointer diverges or
+ * any PC falls outside our text, and Unavailable when the pointer tables are null
+ * and no comparison is possible. Absence of data is never evidence of tampering. */
+TlsTamperResult tls_table_tampered(uint32_t live_count, uint32_t disk_count,
+                                   const uint64_t* live_rebased,
+                                   const uint64_t* expected_rebased,
+                                   uint32_t compare_count,
+                                   const uint8_t* live_pc_in_text) noexcept;
 
 } // namespace selfcheck
 } // namespace hk

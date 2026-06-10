@@ -25,7 +25,7 @@ namespace genealogy {
  * caller treats a 0 as "not collected" via the reparent/delta guards). */
 static uint32_t IntegrityLevelRid(DWORD pid)
 {
-    HANDLE proc;
+    HANDLE proc = nullptr;
     HANDLE token = nullptr;
     DWORD len = 0;
     uint32_t rid = 0;
@@ -50,6 +50,7 @@ static uint32_t IntegrityLevelRid(DWORD pid)
             }
         }
         CloseHandle(token);
+        token = nullptr;
     }
     CloseHandle(proc);
     return rid;

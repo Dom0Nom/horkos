@@ -168,28 +168,45 @@ TEST(SelfCheckLogic, VehFlaggedWhenForeignAhead) {
 /* ---- 153 TLS/init table tamper ---- */
 
 TEST(SelfCheckLogic, TlsCountMismatchIsTampered) {
-    EXPECT_TRUE(tls_table_tampered(3, 2, nullptr, nullptr, 0, nullptr));
+    EXPECT_EQ(tls_table_tampered(3, 2, nullptr, nullptr, 0, nullptr),
+              TlsTamperResult::Tampered);
 }
 
 TEST(SelfCheckLogic, TlsPointerMismatchIsTampered) {
     const uint64_t live[2] = {0x1000, 0x9999};
     const uint64_t expect[2] = {0x1000, 0x2000};
     const uint8_t in_text[2] = {1, 1};
-    EXPECT_TRUE(tls_table_tampered(2, 2, live, expect, 2, in_text));
+    EXPECT_EQ(tls_table_tampered(2, 2, live, expect, 2, in_text),
+              TlsTamperResult::Tampered);
 }
 
 TEST(SelfCheckLogic, TlsCallbackOutOfTextIsTampered) {
     const uint64_t live[1] = {0x1000};
     const uint64_t expect[1] = {0x1000};
     const uint8_t in_text[1] = {0}; /* PC resolves outside our text */
-    EXPECT_TRUE(tls_table_tampered(1, 1, live, expect, 1, in_text));
+    EXPECT_EQ(tls_table_tampered(1, 1, live, expect, 1, in_text),
+              TlsTamperResult::Tampered);
 }
 
 TEST(SelfCheckLogic, TlsCleanTableNotTampered) {
     const uint64_t live[2] = {0x1000, 0x2000};
     const uint64_t expect[2] = {0x1000, 0x2000};
     const uint8_t in_text[2] = {1, 1};
-    EXPECT_FALSE(tls_table_tampered(2, 2, live, expect, 2, in_text));
+    EXPECT_EQ(tls_table_tampered(2, 2, live, expect, 2, in_text),
+              TlsTamperResult::Clean);
+}
+
+TEST(SelfCheckLogic, TlsNullTablesAreUnavailableNotTampered) {
+    /* Both pointers null with matching count — cannot compare; must not be
+     * escalated as evidence of tampering. */
+    EXPECT_EQ(tls_table_tampered(2, 2, nullptr, nullptr, 0, nullptr),
+              TlsTamperResult::Unavailable);
+}
+
+TEST(SelfCheckLogic, TlsOneNullPointerIsUnavailable) {
+    const uint64_t live[1] = {0x1000};
+    EXPECT_EQ(tls_table_tampered(1, 1, live, nullptr, 1, nullptr),
+              TlsTamperResult::Unavailable);
 }
 
 /* ---- pure PE parser: build a minimal PE32+ and assert exact ranges ---- */
@@ -273,4 +290,53 @@ TEST(SelfCheckPeParse, RejectsTruncatedAndForged) {
     b[0] = 0x4D; b[1] = 0x5A;
     b[0x3C] = 0xFF; b[0x3D] = 0xFF; b[0x3E] = 0xFF; b[0x3F] = 0x7F;
     EXPECT_FALSE(pe::parse(b.data(), b.size()).valid);
+}
+
+TEST(SelfCheckPeParse, SectTableWrapRejected) {
+    /* An e_lfanew near UINT32_MAX causes e_lfanew + 4 + 20 + opt_size to wrap;
+     * the parser must reject without an out-of-bounds access. */
+    auto buf = build_min_pe(0x1000, 0x1000, 0x200, 0x1000,
+                            0x140000000ull, 0x10000);
+    /* Overwrite e_lfanew with a value that places the section table past the buffer
+     * when opt_size (0xF0) is added: 0x80 is the planted value; plant 0xFFFFFF00 to
+     * force 64-bit accumulation overflow detection. */
+    const uint32_t bad_lfanew = 0xFFFFFF00u;
+    buf[0x3C] = bad_lfanew & 0xFF;
+    buf[0x3D] = (bad_lfanew >> 8) & 0xFF;
+    buf[0x3E] = (bad_lfanew >> 16) & 0xFF;
+    buf[0x3F] = (bad_lfanew >> 24) & 0xFF;
+    EXPECT_FALSE(pe::parse(buf.data(), buf.size()).valid);
+}
+
+TEST(SelfCheckPeParse, SectionForRvaOverflow) {
+    /* A section with rva=UINT32_MAX-1 and virtual_size=0x10 would overflow
+     * rva + virtual_size; section_for_rva must not return a false positive. */
+    auto buf = build_min_pe(/*rva*/ 0x1000, /*vsize*/ 0x1000,
+                            /*raw_ptr*/ 0x400, /*raw_size*/ 0x1000,
+                            /*base*/ 0x140000000ull, /*soi*/ 0x10000);
+    pe::Headers h = pe::parse(buf.data(), buf.size());
+    ASSERT_TRUE(h.valid);
+    ASSERT_EQ(h.section_count, 1u);
+    /* Plant a pathological rva / virtual_size that would overflow uint32 addition. */
+    h.sections[0].rva = 0xFFFFFFF0u;
+    h.sections[0].virtual_size = 0x20u;
+    /* An rva that does NOT wrap: should not match. */
+    EXPECT_EQ(pe::section_for_rva(h, 0x1000u), nullptr);
+}
+
+TEST(SelfCheckPeParse, RvaToFileOffsetOverflow) {
+    /* raw_ptr near UINT32_MAX with a non-zero delta must not overflow and must
+     * return false rather than a wrapped offset. */
+    auto buf = build_min_pe(0x1000, 0x2000, 0x400, 0x2000,
+                            0x140000000ull, 0x10000);
+    pe::Headers h = pe::parse(buf.data(), buf.size());
+    ASSERT_TRUE(h.valid);
+    ASSERT_EQ(h.section_count, 1u);
+    /* Plant a raw_ptr near the top of uint32 space. */
+    h.sections[0].raw_ptr = 0xFFFFFFF0u;
+    h.sections[0].raw_size = 0x100u;
+    h.sections[0].rva = 0x1000u;
+    h.sections[0].virtual_size = 0x100u;
+    uint32_t out = 0;
+    EXPECT_FALSE(pe::rva_to_file_offset(h, 0x1010u, &out));
 }

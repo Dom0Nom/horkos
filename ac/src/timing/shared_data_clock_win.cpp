@@ -60,7 +60,11 @@ struct KSYSTEM_TIME_LOCAL {
 uint64_t read_ksystem_time(ULONG_PTR offset) {
     volatile const KSYSTEM_TIME_LOCAL* p =
         reinterpret_cast<volatile const KSYSTEM_TIME_LOCAL*>(KUSD_BASE + offset);
-    for (;;) {
+    /* Cap retries to defend against an indefinitely spinning thread in a suspended
+     * or migrating VM where the page updater never runs. Return 0 on non-convergence;
+     * callers treat a 0 result as no-sample (both deltas stay 0, usable() returns
+     * false, and timing_sample_clock_consistency returns false). */
+    for (int retry = 0; retry < 64; ++retry) {
         const LONG hi1 = p->High1Time;
         const ULONG lo = p->LowPart;
         const LONG hi2 = p->High2Time;
@@ -69,6 +73,7 @@ uint64_t read_ksystem_time(ULONG_PTR offset) {
                    static_cast<uint64_t>(lo);
         }
     }
+    return 0u; /* non-convergence — treat as no-sample */
 }
 
 /* Public, stable offsets within KUSER_SHARED_DATA. */

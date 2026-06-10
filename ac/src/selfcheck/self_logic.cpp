@@ -161,26 +161,26 @@ bool veh_handler_ordered_ahead(uint32_t our_handler_index,
     return our_handler_index != 0u || foreign_handler_ahead;
 }
 
-bool tls_table_tampered(uint32_t live_count, uint32_t disk_count,
-                        const uint64_t* live_rebased,
-                        const uint64_t* expected_rebased,
-                        uint32_t compare_count,
-                        const uint8_t* live_pc_in_text) noexcept {
+TlsTamperResult tls_table_tampered(uint32_t live_count, uint32_t disk_count,
+                                   const uint64_t* live_rebased,
+                                   const uint64_t* expected_rebased,
+                                   uint32_t compare_count,
+                                   const uint8_t* live_pc_in_text) noexcept {
     if (live_count != disk_count) {
-        return true; /* a callback was appended/removed */
+        return TlsTamperResult::Tampered; /* a callback was appended/removed */
     }
     if (!live_rebased || !expected_rebased) {
-        return false; /* nothing to compare; absence of data is not evidence */
+        return TlsTamperResult::Unavailable; /* nothing to compare; absence of data is not evidence */
     }
     for (uint32_t i = 0; i < compare_count; ++i) {
         if (live_rebased[i] != expected_rebased[i]) {
-            return true; /* a callback pointer was rebased to a foreign target */
+            return TlsTamperResult::Tampered; /* a callback pointer was rebased to a foreign target */
         }
         if (live_pc_in_text && live_pc_in_text[i] == 0u) {
-            return true; /* a live callback PC resolves outside our text */
+            return TlsTamperResult::Tampered; /* a live callback PC resolves outside our text */
         }
     }
-    return false;
+    return TlsTamperResult::Clean;
 }
 
 } // namespace selfcheck

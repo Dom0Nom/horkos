@@ -10,20 +10,20 @@
 
 #pragma once
 
+#include "platform.h"
+
 namespace hk { namespace sdk {
 
 /* Returns true if the kernel driver's control device can be opened. A false
  * result means the SDK runs in degraded (userspace-only) mode. */
 bool probe_driver();
 
-#if defined(HK_PLATFORM_WINDOWS) || defined(_WIN32)
+#if defined(HK_PLATFORM_WINDOWS)
 /* Windows-only minifilter altitude census (signal 6). Returns the count of
  * minifilters classified as altitude-squatting / failed-Authenticode
  * adjacent-above Horkos, or -1 on enumeration failure. Read-only; implemented in
  * backends/win/MinifilterCensusWin.cpp. Feeds the SDK report plane, not the
- * kernel ring. (The _WIN32 fallback in the guard is only because the SDK has not
- * yet defined HK_PLATFORM_WINDOWS for this TU; the implementation lives strictly
- * under backends/win/ per guardrail #1.) */
+ * kernel ring. */
 int minifilter_census();
 
 /* Signal 36 (user-mode half, win-kernel-driver-integrity). Reads

@@ -115,5 +115,9 @@ bool image_baseline_load(ImageBaseline& out) noexcept {
 #endif
 }
 
+bool image_baseline_valid(const ImageBaseline& bl) noexcept {
+    return bl.valid;
+}
+
 } // namespace selfcheck
 } // namespace hk
