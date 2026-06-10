@@ -165,16 +165,14 @@ static void walk_ext_caps_for_dsn(const uint8_t *cfg, uint32_t cfg_len,
             uint64_t eui64 = (static_cast<uint64_t>(hi) << 32) | lo;
             uint32_t oui = hk_dma_dsn_oui(eui64);
             /* The OUI-vs-VID match is a server-side table lookup. The client
-             * cannot hold the full IEEE registry; it stashes the match result
-             * as "unknown" (0) here and ships the raw VID + a marker. To keep
-             * the client verdict-free yet useful, we only set
-             * dsn_oui_matches_vendor when the OUI is the all-zero/locally-
-             * administered pattern that is a definite forgery shape (bit 1 of
-             * the first octet set => locally administered, never a real OUI).
-             * Anything else stays 0 = "server decides". */
+             * cannot hold the full IEEE registry, but it can detect the
+             * locally-administered bit (bit 1 of the first octet), which is
+             * never set on a real IEEE-assigned OUI. dsn_oui_locally_administered
+             * is 1 when that bit is set (suspicious), 0 when clear (unknown;
+             * the server compares OUI against the VID registry). */
             uint8_t first_octet = static_cast<uint8_t>((oui >> 16) & 0xFFu);
             bool locally_administered = (first_octet & 0x02u) != 0u;
-            d->dsn_oui_matches_vendor = locally_administered ? 0u : 1u;
+            d->dsn_oui_locally_administered = locally_administered ? 1u : 0u;
         }
 
         if (next == 0u || next <= off) break; /* terminator / no back-edges. */

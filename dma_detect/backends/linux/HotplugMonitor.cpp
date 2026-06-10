@@ -22,6 +22,7 @@
 #include <thread>
 #include <unistd.h>
 #include <time.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <linux/netlink.h>
 
@@ -56,15 +57,23 @@ bool parse_pci_bdf_from_uevent(const char *msg, size_t len, hk_pci_bdf *out) {
     bool got_bdf = false;
     bool is_add = false;
     size_t i = 0;
-    /* The first line is "ACTION@DEVPATH"; subsequent NUL-separated KV pairs. */
+    /* The first line is "ACTION@DEVPATH"; subsequent NUL-separated KV pairs.
+     * Token length is bounded by the known buffer length n so a truncated or
+     * non-NUL-terminated receive cannot run past the buffer. */
     while (i < len) {
         const char *tok = msg + i;
-        size_t toklen = std::strlen(tok); /* messages are NUL-separated. */
+        size_t remaining = len - i;
+        /* Find the NUL terminator within the remaining buffer instead of
+         * calling strlen, which would scan past len on a truncated datagram. */
+        size_t toklen = 0;
+        while (toklen < remaining && tok[toklen] != '\0') {
+            ++toklen;
+        }
         if (toklen == 0) { ++i; continue; }
 
-        if (std::strncmp(tok, "ACTION=add", 10) == 0) is_add = true;
-        else if (std::strncmp(tok, "SUBSYSTEM=pci", 13) == 0) is_pci = true;
-        else if (std::strncmp(tok, "PCI_SLOT_NAME=", 14) == 0) {
+        if (toklen >= 10 && std::strncmp(tok, "ACTION=add", 10) == 0) is_add = true;
+        else if (toklen >= 13 && std::strncmp(tok, "SUBSYSTEM=pci", 13) == 0) is_pci = true;
+        else if (toklen >= 14 && std::strncmp(tok, "PCI_SLOT_NAME=", 14) == 0) {
             unsigned dom = 0, bus = 0, dev = 0, fn = 0;
             if (std::sscanf(tok + 14, "%x:%x:%x.%x", &dom, &bus, &dev, &fn) == 4) {
                 out->domain = static_cast<uint16_t>(dom);
@@ -74,7 +83,7 @@ bool parse_pci_bdf_from_uevent(const char *msg, size_t len, hk_pci_bdf *out) {
             }
         }
         /* The first line ("add@/devices/...") also carries the action. */
-        else if (std::strncmp(tok, "add@", 4) == 0) is_add = true;
+        else if (toklen >= 4 && std::strncmp(tok, "add@", 4) == 0) is_add = true;
 
         i += toklen + 1;
     }
@@ -84,10 +93,25 @@ bool parse_pci_bdf_from_uevent(const char *msg, size_t len, hk_pci_bdf *out) {
 void monitor_loop(HotplugHandle *h) {
     char buf[8192];
     while (!h->stop.load(std::memory_order_acquire)) {
-        ssize_t n = ::recv(h->sock, buf, sizeof(buf) - 1, 0);
+        /* poll() with a 500 ms timeout so a dead/closed socket cannot spin
+         * the thread at 100% CPU on repeated zero/error returns from recv(). */
+        struct pollfd pfd;
+        pfd.fd      = h->sock;
+        pfd.events  = POLLIN;
+        pfd.revents = 0;
+        int pr = ::poll(&pfd, 1, 500);
+        if (pr < 0) {
+            if (h->stop.load(std::memory_order_acquire)) break;
+            continue; /* EINTR — re-poll. */
+        }
+        if (pr == 0) {
+            /* Timeout — no event; re-check stop flag and poll again. */
+            continue;
+        }
+        ssize_t n = ::recv(h->sock, buf, sizeof(buf) - 1, MSG_DONTWAIT);
         if (n <= 0) {
             if (h->stop.load(std::memory_order_acquire)) break;
-            continue; /* EINTR / transient — re-check stop and retry. */
+            continue; /* EINTR / EAGAIN — re-poll. */
         }
         buf[n] = '\0';
         hk_pci_bdf bdf;

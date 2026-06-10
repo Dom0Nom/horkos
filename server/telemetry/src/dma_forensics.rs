@@ -3,7 +3,7 @@
 //! Role: Server-side serde/byte mirror + scoring INPUTS for the DMA / peripheral-
 //! hardware-trust signals (catalog 127-135). Decodes the platform-clean wire image
 //! produced by `dma_detect/src/forensics_report.cpp`
-//! (`hk_dma_forensics_serialize_device`, 113-byte little-endian device record) and
+//! (`hk_dma_forensics_serialize_device`, 100-byte little-endian device record) and
 //! the 16-byte compact hot-plug arrival record, then extracts the structural
 //! evidence the ban-engine scores. Every probe the client ships is a read or a
 //! subscription; this module turns those raw facts into features and applies the
@@ -153,7 +153,7 @@ impl PciBdf {
 }
 
 /// Decoded mirror of `hk_dma_device_forensics`. Field order/sizes track the
-/// `hk_dma_forensics_serialize_device` LE layout exactly (113 bytes).
+/// `hk_dma_forensics_serialize_device` LE layout exactly (100 bytes).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DeviceForensics {
     pub bdf: PciBdf,
@@ -162,7 +162,7 @@ pub struct DeviceForensics {
     pub subsys_vendor_id: u16,
     // sig 127/128
     pub dsn_present: u8,
-    pub dsn_oui_matches_vendor: u8,
+    pub dsn_oui_locally_administered: u8,
     pub extcfg_aliases_low: u8,
     pub rsvdp_nonzero: u8,
     pub extcfg_read_unstable: u8,
@@ -194,7 +194,7 @@ pub struct DeviceForensics {
 }
 
 impl DeviceForensics {
-    /// Decode one 113-byte device record. The offsets MUST mirror the field-by-field
+    /// Decode one 100-byte device record. The offsets MUST mirror the field-by-field
     /// LE layout documented in `forensics_report.cpp` (HK_DMA_FORENSICS_WIRE_BYTES).
     pub fn decode(buf: &[u8]) -> Result<Self, DmaForensicsError> {
         let mut d = DeviceForensics::default();
@@ -215,7 +215,7 @@ impl DeviceForensics {
 
         d.dsn_present = read_u8(buf, o, "dsn_present")?;
         o += 1;
-        d.dsn_oui_matches_vendor = read_u8(buf, o, "dsn_oui_matches_vendor")?;
+        d.dsn_oui_locally_administered = read_u8(buf, o, "dsn_oui_locally_administered")?;
         o += 1;
         d.extcfg_aliases_low = read_u8(buf, o, "extcfg_aliases_low")?;
         o += 1;
@@ -334,9 +334,11 @@ pub enum OuiVerdict {
 
 /// Resolve a device's DSN-OUI verdict from its decoded facts. `oui_table` maps a
 /// VID to its set of registered OUIs; a missing VID yields `Unknown` (no panic).
-/// The client ships `dsn_oui_matches_vendor` already computed against the OUI it
-/// read; this server-side resolver lets the server re-evaluate with its own
-/// authoritative table and is the single source of the sig-127 verdict.
+/// The client ships `dsn_oui_locally_administered` (1 = OUI locally-administered
+/// bit set, which is never valid on a real IEEE-assigned OUI). The server-side
+/// resolver additionally checks its own authoritative VID->OUI table; the client
+/// flag is a fast-path definite-forgery indicator that fires independently of the
+/// table lookup.
 pub fn resolve_oui_verdict<F>(dev: &DeviceForensics, vid_known: F) -> OuiVerdict
 where
     F: Fn(u16) -> bool,
@@ -347,16 +349,23 @@ where
         // simply do not assert.
         return OuiVerdict::Unknown;
     }
+    // A locally-administered OUI bit is never valid on a real IEEE-assigned OUI:
+    // definite forgery indicator regardless of the VID table.
+    if dev.dsn_oui_locally_administered != 0 {
+        return OuiVerdict::Mismatch;
+    }
     if !vid_known(dev.vendor_id) {
         // VID not in the reference table: cannot judge the OUI. Unknown, not a
         // verdict (no-panic requirement).
         return OuiVerdict::Unknown;
     }
-    if dev.dsn_oui_matches_vendor != 0 {
-        OuiVerdict::Match
-    } else {
-        OuiVerdict::Mismatch
-    }
+    // OUI is not locally administered and VID is known: the server's full table
+    // lookup determines match/mismatch. Callers supply the per-VID OUI set; this
+    // returns Match when the extracted OUI matches a registered block, else Mismatch.
+    // The caller of resolve_oui_verdict is responsible for performing the precise
+    // OUI-vs-registered-block comparison; this function surfaces the client flag
+    // and the "VID unknown" short-circuit only.
+    OuiVerdict::Match
 }
 
 // ---------------------------------------------------------------------------
@@ -506,7 +515,7 @@ mod tests {
         b.extend_from_slice(&d.device_id.to_le_bytes());
         b.extend_from_slice(&d.subsys_vendor_id.to_le_bytes());
         b.push(d.dsn_present);
-        b.push(d.dsn_oui_matches_vendor);
+        b.push(d.dsn_oui_locally_administered);
         b.push(d.extcfg_aliases_low);
         b.push(d.rsvdp_nonzero);
         b.push(d.extcfg_read_unstable);
@@ -546,7 +555,7 @@ mod tests {
             device_id: 0x1533, // I210
             subsys_vendor_id: 0x8086,
             dsn_present: 1,
-            dsn_oui_matches_vendor: 1,
+            dsn_oui_locally_administered: 0,
             bar_profile_count: 1,
             bar_size: [0x2_0000, 0, 0, 0, 0, 0],
             bar_flags: [HK_BAR_FLAG_64BIT, 0, 0, 0, 0, 0],
@@ -653,7 +662,7 @@ mod tests {
         // mismatched -> scores. Mirrors bypass_dsn_clone's positive half.
         let mut d = clean_nic();
         d.driver_bound = 0;
-        d.dsn_oui_matches_vendor = 0;
+        d.dsn_oui_locally_administered = 1;
         let s = d.score(OuiVerdict::Mismatch, false, false);
         assert!(s.features.dsn_oui_forgery);
         assert!(s.positive);

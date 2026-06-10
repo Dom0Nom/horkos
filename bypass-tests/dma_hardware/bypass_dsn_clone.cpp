@@ -57,7 +57,7 @@ int main(void) {
     /* The structural suspect flag is fine to be true; the point is the DSN arm does
      * not add a forgery signal when no DSN is present. We assert the OUI helper is
      * never consulted for an absent DSN by checking the record stays "no forgery"
-     * shaped: dsn_oui_matches_vendor left 0 but dsn_present 0 => server -> Unknown.
+     * shaped: dsn_oui_locally_administered left 0, dsn_present 0 => server -> Unknown.
      * (The server-side Unknown verdict is covered in dma_forensics.rs tests; here we
      * assert the client never asserts a forgery on an absent DSN.) */
     if (dsnless.dsn_present != 0) {

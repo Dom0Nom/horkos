@@ -11,7 +11,7 @@
  *
  * Build:
  *   clang++ -std=c++17 -Wall -Wextra -Werror horkosd.cpp \
- *           -framework Foundation -o horkosd
+ *           -framework Foundation -framework Security -o horkosd
  *   (Foundation pulls in libSystem and the XPC runtime on macOS.)
  *
  * XPC service naming note:
@@ -25,8 +25,34 @@
 
 #include <xpc/xpc.h>
 #include <dispatch/dispatch.h>
+#include <Security/Security.h>
 #include <syslog.h>
 #include <cstdlib>
+#include <cstring>
+
+/* -----------------------------------------------------------------------
+ * xpc_connection_get_audit_token is Apple SPI (not in the public SDK
+ * headers) but is stable and documented via security research. We declare
+ * it guarded so the build fails loudly if the symbol disappears rather
+ * than silently calling the wrong address.
+ *
+ * HK-UNCERTAIN(xpc-audit-token-spi): xpc_connection_get_audit_token is
+ * private SPI. Its signature is well-known and the symbol has been stable
+ * across OS X 10.10 through macOS 14, but Apple may remove or change it
+ * without notice. If the symbol is unavailable the peer-validation path
+ * fails closed (connection cancelled). Verify on each major macOS release.
+ * ----------------------------------------------------------------------- */
+extern "C" void xpc_connection_get_audit_token(xpc_connection_t, audit_token_t *);
+
+/* Allowlisted signing identifiers that may connect to this daemon.
+ * A placeholder list; the real list must be reviewed before Phase 5
+ * ships to production. */
+static const char * const kAllowedSigningIds[] = {
+    "com.horkos.game",
+    "com.horkos.client",
+};
+static const size_t kAllowedSigningIdCount =
+    sizeof(kAllowedSigningIds) / sizeof(kAllowedSigningIds[0]);
 
 /* ------------------------------------------------------------------
  * Forward declarations
@@ -35,10 +61,77 @@ static void handle_client_event(xpc_connection_t peer, xpc_object_t event);
 static void handle_peer_connection(xpc_connection_t peer);
 
 /* ------------------------------------------------------------------
+ * validate_peer_signing_id
+ *
+ * Obtains the connecting process's audit token via the SPI
+ * xpc_connection_get_audit_token, creates a SecTask from it, reads the
+ * code-signing identifier, and checks it against the allowlist.
+ *
+ * Fail-closed contract: any failure in the SPI call, SecTask creation,
+ * or identifier retrieval returns false (caller cancels the connection).
+ * ------------------------------------------------------------------ */
+static bool validate_peer_signing_id(xpc_connection_t peer)
+{
+    audit_token_t token;
+    memset(&token, 0, sizeof(token));
+
+    /* SPI — see HK-UNCERTAIN(xpc-audit-token-spi) above. */
+    xpc_connection_get_audit_token(peer, &token);
+
+    SecTaskRef task = SecTaskCreateWithAuditToken(NULL, token);
+    if (task == NULL) {
+        syslog(LOG_ERR, "horkosd: SecTaskCreateWithAuditToken failed — rejecting peer");
+        return false;
+    }
+
+    CFErrorRef err = NULL;
+    /* Try the application-identifier entitlement first (sandboxed apps). */
+    CFTypeRef ent_val = SecTaskCopyValueForEntitlement(
+        task, CFSTR("com.apple.application-identifier"), &err);
+    CFStringRef signing_id = NULL;
+    if (ent_val != NULL && CFGetTypeID(ent_val) == CFStringGetTypeID()) {
+        signing_id = (CFStringRef)ent_val;
+    } else {
+        if (ent_val != NULL) CFRelease(ent_val);
+        if (err != NULL) { CFRelease(err); err = NULL; }
+        /* Fall back to the bare signing identifier (non-sandboxed daemons). */
+        signing_id = SecTaskCopySigningIdentifier(task, &err);
+    }
+    CFRelease(task);
+
+    if (signing_id == NULL) {
+        if (err) CFRelease(err);
+        syslog(LOG_ERR, "horkosd: could not read peer signing id — rejecting");
+        return false;
+    }
+
+    char id_buf[256] = {0};
+    CFStringGetCString(signing_id, id_buf, sizeof(id_buf), kCFStringEncodingUTF8);
+    CFRelease(signing_id);
+
+    for (size_t i = 0; i < kAllowedSigningIdCount; ++i) {
+        if (strcmp(id_buf, kAllowedSigningIds[i]) == 0) {
+            return true;
+        }
+    }
+
+    syslog(LOG_WARNING, "horkosd: rejected peer with signing id '%s'", id_buf);
+    return false;
+}
+
+/* ------------------------------------------------------------------
  * XPC listener callback — called once per new client connection.
  * ------------------------------------------------------------------ */
 static void handle_peer_connection(xpc_connection_t peer)
 {
+    /* Validate the peer's code-signing identity before processing any
+     * messages. Fail closed: if validation is unavailable or fails, the
+     * connection is cancelled immediately and the retain is never taken. */
+    if (!validate_peer_signing_id(peer)) {
+        xpc_connection_cancel(peer);
+        return;
+    }
+
     /* Retain the peer; it is released when the connection is cancelled. */
     xpc_retain(peer);
 

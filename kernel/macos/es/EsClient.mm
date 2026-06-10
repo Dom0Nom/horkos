@@ -641,8 +641,10 @@ BOOL HKEsClientStart(HKEsEventSink sink, void *sink_ctx, NSError **out_err)
                                            code:(NSInteger)result
                                        userInfo:@{NSLocalizedDescriptionKey: desc}];
         }
-        sSink    = NULL;
-        sSinkCtx = NULL;
+        sSink      = NULL;
+        sSinkCtx   = NULL;
+        sSinkQueue = nil;
+        sLog       = NULL;
         return NO;
     }
 
@@ -658,8 +660,10 @@ BOOL HKEsClientStart(HKEsEventSink sink, void *sink_ctx, NSError **out_err)
                                        userInfo:@{NSLocalizedDescriptionKey:
                                            @"es_subscribe failed"}];
         }
-        sSink    = NULL;
-        sSinkCtx = NULL;
+        sSink      = NULL;
+        sSinkCtx   = NULL;
+        sSinkQueue = nil;
+        sLog       = NULL;
         return NO;
     }
 

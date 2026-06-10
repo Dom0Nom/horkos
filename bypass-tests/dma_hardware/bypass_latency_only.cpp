@@ -33,7 +33,7 @@ int main(void) {
     d.tlp_latency_iqr_ns = 4000;           /* high jitter */
     d.tlp_same_root_port_group = 2;        /* cohort id */
     /* Every structural signal is clean. */
-    d.dsn_oui_matches_vendor = 0;
+    d.dsn_oui_locally_administered = 0;
     d.dsn_present = 0;                      /* no DSN => no forgery signal */
     d.extcfg_aliases_low = 0;
     d.extcfg_read_unstable = 0;
@@ -62,7 +62,7 @@ int main(void) {
     }
 
     bool any_structural_signal =
-        d.dsn_oui_matches_vendor == 0 && d.dsn_present != 0; /* would-be forgery */
+        d.dsn_oui_locally_administered != 0 && d.dsn_present != 0; /* would-be forgery */
     any_structural_signal = any_structural_signal
         || d.extcfg_aliases_low || d.extcfg_read_unstable || d.rsvdp_nonzero
         || d.msix_containment_violation || d.rom_pcir_id_mismatch

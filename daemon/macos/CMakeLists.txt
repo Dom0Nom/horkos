@@ -165,6 +165,9 @@ target_compile_options(horkosd PRIVATE
 # (no extra framework). Reference: Xcode SDK headers, WWDC 2012 session 241.
 target_link_libraries(horkosd PRIVATE
     "-framework Foundation"
+    # XPC peer validation (SecTaskCreateWithAuditToken + signing-identifier
+    # check in horkosd.cpp) lives in the Security framework.
+    "-framework Security"
     # macos-codesign-integrity: the AMFI-posture / amfid probes route their
     # IORegistry + csr_* + SIP reads through hk::platform (guardrail #1); link the
     # platform backend (which itself pulls CoreFoundation + IOKit).
