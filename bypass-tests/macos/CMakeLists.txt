@@ -15,6 +15,9 @@ set(hk_macos_bypass
     remote_thread           # signal 114
     ptrace_attach           # signal 116
     text_patch              # signal 117
+    # process-genealogy signal 207 (responsibility laundering). Disabled-but-
+    # compiled until the ES genealogy handler ships (HK_GENEALOGY_TEST_ENABLED).
+    responsible_launder     # signal 207
     # macos-codesign-integrity (signals 118-126). Disabled-but-compiled until the
     # Phase-5 signed fixture + daemon enforcement land (HK_CS_TEST_ENABLED gate).
     csflags_strip           # signal 118

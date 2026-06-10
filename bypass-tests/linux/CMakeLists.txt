@@ -25,6 +25,13 @@ foreach(_t hk_bypass_vm_write hk_bypass_proc_mem hk_bypass_wx_flip
     add_test(NAME ${_t} COMMAND ${_t})
 endforeach()
 
+# process-genealogy signal 206 (LD_PRELOAD / linker hijack). DISABLED
+# (HK_GENEALOGY_TEST_ENABLED undefined): a compiled no-op that passes; assertions
+# activate once the eBPF loader-trust path is verified on a real kernel. Signal
+# 205 reuses the existing hk_bypass_ptrace fixture (extended, not duplicated).
+add_executable(hk_bypass_ld_preload_launch ld_preload_launch.cpp)
+add_test(NAME hk_bypass_ld_preload_launch COMMAND hk_bypass_ld_preload_launch)
+
 # ---- linux-ebpf-injection bypass tests (signals 82-90) ----------------------
 # One per mechanism class (impl-plan §6.2). Built disabled-by-default like the
 # gate above; each defines its own HK_*_TEST_ENABLED activation macro once the

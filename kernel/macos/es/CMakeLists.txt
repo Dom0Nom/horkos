@@ -68,7 +68,10 @@ endif()
 # the daemon's own task as a proof-of-mechanism until resolved on-box.
 add_library(horkos_es STATIC
     EsClient.mm
-    ExceptionPortAudit.mm)
+    ExceptionPortAudit.mm
+    # process-genealogy signal 207: NOTIFY_EXEC responsible/team-id extraction.
+    # NOTIFY-only, no reply deadline (guardrail #7). Built only under HORKOS_MACOS_ES.
+    genealogy_handler.cpp)
 
 target_include_directories(horkos_es PRIVATE
     ${CMAKE_SOURCE_DIR}/sdk/include    # horkos/event_schema.h

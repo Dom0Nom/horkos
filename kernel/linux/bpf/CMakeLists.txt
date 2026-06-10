@@ -215,6 +215,21 @@ if(HORKOS_LINUX_EBPF_MEMORY)
     bpf_program(iter_task_vma)
 endif()
 
+# ---- process-genealogy launch-trust set (signals 205/206) --------------------
+# genealogy.bpf.c (205): ptrace x exec join + a BPF LSM ptrace_access_check hook
+# (audit-only). loader_trust.bpf.c (206): bounded envp scan at sys_enter_execve
+# for LD_PRELOAD/LD_AUDIT/LD_LIBRARY_PATH. Both share hk_ringbuf and compile
+# -Werror; the LSM half (205) attach-gates on CONFIG_BPF_LSM availability in
+# Loader.cpp (the tracepoint-join fallback stands alone), and the envp read (206)
+# is HK-UNCERTAIN per kernel (verifier-bounded loop) — confirm on the target.
+option(HORKOS_LINUX_EBPF_GENEALOGY
+    "Build the eBPF process-genealogy launch-trust sensors (signals 205/206)"
+    OFF)
+if(HORKOS_LINUX_EBPF_GENEALOGY)
+    bpf_program(genealogy)
+    bpf_program(loader_trust)
+endif()
+
 # ---- memory-integrity-selfcheck self-read set (signals 145/146/148/152) ------
 # selfcheck_read.bpf.c cooperates with the libbpf loader to foreign-read the AC
 # task's OWN memory (145) + soft-dirty/private state (146) + exec-VMA prot (152);
