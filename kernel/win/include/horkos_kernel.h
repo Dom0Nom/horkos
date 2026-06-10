@@ -761,6 +761,17 @@ void HkRingEmit(_In_ uint32_t type,
                 _In_reads_bytes_opt_(payload_bytes) const void* payload,
                 _In_ uint32_t payload_bytes);
 
+/* ---- win-hypervisor-detection kernel sensors (signals 39/41/42/44) ----
+ * Each samples at PASSIVE_LEVEL and emits a 16-byte hk_event_hv_* record via
+ * HkRingEmit. HkHvKernelSample() drives the enabled subset per the build flags
+ * (42 default ON; 39 default OFF-until-reviewed; 41/44 behind
+ * HK_HV_KERNEL_EXPERIMENTAL). The periodic call site is wired on the target box. */
+_IRQL_requires_max_(PASSIVE_LEVEL) void HkHvSyntheticMsrSample(void);   /* 42 */
+_IRQL_requires_max_(PASSIVE_LEVEL) void HkHvEptProbeSample(void);       /* 39 */
+_IRQL_requires_max_(PASSIVE_LEVEL) void HkHvSecureKernelSample(void);   /* 41 */
+_IRQL_requires_max_(PASSIVE_LEVEL) void HkHvApicIdtSample(void);        /* 44 */
+_IRQL_requires_max_(PASSIVE_LEVEL) void HkHvKernelSample(void);
+
 /* ---- Notify.c ---- */
 _IRQL_requires_max_(PASSIVE_LEVEL) NTSTATUS HkNotifyArm(void);
 _IRQL_requires_max_(PASSIVE_LEVEL) void     HkNotifyDisarm(void);

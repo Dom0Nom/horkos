@@ -82,6 +82,10 @@
     <ClCompile Include="src\ExecOrigin.c" />
     <ClCompile Include="src\MemScanPte.c" />
     <ClCompile Include="src\ModuleStomp.c" />
+    <ClCompile Include="src\HvSyntheticMsr.c" />
+    <ClCompile Include="src\HvEptProbe.c" />
+    <ClCompile Include="src\HvSecureKernelLiveness.c" />
+    <ClCompile Include="src\HvApicIdtResidue.c" />
     <ClCompile Include="src\Notify.c" />
     <ClCompile Include="src\ThreadProvenance.c" />
     <ClCompile Include="src\RingBuffer.c" />

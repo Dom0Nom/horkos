@@ -97,6 +97,24 @@ if(HORKOS_ANTI_ANALYSIS_SENSORS)
     endif()
 endif()
 
+# -------------------------------------------------------------------------
+# win-hypervisor-detection usermode samplers (signals 37/38/40/42/43/45 + the
+# kernel-record correlator). Windows-only (CPUID/RDTSCP/WMI/SMBIOS/IOCTL); the
+# pure structural-consistency cores are header-only in include/horkos/hv_logic.h
+# and host-unit-tested (tests/unit/test_hv_logic.cpp). The .cpp carry an #else
+# HK_AC_NOT_IMPLEMENTED stub so a stray non-Windows compile is safe.
+# -------------------------------------------------------------------------
+option(HK_HV_SENSORS "Build the win-hypervisor-detection usermode samplers" ON)
+if(HK_HV_SENSORS AND WIN32)
+    list(APPEND hk_ac_src
+        src/hv/hv_tlfs_leaves.cpp       # 37
+        src/hv/hv_vmexit_latency.cpp    # 38
+        src/hv/hv_vbs_attest.cpp        # 40
+        src/hv/hv_vm_identity.cpp       # 43
+        src/hv/hv_tsc_coherence.cpp     # 45
+        src/hv/hv_kernel_correlate.cpp) # kernel fold + hv_collect_all aggregator
+endif()
+
 add_library(hk_ac STATIC ${hk_ac_src})
 target_include_directories(hk_ac PUBLIC include)
 # The selfcheck TUs route platform reads through platform.h (guardrail #1) and
