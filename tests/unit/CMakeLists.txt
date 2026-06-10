@@ -26,6 +26,15 @@ add_executable(hk_unit_tests
     # win-kernel-driver-integrity pure-logic tests (no WDK; headers are plain C99).
     test_module_map_resolve.cpp
     test_ssdt_decode.cpp
+    # win-kernel-memory-injection pure decision cores (signals 10-18). The cores are
+    # header-only inline functions under kernel/win/include (mem_logic_vad.h /
+    # mem_logic_image.h / mem_logic_stomp.h, plain C99 over normalized mem_types.h);
+    # these tests exercise them with synthetic VAD nodes / loader lists / section
+    # bytes — no WDK, no live process, no VAD tree, no OS API. The kernel samplers
+    # that fill these inputs are Windows-driver-only and not built here.
+    test_mem_vad_logic.cpp
+    test_mem_image_logic.cpp
+    test_mem_stomp_logic.cpp
     test_integrity_finding_size.cpp
     # macos-codesign-integrity schema pin + pure FP-gate cores (signals 118-126).
     # The probe TUs split a PURE decision core from the impure csops()/Sec*/ES

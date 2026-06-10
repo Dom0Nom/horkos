@@ -33,6 +33,9 @@ pub enum TelemetryError {
     #[error("anti-analysis payload invalid: {0}")]
     AntiAnalysis(String),
 
+    #[error("memory-event record invalid: {0}")]
+    MemEvent(String),
+
     #[error("rate limit exceeded")]
     RateLimited,
 
@@ -70,6 +73,10 @@ impl IntoResponse for TelemetryError {
             TelemetryError::AntiAnalysis(msg) => (
                 StatusCode::BAD_REQUEST,
                 json!({ "status": "anti_analysis_invalid", "reason": msg }),
+            ),
+            TelemetryError::MemEvent(msg) => (
+                StatusCode::BAD_REQUEST,
+                json!({ "status": "mem_event_invalid", "reason": msg }),
             ),
             TelemetryError::RateLimited => (
                 StatusCode::TOO_MANY_REQUESTS,

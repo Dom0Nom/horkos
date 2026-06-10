@@ -48,6 +48,12 @@ extern "C" {
     HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x801, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
 #define HK_IOCTL_PUSH_POLICY \
     HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x802, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
+/* Memory-scan plane (schema v3). DRAIN_MEM_EVENTS strides the large
+ * hk_event_mem_record; SCAN_PROCESS enqueues a target PID for the scan worker. */
+#define HK_IOCTL_DRAIN_MEM_EVENTS \
+    HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x803, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
+#define HK_IOCTL_SCAN_PROCESS \
+    HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x804, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
 
 /* User-visible device name. Kernel creates \Device\Horkos with a symlink at
  * \DosDevices\Horkos; userspace opens \\.\Horkos. */
@@ -118,6 +124,42 @@ HK_STATIC_ASSERT(sizeof(hk_event_record) == 40, "hk_event_record wire size drift
 HK_STATIC_ASSERT(sizeof(hk_drain_header) == 16, "hk_drain_header wire size drift");
 HK_STATIC_ASSERT(sizeof(hk_status) == 32,       "hk_status wire size drift");
 HK_STATIC_ASSERT(sizeof(hk_policy) == 16,       "hk_policy wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Memory-scan large-record plane (schema v3).
+ * Memory/image-anomaly payloads (event_schema.h types 5..13) exceed the
+ * 16-byte hk_event_record payload. Rather than widen HK_EVENT_PAYLOAD_MAX
+ * (which would bloat the main 4096-slot ring 8-16x), a SECOND fixed-size record
+ * type sized to the largest memory payload (hk_event_mem_module_stomp, 304B)
+ * is drained via HK_IOCTL_DRAIN_MEM_EVENTS. Both record families share
+ * hk_event_header so the server demuxes on header.type.
+ * ------------------------------------------------------------------------- */
+#define HK_EVENT_MEM_PAYLOAD_MAX 320u /* >= sizeof(hk_event_mem_module_stomp). */
+#define HK_MEM_RING_CAPACITY     256u /* power of two; big slots stay bounded. */
+
+typedef struct hk_event_mem_record {
+    hk_event_header header;                          /* 24 bytes (shared). */
+    uint8_t         payload[HK_EVENT_MEM_PAYLOAD_MAX]; /* 320 bytes. */
+} hk_event_mem_record;                               /* 344 bytes total. */
+
+/* HK_IOCTL_SCAN_PROCESS input: enqueue a target for the scan worker. */
+typedef struct hk_scan_request {
+    uint32_t target_pid;
+    uint32_t signal_mask;   /* bit per signal 10..18; 0 = all enabled. */
+    uint32_t flags;         /* reserved (e.g. force-resample). */
+    uint32_t reserved;      /* must be zero. */
+} hk_scan_request;
+
+/* HK_IOCTL_DRAIN_MEM_EVENTS reuses hk_drain_header as its envelope but strides
+ * hk_event_mem_record. The largest memory payload must fit the record. */
+HK_STATIC_ASSERT(sizeof(hk_event_mem_record) == 344, "hk_event_mem_record wire size drift");
+HK_STATIC_ASSERT(sizeof(hk_scan_request) == 16,      "hk_scan_request wire size drift");
+HK_STATIC_ASSERT(sizeof(hk_event_mem_module_stomp) <= HK_EVENT_MEM_PAYLOAD_MAX,
+    "hk_event_mem_module_stomp exceeds HK_EVENT_MEM_PAYLOAD_MAX");
+HK_STATIC_ASSERT(sizeof(hk_event_mem_unsigned_image) <= HK_EVENT_MEM_PAYLOAD_MAX,
+    "hk_event_mem_unsigned_image exceeds HK_EVENT_MEM_PAYLOAD_MAX");
+HK_STATIC_ASSERT(sizeof(hk_event_mem_image_anomaly) <= HK_EVENT_MEM_PAYLOAD_MAX,
+    "hk_event_mem_image_anomaly exceeds HK_EVENT_MEM_PAYLOAD_MAX");
 
 #ifdef __cplusplus
 } /* extern "C" */

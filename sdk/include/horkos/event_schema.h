@@ -36,8 +36,10 @@
 
 /* Schema version. Bumped on every additive field change. Mirrored by the
  * Phase 2 server in lockstep. v2 added hk_event_process_exit and the image
- * flags field. */
-#define HK_EVENT_SCHEMA_VERSION 2u
+ * flags field. v3 added the memory/image-anomaly event family (types 5..13),
+ * which rides a separate large-record wire plane (see ioctl.h
+ * hk_event_mem_record) — the 16-byte hk_event_record plane is unchanged. */
+#define HK_EVENT_SCHEMA_VERSION 3u
 
 /* -------------------------------------------------------------------------
  * Event type enumeration.
@@ -49,7 +51,162 @@ typedef enum hk_event_type {
     HK_EVENT_PROCESS_EXIT    = 2,
     HK_EVENT_IMAGE_LOAD      = 3,
     HK_EVENT_HANDLE_OPEN     = 4,
+    /* Memory & image-anomaly family (schema v3). These ride the large-record
+     * wire plane (ioctl.h hk_event_mem_record), not the 16-byte hk_event_record
+     * ring. The kernel scan worker emits raw evidence; the server classifies. */
+    HK_EVENT_MEM_UNBACKED_EXEC    = 5,  /* signal 10: executable VAD, no backing. */
+    HK_EVENT_MEM_WX_DIVERGENCE    = 6,  /* signal 11: PTE NX vs VAD protection. */
+    HK_EVENT_MEM_MODULE_STOMP     = 7,  /* signal 12: on-disk vs in-memory .text. */
+    HK_EVENT_MEM_GHOST_IMAGE      = 8,  /* signal 13: image VAD absent from Ldr. */
+    HK_EVENT_MEM_PRIV_EXEC_COMMIT = 9,  /* signal 14: oversized private +X commit. */
+    HK_EVENT_MEM_EXOTIC_VAD       = 10, /* signal 15: large-page / VAD-rotate +X. */
+    HK_EVENT_MEM_HOLLOW_BACKING   = 11, /* signal 16: backing name/state mismatch. */
+    HK_EVENT_MEM_EXEC_ORIGIN_ANON = 12, /* signal 17: thread/TLS origin unbacked. */
+    HK_EVENT_MEM_UNSIGNED_IMAGE   = 13, /* signal 18: backing lacks signing prov. */
 } hk_event_type;
+
+/* -------------------------------------------------------------------------
+ * Normalized constants for the memory/image-anomaly family. The kernel scan
+ * worker reduces build-specific MMVAD/PTE state into these stable values
+ * before they cross the wire, so the server never sees a raw kernel layout.
+ * ------------------------------------------------------------------------- */
+
+/* Normalized VadType (independent of the build-specific MMVAD enum). */
+#define HK_MEM_VAD_NONE        0u  /* private (VadNone) — no section backing. */
+#define HK_MEM_VAD_IMAGE       1u  /* image-backed mapping. */
+#define HK_MEM_VAD_AWE         2u  /* Address Windowing Extensions region. */
+#define HK_MEM_VAD_ROTATE      3u  /* rotate-physical region. */
+#define HK_MEM_VAD_LARGE_PAGES 4u  /* large-page region. */
+#define HK_MEM_VAD_OTHER       5u
+
+/* Normalized protection bits (independent of MM_EXECUTE* build constants). */
+#define HK_MEM_PROT_READ    0x1u
+#define HK_MEM_PROT_WRITE   0x2u
+#define HK_MEM_PROT_EXECUTE 0x4u
+
+/* hk_mem_region.flags bits (signals 10/14/15). */
+#define HK_MEM_REGION_FLAG_UNBACKED      0x1u /* no ControlArea/FilePointer. */
+#define HK_MEM_REGION_FLAG_LARGE_PAGE    0x2u
+#define HK_MEM_REGION_FLAG_HAS_JIT_OWNER 0x4u /* inside a known-JIT module range. */
+
+/* hk_event_mem_image_anomaly.flags bits (signals 13 ghost + 16 hollow). */
+#define HK_MEM_IMG_FLAG_GHOST          0x01u /* image VAD in none of the Ldr lists. */
+#define HK_MEM_IMG_FLAG_HOLLOW         0x02u /* hollow/doppelgang backing. */
+#define HK_MEM_IMG_FLAG_DELETE_PENDING 0x04u
+#define HK_MEM_IMG_FLAG_TRANSACTED     0x08u
+#define HK_MEM_IMG_FLAG_NAME_MISMATCH  0x10u /* FILE_OBJECT name != Ldr path. */
+#define HK_MEM_IMG_FLAG_ENTRY_REGION   0x20u /* region contains the entry point. */
+#define HK_MEM_IMG_FLAG_EXEC           0x40u
+#define HK_MEM_IMG_FLAG_HAS_JIT_OWNER  0x80u
+
+/* hk_event_mem_exec_origin.flags bits (signal 17). */
+#define HK_MEM_ORIGIN_FLAG_ANON         0x1u /* resolved into an unbacked region. */
+#define HK_MEM_ORIGIN_FLAG_TLS_CALLBACK 0x2u /* origin is a TLS callback (not thread). */
+#define HK_MEM_ORIGIN_FLAG_HAS_JIT_OWNER 0x4u
+
+/* signer_verdict enum (signal 18). The kernel ships HK_SIGN_UNKNOWN; userspace
+ * (ImageSigningWin.cpp via WinVerifyTrust) overwrites it before forwarding. */
+#define HK_SIGN_UNKNOWN   0u
+#define HK_SIGN_UNSIGNED  1u
+#define HK_SIGN_SELF      2u
+#define HK_SIGN_UNTRUSTED 3u
+#define HK_SIGN_TRUSTED   4u
+
+/* -------------------------------------------------------------------------
+ * Payload: common region descriptor — reused by signals 10, 14, 15
+ * (HK_EVENT_MEM_UNBACKED_EXEC / _PRIV_EXEC_COMMIT / _EXOTIC_VAD).
+ * Fixed size: 32 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_mem_region {
+    uint32_t pid;
+    uint32_t vad_type;     /* HK_MEM_VAD_*. */
+    uint64_t region_base;  /* StartingVpn << PAGE_SHIFT. */
+    uint64_t region_size;  /* (EndingVpn - StartingVpn + 1) << PAGE_SHIFT. */
+    uint32_t protection;   /* HK_MEM_PROT_* mask. */
+    uint32_t flags;        /* HK_MEM_REGION_FLAG_*. */
+} hk_mem_region;
+
+HK_STATIC_ASSERT(sizeof(hk_mem_region) == 32, "hk_mem_region wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_MEM_WX_DIVERGENCE (signal 11). Fixed size: 40 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_mem_wx {
+    hk_mem_region region;     /* 32 */
+    uint32_t      vad_says_exec; /* 0/1 from VAD protection. */
+    uint32_t      pte_says_exec; /* 0/1 from live leaf-PTE NX bit. */
+} hk_event_mem_wx;
+
+HK_STATIC_ASSERT(sizeof(hk_event_mem_wx) == 40, "hk_event_mem_wx wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_MEM_MODULE_STOMP (signal 12). Largest payload — pins
+ * HK_EVENT_MEM_PAYLOAD_MAX in ioctl.h. Fixed size: 304 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_mem_module_stomp {
+    uint32_t pid;
+    uint32_t first_diff_rva;          /* RVA of first unexplained code byte. */
+    uint64_t image_base;
+    uint8_t  live_section_sha256[32];
+    uint8_t  disk_section_sha256[32];
+    uint16_t module_path_len;         /* bytes used in module_path (<= 208). */
+    uint16_t section_name_len;        /* bytes used in section_name (<= 8). */
+    uint8_t  module_path[208];        /* UTF-16 -> UTF-8 path, truncated. */
+    uint8_t  section_name[8];         /* e.g. ".text". */
+} hk_event_mem_module_stomp;
+
+HK_STATIC_ASSERT(sizeof(hk_event_mem_module_stomp) == 304,
+    "hk_event_mem_module_stomp wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_MEM_GHOST_IMAGE (13) + HK_EVENT_MEM_HOLLOW_BACKING (16)
+ * share this {pid, flags, base, path} shape; the server demuxes on header.type
+ * and reads HK_MEM_IMG_FLAG_* to tell ghost from hollow + backing state.
+ * Fixed size: 232 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_mem_image_anomaly {
+    uint32_t pid;
+    uint32_t flags;        /* HK_MEM_IMG_FLAG_*. */
+    uint64_t image_base;
+    uint16_t path_len;     /* bytes used in path (<= 208). */
+    uint16_t reserved;     /* must be zero. */
+    uint8_t  path[208];    /* Ldr-recorded path, UTF-16 -> UTF-8, truncated. */
+} hk_event_mem_image_anomaly;
+
+HK_STATIC_ASSERT(sizeof(hk_event_mem_image_anomaly) == 232,
+    "hk_event_mem_image_anomaly wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_MEM_EXEC_ORIGIN_ANON (signal 17). Fixed size: 24 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_mem_exec_origin {
+    uint32_t pid;
+    uint32_t thread_id;        /* TID whose start address resolved anon (0 = TLS). */
+    uint64_t start_address;    /* Win32 start address or TLS callback target. */
+    uint32_t resolved_vad_type;/* HK_MEM_VAD_* the target resolved into. */
+    uint32_t flags;            /* HK_MEM_ORIGIN_FLAG_*. */
+} hk_event_mem_exec_origin;
+
+HK_STATIC_ASSERT(sizeof(hk_event_mem_exec_origin) == 24,
+    "hk_event_mem_exec_origin wire size drift");
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_MEM_UNSIGNED_IMAGE (signal 18). Kernel ships path + hash
+ * with signer_verdict = HK_SIGN_UNKNOWN; userspace fills the verdict.
+ * Fixed size: 264 bytes.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_mem_unsigned_image {
+    uint32_t pid;
+    uint32_t signer_verdict;   /* HK_SIGN_* (kernel: UNKNOWN; userspace fills). */
+    uint64_t image_base;
+    uint8_t  file_sha256[32];
+    uint16_t path_len;         /* bytes used in file_path (<= 208). */
+    uint16_t reserved;         /* must be zero. */
+    uint8_t  file_path[208];
+} hk_event_mem_unsigned_image;
+
+HK_STATIC_ASSERT(sizeof(hk_event_mem_unsigned_image) == 264,
+    "hk_event_mem_unsigned_image wire size drift");
 
 /* -------------------------------------------------------------------------
  * Common event header — present at the start of every event payload.
