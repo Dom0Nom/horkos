@@ -13,6 +13,7 @@
 #include <wdmsec.h>   /* SDDL_DEVOBJ_* and WdfControlDeviceInitAllocate SDDL. */
 
 #include "horkos_kernel.h"
+#include "mem_scan.h"
 
 /* Single global control-device handle (declared extern in horkos_kernel.h). */
 WDFDEVICE g_HkControlDevice = NULL;
@@ -167,6 +168,14 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
         status = STATUS_SUCCESS;
     }
 
+    /* Arm the memory-scan plane worker (signals 10-18). Non-fatal: the worker
+     * fails closed on an unconfirmed build (vad_layout.h allow-list) and emits
+     * nothing, so a failure here only loses the mem-scan plane, not the driver. */
+    status = HkMemScanArm();
+    if (!NT_SUCCESS(status)) {
+        status = STATUS_SUCCESS;
+    }
+
     /* Arm the registry-tamper filter on Horkos's own keys (signals 5, 9).
      * Non-fatal: an altitude collision or denied registration degrades the
      * registry sensor but the rest of the driver runs. */
@@ -219,6 +228,7 @@ void HkEvtDriverUnload(_In_ WDFDRIVER Driver)
 
     /* Disarm in reverse order of arming, BEFORE deleting the control device,
      * so no callback can touch a freed ring. */
+    HkMemScanDisarm();
     HkNotifyDisarm();
 
     /* If a Ps* callback could not be removed, the kernel still holds a live
