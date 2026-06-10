@@ -13,6 +13,7 @@ pub mod device_trust;
 pub mod dma_forensics;
 pub mod driver_integrity;
 pub mod error;
+pub mod hv;
 pub mod input_cadence;
 pub mod input_prov;
 pub mod kernel_events;
@@ -83,6 +84,13 @@ async fn ingest(
     // an out-of-range tier yields a typed error (never a panic). Absent = no signal.
     if let Some(aa) = &payload.anti_analysis {
         aa.validate()?;
+    }
+
+    // The optional hypervisor-state sub-payload (v6) is range-validated when
+    // present; an out-of-range VM-identity class yields a typed error (never a
+    // panic). Absent = no HV signal.
+    if let Some(hv) = &payload.hv {
+        hv.validate()?;
     }
 
     tracing::Span::current()
