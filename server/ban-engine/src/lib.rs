@@ -15,6 +15,7 @@ pub mod error;
 pub mod fusion;
 pub mod loader_inject;
 pub mod pipeline;
+pub mod scoring;
 pub mod store;
 
 use std::collections::HashMap;

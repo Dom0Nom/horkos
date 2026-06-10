@@ -181,9 +181,10 @@ async fn ingest_to_pipeline(
 }
 
 /// Compile-time reference to an `ort` type so the dependency stays wired and any
-/// API drift in the pinned `ort` version surfaces as a build error here. This
-/// does NOT load or initialize the ONNX Runtime native library — that happens
-/// when the real inference path constructs a session in a later phase.
+/// API drift in the pinned `ort` version surfaces as a build error here. The
+/// live inference path is `ban_engine::scoring::AimScorer`, which constructs a
+/// real ONNX session from `HORKOS_AIM_MODEL`; this marker stays for the
+/// telemetry crate's own `ort` link check.
 pub fn ort_linked_marker() -> &'static str {
     let _phantom = std::marker::PhantomData::<ort::session::Session>;
     "ort: linked"

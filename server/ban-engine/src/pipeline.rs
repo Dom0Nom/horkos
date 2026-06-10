@@ -29,19 +29,21 @@
 //! blocking syscalls; bounded channels, bounded session maps, bounded
 //! snapshot buffers (DoS gates); `thiserror`; no `unwrap()` outside tests.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
-use telemetry::analyzers::AnalyzerRegistry;
+use telemetry::analyzers::{AnalyzerRegistry, SuspicionEvent};
 use telemetry::schema::TickPayload;
 use telemetry::snapshot::Snapshot;
 use tokio::sync::mpsc;
 
+use crate::aim_kinematics::{segment_flicks, segment_reactions, segment_switches};
 use crate::arrival_cadence::{Arrival, ArrivalRing, CadenceParams};
 use crate::fusion::{fuse, FusionParams, Verdict};
+use crate::scoring::{observations_from_segments, AimScorer};
 use crate::store::{DecisionRecord, DecisionStore, RecordKind};
 
 /// Pipeline tuning. Defaults are PoC-scale; the live values are deployment
@@ -68,6 +70,9 @@ pub struct PipelineConfig {
     /// Minimum received ticks before sustained zero pairing raises the
     /// Review-tier pairing-integrity anomaly.
     pub pairing_anomaly_min_ticks: u64,
+    /// Per-session rolling tick window the aim-kinematics segmenters run over
+    /// (signals 166-169). Bounded (DoS gate); oldest ticks evicted FIFO.
+    pub aim_window_ticks: usize,
     pub fusion: FusionParams,
     pub cadence: CadenceParams,
 }
@@ -83,6 +88,7 @@ impl Default for PipelineConfig {
             pair_window_ticks: 2,
             snapshot_buffer: 256,
             pairing_anomaly_min_ticks: 256,
+            aim_window_ticks: 1024,
             fusion: FusionParams::default(),
             cadence: CadenceParams::default(),
         }
@@ -149,8 +155,19 @@ impl PipelineHandle {
     }
 }
 
-/// Spawn the pipeline shard tasks. Requires a running tokio runtime.
+/// Spawn the pipeline shard tasks. Requires a running tokio runtime. The
+/// aim-kinematics ONNX scorer is loaded once from `HORKOS_AIM_MODEL` and shared
+/// read-only across shards; absent/invalid = no aim-model signal (fail-open).
 pub fn spawn(cfg: PipelineConfig, store: Arc<DecisionStore>) -> PipelineHandle {
+    spawn_with_scorer(cfg, store, Arc::new(AimScorer::from_env()))
+}
+
+/// `spawn` with an explicit scorer (tests inject a fixture model).
+pub fn spawn_with_scorer(
+    cfg: PipelineConfig,
+    store: Arc<DecisionStore>,
+    scorer: Arc<Option<AimScorer>>,
+) -> PipelineHandle {
     let shards = cfg.shards.max(1);
     let alive = Arc::new(AtomicBool::new(true));
     let decisions = Arc::new(RwLock::new(HashMap::new()));
@@ -169,8 +186,9 @@ pub fn spawn(cfg: PipelineConfig, store: Arc<DecisionStore>) -> PipelineHandle {
         let decisions = Arc::clone(&decisions);
         let alive = Arc::clone(&alive);
         let stats = Arc::clone(&stats);
+        let scorer = Arc::clone(&scorer);
         tokio::spawn(async move {
-            shard_loop(cfg, tick_rx, snap_rx, store, decisions, stats).await;
+            shard_loop(cfg, tick_rx, snap_rx, store, decisions, stats, scorer).await;
             // Any shard exiting means the pipeline can no longer analyze its
             // players: flag the whole pipeline unhealthy (fail closed).
             alive.store(false, Ordering::Release);
@@ -193,6 +211,9 @@ struct PlayerSession {
     arrivals: ArrivalRing,
     /// Not-yet-consumed authoritative snapshots, keyed by snapshot tick.
     snaps: BTreeMap<u64, Snapshot>,
+    /// Rolling window of recent ticks for the aim-kinematics segmenters
+    /// (signals 166-169). Bounded FIFO (DoS gate).
+    tick_window: VecDeque<TickPayload>,
     latched: Verdict,
     session_start_ns: u64,
     last_seen: Instant,
@@ -210,6 +231,7 @@ impl PlayerSession {
             registry: AnalyzerRegistry::new(player_id),
             arrivals: ArrivalRing::new(),
             snaps: BTreeMap::new(),
+            tick_window: VecDeque::new(),
             latched: Verdict::Clean,
             session_start_ns: unix_now_ns(),
             last_seen: now,
@@ -252,6 +274,7 @@ impl PlayerSession {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn shard_loop(
     cfg: PipelineConfig,
     mut tick_rx: mpsc::Receiver<TickPayload>,
@@ -259,6 +282,7 @@ async fn shard_loop(
     store: Arc<DecisionStore>,
     decisions: Arc<RwLock<HashMap<u64, LatestDecision>>>,
     stats: Arc<PipelineStats>,
+    scorer: Arc<Option<AimScorer>>,
 ) {
     let mut sessions: HashMap<u64, PlayerSession> = HashMap::new();
     let sweep_every = cfg.session_ttl.checked_div(4).unwrap_or(cfg.session_ttl);
@@ -270,7 +294,7 @@ async fn shard_loop(
         tokio::select! {
             tick = tick_rx.recv() => match tick {
                 Some(t) => {
-                    handle_tick(&cfg, &mut sessions, t, &store, &decisions, &stats).await;
+                    handle_tick(&cfg, &mut sessions, t, &store, &decisions, &stats, &scorer).await;
                 }
                 // Ingest sink gone: the pipeline has no input plane left.
                 None => break,
@@ -311,6 +335,7 @@ fn handle_snapshot(
     sessions.insert(player_id, session);
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_tick(
     cfg: &PipelineConfig,
     sessions: &mut HashMap<u64, PlayerSession>,
@@ -318,6 +343,7 @@ async fn handle_tick(
     store: &DecisionStore,
     decisions: &RwLock<HashMap<u64, LatestDecision>>,
     stats: &PipelineStats,
+    scorer: &Option<AimScorer>,
 ) {
     let player_id = tick.player_id;
     let now = Instant::now();
@@ -360,9 +386,40 @@ async fn handle_tick(
         None => session.pairing_misses += 1,
     }
 
-    if session.ticks_received % cfg.score_interval_ticks == 0 {
-        score_session(cfg, session, store, decisions).await;
+    if session.tick_window.len() >= cfg.aim_window_ticks {
+        session.tick_window.pop_front();
     }
+    session.tick_window.push_back(tick);
+
+    if session.ticks_received % cfg.score_interval_ticks == 0 {
+        score_session(cfg, session, store, decisions, scorer).await;
+    }
+}
+
+/// Run the aim-kinematics segmenters over the session's tick window and score
+/// each observation with the ONNX model. Returns the model-derived suspicions
+/// (empty when no model is loaded — fail-open). Signal 168 (recoil phase-lock)
+/// needs the authoritative per-weapon recoil table, which the live pipeline
+/// does not yet carry, so only 166/167/169 are scored here.
+fn aim_model_suspicions(
+    session: &PlayerSession,
+    scorer: &Option<AimScorer>,
+    window_ticks: u64,
+) -> Vec<SuspicionEvent> {
+    let Some(scorer) = scorer else {
+        return Vec::new();
+    };
+    let window: Vec<TickPayload> = session.tick_window.iter().cloned().collect();
+    let flicks = segment_flicks(&window);
+    let reactions = segment_reactions(&window);
+    let switches = segment_switches(&window);
+    let observations =
+        observations_from_segments(&flicks, &reactions, &[], &switches, window_ticks);
+    let player_id = session.registry.player_id();
+    observations
+        .iter()
+        .filter_map(|o| scorer.score(player_id, o))
+        .collect()
 }
 
 async fn score_session(
@@ -370,9 +427,14 @@ async fn score_session(
     session: &mut PlayerSession,
     store: &DecisionStore,
     decisions: &RwLock<HashMap<u64, LatestDecision>>,
+    scorer: &Option<AimScorer>,
 ) {
     let player_id = session.registry.player_id();
-    let events = session.registry.collect_suspicions();
+    let mut events = session.registry.collect_suspicions();
+    let window_ticks = session
+        .last_tick
+        .saturating_sub(session.first_tick.unwrap_or(0));
+    events.extend(aim_model_suspicions(session, scorer, window_ticks));
     let cadence = match crate::arrival_cadence::detect(&session.arrivals, &cfg.cadence) {
         Ok(obs) => obs,
         Err(e) => {
