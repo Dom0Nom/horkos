@@ -400,14 +400,14 @@ static void cs_emit_mmap(const es_message_t *msg)
     obs.target_pid   = obs.source_pid;   /* ES MMAP is the mapping process itself */
     obs.protection   = (uint32_t)mm->protection;
     obs.flags        = (uint32_t)mm->flags;
-    /* The source FD's signing attributes (es_file_t.* via mm->source) and whether
-     * it is a platform binary identify a non-platform exec page. mm->source is an
-     * es_file_t*; the signing-id lives on the mapping PROCESS for team-id, but the
-     * FD-level platform bit is the discriminant the correlator wants.
-     * HK-UNCERTAIN(es-mmap-source): the exact es_event_mmap_t source signing
-     * fields / availability across ES message versions is unverified (plan
-     * Risk 4); we conservatively copy the mapping process's platform bit + signing
-     * id, which the correlator treats as the non-platform gate input. */
+    /* HK-VERIFIED(es-mmap-source): es_event_mmap_t.source is an es_file_t* (available
+     * since macOS 10.15, ES message v1). es_file_t carries only path, path_truncated,
+     * and stat — it has NO signing_id or team_id fields. Signing identity lives on
+     * es_process_t, not es_file_t. The mapping process's platform bit and signing_id
+     * are therefore the correct fields to use here (as this code does). There is no
+     * per-file signing info available from the mmap source in ES.
+     * Source: https://developer.apple.com/documentation/endpointsecurity/es_event_mmap_t
+     *         https://developer.apple.com/documentation/endpointsecurity/es_file_t */
     obs.is_platform_src = msg->process->is_platform_binary ? 1u : 0u;
     obs.timestamp_ns = hk_monotonic_ns();
     copy_token(obs.signing_id, sizeof(obs.signing_id), &msg->process->signing_id);

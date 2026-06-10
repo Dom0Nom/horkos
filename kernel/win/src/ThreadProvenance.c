@@ -15,33 +15,36 @@
  *       horkos_kernel.h). Guardrail #4: kernel TU only, no userspace headers.
  *
  * ============================================================================
- * HK-UNCERTAIN(ex-thread-notify-startaddress): VERIFIED-FALSE PLAN ASSUMPTION.
- * The plan (docs/impl-plans/win-kernel-thread-injection.md §"Kernel plane") is
+ * HK-VERIFIED(ex-thread-notify-startaddress): VERIFIED-FALSE PLAN ASSUMPTION.
+ * The plan (docs/impl-plans/win-kernel-thread-injection.md ss"Kernel plane") is
  * built on PsSetCreateThreadNotifyRoutineEx delivering a
  * PPS_CREATE_THREAD_NOTIFY_INFO whose StartAddress is the spoof-resistant kernel
  * ETHREAD start (the load-bearing source for signal 23). That is INCORRECT per
  * the WDK DDI:
  *   - PsSetCreateThreadNotifyRoutineEx(PSCREATETHREADNOTIFYTYPE NotifyType,
  *       PVOID NotifyInformation): for PsCreateThreadNotifyNonSystem,
- *       NotifyInformation is a PCREATE_THREAD_NOTIFY_ROUTINE — the SAME 3-arg
+ *       NotifyInformation is a PCREATE_THREAD_NOTIFY_ROUTINE -- the SAME 3-arg
  *       callback as the non-Ex variant: VOID(HANDLE ProcessId, HANDLE ThreadId,
  *       BOOLEAN Create). There is NO PS_CREATE_THREAD_NOTIFY_INFO and NO
  *       StartAddress parameter.
  *   - The ONLY documented difference vs PsSetCreateThreadNotifyRoutine is the
  *       execution context: the Ex/NonSystem callback runs on the NEWLY CREATED
  *       thread; the legacy callback runs on the CREATOR thread.
- *   refs: ntddk.h PsSetCreateThreadNotifyRoutineEx /
- *         PCREATE_THREAD_NOTIFY_ROUTINE (both fetched & quoted in the task log).
+ *   Refs (verified against public docs):
+ *     learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/
+ *       nf-ntddk-pssetcreatethreadnotifyroutineex
+ *     learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/
+ *       ne-ntddk-_pscreatethreadnotifytype
  *
  * Consequence: there is NO sanctioned kernel-callback source for the thread
  * start address at create time. Signal 23's "spoof-resistant kernel start" must
  * come from a different mechanism (e.g. ZwQueryInformationThread under the
  * userspace enrichment plane, with its known spoofability, or an undocumented
  * ETHREAD->StartAddress / Win32StartAddress field read which is exactly the kind
- * of version-gated internals the CLAUDE.md guardrails forbid guessing). Per
- * guardrail #13 this file does NOT fabricate a start-address source: it captures
- * kernel_start_address = 0 and sets it to be resolved by the userspace plane,
- * and the design owner must revisit signal 23 before this ships. STOP/confirm.
+ * of version-gated internals the guardrails forbid guessing). Per guardrail #13
+ * this file does NOT fabricate a start-address source: it captures
+ * kernel_start_address = 0 and sets it to be resolved by the userspace plane.
+ * Design owner must revisit signal 23 before this ships. STOP/confirm.
  * ============================================================================
  */
 
@@ -128,7 +131,7 @@ static VOID NTAPI HkThreadNotifyEx(_In_ HANDLE ProcessId,
     payload.tid = (uint32_t)(ULONG_PTR)ThreadId;
     payload.pid = (uint32_t)(ULONG_PTR)ProcessId;
 
-    /* HK-UNCERTAIN(ex-thread-notify-startaddress) — see file header. No
+    /* HK-VERIFIED(ex-thread-notify-startaddress) -- see file header. No
      * sanctioned kernel start-address source at create time; resolved by the
      * userspace enrichment plane (hk_event_thread_provenance). Left zero. */
     payload.kernel_start_address = 0;

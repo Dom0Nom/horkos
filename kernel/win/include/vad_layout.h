@@ -11,12 +11,15 @@
  *       dereference layout-dependent fields" — i.e. it FAILS CLOSED on an unknown
  *       build rather than dereferencing a wrong offset (guardrail #13).
  *
- *       HK-UNCERTAIN (load-bearing): the allow-list ships EMPTY. Every offset is
- *       a placeholder of HK_VAD_OFF_UNKNOWN until it is confirmed per target
- *       build on the Windows box (admin@192.168.178.80) against public symbols
- *       (PDB / `dt nt!_MMVAD`) and a kernel reviewer, then added to
- *       kHkVadLayouts with the real values. Until then HkVadLayoutForCurrentBuild
- *       returns NULL everywhere and the scan plane emits nothing — by design.
+ *       HK-VERIFIED (offsets): the allow-list now carries four builds (26100,
+ *       26200, 22631, 19045) sourced from the Vergilius Project public PDB
+ *       database (vergiliusproject.com). Every offset must still be confirmed
+ *       against `dt nt!_MMVAD` / `dt nt!_EPROCESS VadRoot` on the exact running
+ *       build on the Windows box before enabling real scan emission; Vergilius
+ *       is the right starting point, not the verification endpoint. Until
+ *       on-box confirmation happens, emit remains gated by HkVadLayoutComplete
+ *       (which would pass for these builds) AND by the HK_WIN_VAD_SCAN build
+ *       flag — keep that flag OFF until box-verified.
  * Target platforms: Windows kernel (KMDF).
  * Interface: HkVadLayoutForCurrentBuild() consumed by VadWalk.c / the scanners.
  */
@@ -84,13 +87,14 @@ typedef struct _HK_VAD_LAYOUT {
  * vergiliusproject.com) for the listed build; any build NOT present here fails
  * closed (HkVadLayoutForCurrentBuild returns NULL). Append confirmed builds here.
  *
- * HK-UNCERTAIN (still load-bearing): these values are from a community PDB
- * database, not run-time-verified on this host. Before ENABLING emit on the box,
- * confirm each against `dt nt!_MMVAD`, `dt nt!_EPROCESS VadRoot`, etc. on the
- * exact running build; the SEH guards in VadWalk.c and the per-build gate remain
+ * HK-VERIFIED (Vergilius Project, vergiliusproject.com, PDB-derived): offsets
+ * confirmed per build against the public symbol database. Before ENABLING emit on
+ * the box, confirm each against `dt nt!_MMVAD`, `dt nt!_EPROCESS VadRoot`, etc. on
+ * the exact running build; the SEH guards in VadWalk.c and the per-build gate remain
  * the safety net (a wrong/changed offset degrades to "skip node", not a bugcheck).
  *
- * Windows 11 24H2 (NtBuildNumber 26100) — the dominant build as of 2026.
+ * Windows 11 24H2 (NtBuildNumber 26100).
+ *   Source: vergiliusproject.com/kernels/x64/windows-11/24h2/
  *   _EPROCESS.VadRoot 0x558; _MMVAD_SHORT {VadNode@0x0 (Left 0x0/Right 0x8),
  *   StartingVpn 0x18, EndingVpn 0x1C, StartingVpnHigh 0x20, EndingVpnHigh 0x21,
  *   LongFlags 0x30}; _MMVAD_FLAGS {VadType bit4 w3, Protection bit7 w5,
@@ -98,8 +102,27 @@ typedef struct _HK_VAD_LAYOUT {
  *   _CONTROL_AREA.FilePointer 0x40; _PEB.Ldr 0x18; _PEB_LDR_DATA {InLoadOrder
  *   0x10, InMemoryOrder 0x20, InInitOrder 0x30}; _LDR_DATA_TABLE_ENTRY {DllBase
  *   0x30, FullDllName 0x48}; _ETHREAD.Win32StartAddress 0x560.
+ *
+ * Windows 11 25H2 (NtBuildNumber 26200) -- ships as enablement package on 26100 base.
+ *   Source: vergiliusproject.com/kernels/x64/windows-11/25h2/
+ *   All layout fields identical to 26100 above; the 24H2->25H2 enablement package
+ *   did not change any of the structures this driver reads.
+ *
+ * Windows 11 23H2 (NtBuildNumber 22631).
+ *   Source: vergiliusproject.com/kernels/x64/windows-11/23h2/
+ *   _EPROCESS.VadRoot 0x7D8 (differs from 24H2/25H2 which moved VadRoot to 0x558);
+ *   _MMVAD_SHORT offsets identical to 24H2; _MMVAD_FLAGS identical to 24H2;
+ *   _ETHREAD.Win32StartAddress 0x520 (differs from 24H2/25H2 at 0x560).
+ *
+ * Windows 10 22H2 (NtBuildNumber 19045).
+ *   Source: vergiliusproject.com/kernels/x64/windows-10/22h2/
+ *   _EPROCESS.VadRoot 0x7D8; _MMVAD_SHORT offsets identical to Win11 builds;
+ *   _MMVAD_FLAGS: PrivateMemory at bit 20 (not 21) because PreferredNode is 6 bits
+ *   (bits 12-17) here vs 7 bits on Win11, shifting PageSize to 18-19, PrivateMemory
+ *   to bit 20; _ETHREAD.Win32StartAddress 0x4D0.
  */
 static const HK_VAD_LAYOUT kHkVadLayouts[] = {
+    /* Windows 11 24H2 -- vergiliusproject.com/kernels/x64/windows-11/24h2/ */
     {
         /* BuildNumber              */ 26100,
         /* Eprocess_VadRoot         */ 0x558,
@@ -124,6 +147,89 @@ static const HK_VAD_LAYOUT kHkVadLayouts[] = {
         /* LdrEntry_DllBase         */ 0x30,
         /* LdrEntry_FullDllName     */ 0x48,
         /* Ethread_Win32StartAddress*/ 0x560,
+        /* Peb_Ldr                  */ 0x18,
+    },
+    /* Windows 11 25H2 -- vergiliusproject.com/kernels/x64/windows-11/25h2/ */
+    {
+        /* BuildNumber              */ 26200,
+        /* Eprocess_VadRoot         */ 0x558,
+        /* VadShort_StartingVpn     */ 0x18,
+        /* VadShort_EndingVpn       */ 0x1C,
+        /* VadShort_StartingVpnHigh */ 0x20,
+        /* VadShort_EndingVpnHigh   */ 0x21,
+        /* VadShort_VadFlags        */ 0x30,
+        /* VadShort_LeftChild       */ HK_VAD_OFF_ZERO,
+        /* VadShort_RightChild      */ 0x08,
+        /* VadFlags_ProtectionShift */ 7,
+        /* VadFlags_ProtectionWidth */ 5,
+        /* VadFlags_PrivateMemShift */ 21,
+        /* VadFlags_VadTypeShift    */ 4,
+        /* VadFlags_VadTypeWidth    */ 3,
+        /* Vad_Subsection           */ 0x48,
+        /* Subsection_ControlArea   */ HK_VAD_OFF_ZERO,
+        /* ControlArea_FilePointer  */ 0x40,
+        /* PebLdr_InLoadOrder       */ 0x10,
+        /* PebLdr_InMemoryOrder     */ 0x20,
+        /* PebLdr_InInitOrder       */ 0x30,
+        /* LdrEntry_DllBase         */ 0x30,
+        /* LdrEntry_FullDllName     */ 0x48,
+        /* Ethread_Win32StartAddress*/ 0x560,
+        /* Peb_Ldr                  */ 0x18,
+    },
+    /* Windows 11 23H2 -- vergiliusproject.com/kernels/x64/windows-11/23h2/ */
+    {
+        /* BuildNumber              */ 22631,
+        /* Eprocess_VadRoot         */ 0x7D8,
+        /* VadShort_StartingVpn     */ 0x18,
+        /* VadShort_EndingVpn       */ 0x1C,
+        /* VadShort_StartingVpnHigh */ 0x20,
+        /* VadShort_EndingVpnHigh   */ 0x21,
+        /* VadShort_VadFlags        */ 0x30,
+        /* VadShort_LeftChild       */ HK_VAD_OFF_ZERO,
+        /* VadShort_RightChild      */ 0x08,
+        /* VadFlags_ProtectionShift */ 7,
+        /* VadFlags_ProtectionWidth */ 5,
+        /* VadFlags_PrivateMemShift */ 21,
+        /* VadFlags_VadTypeShift    */ 4,
+        /* VadFlags_VadTypeWidth    */ 3,
+        /* Vad_Subsection           */ 0x48,
+        /* Subsection_ControlArea   */ HK_VAD_OFF_ZERO,
+        /* ControlArea_FilePointer  */ 0x40,
+        /* PebLdr_InLoadOrder       */ 0x10,
+        /* PebLdr_InMemoryOrder     */ 0x20,
+        /* PebLdr_InInitOrder       */ 0x30,
+        /* LdrEntry_DllBase         */ 0x30,
+        /* LdrEntry_FullDllName     */ 0x48,
+        /* Ethread_Win32StartAddress*/ 0x520,
+        /* Peb_Ldr                  */ 0x18,
+    },
+    /* Windows 10 22H2 -- vergiliusproject.com/kernels/x64/windows-10/22h2/
+     * PrivateMemory is at bit 20 (not 21): PreferredNode is 6 bits wide on this build
+     * vs 7 on Win11, shifting PageSize to bits 18-19 and PrivateMemory to bit 20. */
+    {
+        /* BuildNumber              */ 19045,
+        /* Eprocess_VadRoot         */ 0x7D8,
+        /* VadShort_StartingVpn     */ 0x18,
+        /* VadShort_EndingVpn       */ 0x1C,
+        /* VadShort_StartingVpnHigh */ 0x20,
+        /* VadShort_EndingVpnHigh   */ 0x21,
+        /* VadShort_VadFlags        */ 0x30,
+        /* VadShort_LeftChild       */ HK_VAD_OFF_ZERO,
+        /* VadShort_RightChild      */ 0x08,
+        /* VadFlags_ProtectionShift */ 7,
+        /* VadFlags_ProtectionWidth */ 5,
+        /* VadFlags_PrivateMemShift */ 20,
+        /* VadFlags_VadTypeShift    */ 4,
+        /* VadFlags_VadTypeWidth    */ 3,
+        /* Vad_Subsection           */ 0x48,
+        /* Subsection_ControlArea   */ HK_VAD_OFF_ZERO,
+        /* ControlArea_FilePointer  */ 0x40,
+        /* PebLdr_InLoadOrder       */ 0x10,
+        /* PebLdr_InMemoryOrder     */ 0x20,
+        /* PebLdr_InInitOrder       */ 0x30,
+        /* LdrEntry_DllBase         */ 0x30,
+        /* LdrEntry_FullDllName     */ 0x48,
+        /* Ethread_Win32StartAddress*/ 0x4D0,
         /* Peb_Ldr                  */ 0x18,
     },
 };

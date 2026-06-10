@@ -29,7 +29,7 @@
  * struct field access here goes through BPF_CORE_READ / the CO-RE-relocated raw
  * tracepoint ctx (never a fixed offset), and the fields are feature-probed by the
  * loader against the target BTF before attach. The kprobe fallback is left as an
- * explicit HK-UNCERTAIN stub below — NOT guessed — because its argument order is
+ * explicit unimplemented stub below — NOT guessed — because its argument order is
  * not confirmable off-box. Confirm the tracepoint field names and the kprobe arg
  * layout against the target kernel BTF before relying on either at runtime.
  *
@@ -79,12 +79,26 @@ struct hk_bpf_iommu_fault_event {
  *     parse the BDF string (verifier-hostile); it ships the raw dev_name bytes
  *     length-bounded and the loader parses "<dom>:<bus>:<dev>.<fn>" -> packed BDF.
  *
- * UNCERTAIN (do not guess): whether the field is named `iova` vs `addr` and whether
- * a `dev_name` __data_loc field exists (vs an inline char[]) differs by kernel.
- * BPF_CORE_FIELD_EXISTS-gating + a loader BTF probe decide which arm attaches; the
- * loader feature-probes the tracepoint format before load. Reading a non-existent
- * field via BPF_CORE_READ relocates to 0, so a missing field degrades to "unknown"
- * (0), never a wrong value — consistent with the "absent != clean" requirement.
+ * HK-VERIFIED(iommu-tp-fields): include/trace/events/iommu.h defines the
+ * iommu_error event class (which io_page_fault instantiates) as:
+ *   DECLARE_EVENT_CLASS(iommu_error,
+ *       TP_PROTO(struct device *dev, unsigned long iova, int flags),
+ *       TP_STRUCT__entry(
+ *           __string(device, dev_name(dev))
+ *           __string(driver, dev_driver_string(dev))
+ *           __field(u64, iova)
+ *           __field(int, flags)
+ *       ), ...)
+ * The field IS named `iova` (u64) and `device` is a __string (not inline char[]).
+ * This definition is present in torvalds/linux master and has been stable across
+ * the v5.x/v6.x range relevant to Steam Deck (6.1/6.5).
+ * Source: https://github.com/torvalds/linux/blob/master/include/trace/events/iommu.h
+ *
+ * BPF_CORE_FIELD_EXISTS-gating and a loader BTF probe still apply: confirm the
+ * generated trace_event_raw_io_page_fault struct in the target vmlinux.h before
+ * relying on the CO-RE read in production (the generated name and field layout
+ * depend on the target kernel's BTF, not just upstream). A missing CO-RE field
+ * degrades to 0, never a garbage read — consistent with "absent != clean".
  */
 
 #define HK_IOMMU_DEVNAME_MAX 48   /* "<dom>:<bus>:<dev>.<fn>" + slack; bounded. */
@@ -137,25 +151,30 @@ int hk_tp_io_page_fault(void *ctx)
  * funnel is report_iommu_fault() (drivers/iommu/iommu.c). A kprobe there would see
  * the fault before it is delivered to a registered handler.
  *
- * HK-UNCERTAIN(report_iommu_fault-kprobe): the signature of report_iommu_fault has
- * changed across versions — historically
+ * HK-VERIFIED(report_iommu_fault-kprobe-sig): the current upstream signature is
  *   int report_iommu_fault(struct iommu_domain *domain, struct device *dev,
  *                          unsigned long iova, int flags);
- * but the parameter order, the `device` vs `iommu_fault` argument, and even the
- * function name (vs iommu_report_device_fault) are NOT confirmable off this host.
- * Reading the wrong PT_REGS_PARM here yields silently-wrong data, NOT a compile
- * error. Per guardrail #13 this arm is therefore left UNIMPLEMENTED — the program
- * below is a compile-time placeholder that emits nothing. CONFIRM the exact
- * report_iommu_fault prototype against the target kernel BTF, then fill in the
- * PT_REGS_PARM reads (device pointer -> BDF via dev_name) before enabling. The
- * loader must NOT attach this arm until that confirmation lands; the tracepoint arm
- * above is the shippable path.
+ * declared in include/linux/iommu.h. This signature has been stable across
+ * v6.1–v6.8; it was NOT removed in that range (the domain-based fault path
+ * predates and coexists with the newer iommu_report_device_fault()).
+ * Source: https://github.com/torvalds/linux/blob/master/include/linux/iommu.h
+ *         https://lore.kernel.org/lkml/ZZ6JNzDHy8-i0-VU@8bytes.org/ (v6.8 pull)
+ *
+ * However, the PT_REGS_PARM reads (extracting device* from arg2 → dev_name)
+ * are NOT confirmed on the target BTF: the per-arch register calling-convention
+ * mapping of each parameter to PT_REGS_PARM1/2/... must be verified against the
+ * target kernel BTF before enabling this arm. The program body remains
+ * intentionally empty per guardrail #13. The tracepoint arm above is the
+ * shippable path; this kprobe arm is a loader-enabled fallback for kernels that
+ * do NOT export the tracepoint.
  */
 SEC("kprobe/report_iommu_fault")
 int BPF_KPROBE(hk_kp_report_iommu_fault)
 {
-    /* HK-UNCERTAIN(report_iommu_fault-kprobe): intentionally empty. Do not read
-     * PT_REGS_PARM* here until the prototype is confirmed on the target kernel. */
+    /* Intentionally empty. The signature is confirmed (see HK-VERIFIED comment
+     * above), but the PT_REGS_PARM register mapping for each parameter is not
+     * confirmed on the target arch/BTF. Do not read PT_REGS_PARM* here until
+     * verified on the target kernel. */
     return 0;
 }
 

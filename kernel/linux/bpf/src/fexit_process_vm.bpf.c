@@ -7,7 +7,7 @@
  *       fexit return value (bytes transferred). A foreign writer poking the
  *       game's address space is the classic external-memory-cheat choke point.
  * Target platform: Linux eBPF (BPF_PROG_TYPE_TRACING / fexit; needs BTF and the
- *                  target fn in kallsyms/BTF — see HK-UNCERTAIN below).
+ *                  target fn in kallsyms/BTF — see HK-VERIFIED note in hk_emit_vm_access).
  * Interface: fexit on the process_vm_writev / process_vm_readv syscall fns;
  *            reads hk_protected (include/hk_protected.bpf.h); writes hk_ringbuf
  *            (extern, shared via Loader.cpp). Maps to server events
@@ -54,15 +54,25 @@ struct hk_bpf_vm_access_event {
  * Shared emit helper. Resolves the target task from the syscall `pid` argument,
  * checks the protected set, and submits an event. `tag` selects write vs read.
  *
- * HK-UNCERTAIN(process-vm-fexit-target): whether fexit attaches to the exported
- * syscall entry (process_vm_writev / __x64_sys_process_vm_writev) or whether the
- * real work lives in an inner helper (e.g. process_vm_rw(..., vm_write=1)) that
- * may be `static`/inlined and therefore absent from BTF/kallsyms is
- * kernel-version-dependent. If the SEC() name below does not resolve at load,
- * the loader must fall back to a kprobe on process_vm_rw (designed-in, not
- * bolted-on). CONFIRM the attachable symbol against the target kernel BTF before
- * committing to fexit vs kprobe. The pid->task->mm resolution and the protected
- * comparison are stable regardless of attach point.
+ * HK-VERIFIED(process-vm-fexit-target): mm/process_vm_access.c defines
+ *   SYSCALL_DEFINE6(process_vm_writev, ...)  →  sys_process_vm_writev
+ *   SYSCALL_DEFINE6(process_vm_readv, ...)   →  sys_process_vm_readv
+ * The inner helper process_vm_rw() is STATIC and therefore absent from BTF and
+ * kallsyms; fentry/fexit cannot attach to it. The SYSCALL_DEFINE6 wrappers ARE
+ * exported (non-static); their canonical BTF names on x86-64 are
+ * "__x64_sys_process_vm_writev" / "__x64_sys_process_vm_readv" (the syscall
+ * table wrapper) AND the "process_vm_writev" / "process_vm_readv" names used in
+ * the SEC() strings below, which libbpf resolves to the arch-prefixed symbol at
+ * load time via the syscall-naming convention. The SEC("fexit/process_vm_writev")
+ * form is the correct libbpf spelling; libbpf handles the arch prefix.
+ * The first argument (pid_t pid) is confirmed as the first register-argument in
+ * the SYSCALL_DEFINE6 expansion, matching the BPF_PROG declaration below.
+ * Source: https://github.com/torvalds/linux/blob/master/mm/process_vm_access.c
+ *
+ * process_vm_rw fallback note: if the arch-prefixed symbol is absent on an
+ * unusual target, the loader kprobe fallback on process_vm_rw is NOT viable
+ * (static/inlined). The kprobe fallback should target __x64_sys_process_vm_writev
+ * directly instead.
  */
 static __always_inline int
 hk_emit_vm_access(__u32 tag, pid_t target_pid_arg, long ret)

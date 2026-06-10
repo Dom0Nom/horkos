@@ -43,11 +43,26 @@ extern "C" int hv_sample_tlfs_leaves(hv_tlfs_leaves* out)
     __cpuid(regs, 1);
     out->cpuid1_ecx31_hv = ((uint32_t)regs[2] & 0x80000000u) ? 1u : 0u;
 
-    /* HK-UNCERTAIN: NtQuerySystemInformation(SystemHypervisorDetailInformation /
-     * SystemIsolatedUserModeInformation) info-class layouts vary by build and are
-     * only semi-documented. The OS posture fields are confirmed on the box (Win11
-     * 25H2); until then they stay 0 (read by the server as "not collected"), and
-     * the CPUID half — which is fully documented — carries the signal. */
+    /* HK-VERIFIED (info-class numbers and struct shapes):
+     *   SystemHypervisorDetailInformation  = 0x9F (159)  available Win10+
+     *   SystemIsolatedUserModeInformation  = 0xA5 (165)  available Win10+
+     * Source: geoffchappell.com/studies/windows/km/ntoskrnl/inc/api/ntexapi/
+     *         system_information_class.htm
+     *
+     * SYSTEM_ISOLATED_USER_MODE_INFORMATION (0x10 bytes): byte 0 contains packed
+     * bit fields; SecureKernelRunning is bit 0, HvciEnabled is bit 1. All-zero
+     * unless the secure kernel is running (VSM active). This is the right query
+     * for os_vbs_running. Struct layout: geoffchappell.com/studies/windows/km/
+     * ntoskrnl/api/ex/sysinfo/isolated_user_mode.htm
+     *
+     * SYSTEM_HYPERVISOR_DETAIL_INFORMATION (0x70 bytes): seven 16-byte HV_DETAILS
+     * members wrapping CPUID leaves 0x40000000..0x40000005 -- redundant with the
+     * CPUID reads above; not useful for os_hv_present here.
+     *
+     * HK-UNCERTAIN (call site): info-class numbers and struct shapes are confirmed;
+     * the actual NtQuerySystemInformation call has not been validated on-box across
+     * SKUs and virtualization configurations. Output fields and failure modes need
+     * on-box verification before relying on SecureKernelRunning for signal 40. */
     out->os_hv_present = out->cpuid1_ecx31_hv; /* best available without the query. */
     out->os_vbs_running = 0;
 
