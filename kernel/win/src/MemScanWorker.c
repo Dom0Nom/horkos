@@ -43,10 +43,11 @@ typedef struct _HK_MEM_PENDING {
 static HK_MEM_PENDING g_Pending;
 
 /* ---- worker control ---- */
-static PETHREAD   g_WorkerThread;
-static KEVENT     g_WorkSignal;     /* set when a target is enqueued or on stop. */
-static volatile LONG g_Stop;
-static BOOLEAN    g_Armed;
+static PETHREAD          g_WorkerThread;
+static KEVENT            g_WorkSignal;      /* set when a target is enqueued or on stop. */
+static KEVENT            g_WorkerDone;      /* signalled by worker as its very last action. */
+static volatile LONG     g_Stop;
+static volatile BOOLEAN  g_Armed;
 
 void HkMemRingEmit(uint32_t type, const void* payload, uint32_t payload_bytes)
 {
@@ -217,6 +218,7 @@ static void HkMemScanWorker(PVOID context)
             HkScanOneTarget(&target);
         }
     }
+    KeSetEvent(&g_WorkerDone, IO_NO_INCREMENT, FALSE);
     PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
@@ -235,6 +237,7 @@ NTSTATUS HkMemScanArm(void)
     RtlZeroMemory(&g_Pending, sizeof(g_Pending));
     KeInitializeSpinLock(&g_Pending.Lock);
     KeInitializeEvent(&g_WorkSignal, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&g_WorkerDone, NotificationEvent, FALSE);
     g_Stop = 0;
 
     InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -247,8 +250,16 @@ NTSTATUS HkMemScanArm(void)
                                        KernelMode, (PVOID*)&g_WorkerThread, NULL);
     ZwClose(h);
     if (!NT_SUCCESS(status)) {
-        /* The thread will run to completion harmlessly (no targets enqueued). */
+        /* Cannot obtain a thread reference to wait on at disarm time.  Drive the
+         * worker to exit via the stop flag + wake event, then wait on g_WorkerDone
+         * (the worker signals it as its last action before PsTerminateSystemThread).
+         * Do NOT set g_Armed: callers must not enqueue targets into a partially-armed
+         * state, and HkMemScanDisarm must still run to drain g_WorkerDone. */
+        InterlockedExchange(&g_Stop, 1);
+        KeSetEvent(&g_WorkSignal, IO_NO_INCREMENT, FALSE);
+        KeWaitForSingleObject(&g_WorkerDone, Executive, KernelMode, FALSE, NULL);
         g_WorkerThread = NULL;
+        return status;
     }
     g_Armed = TRUE;
     return STATUS_SUCCESS;
@@ -266,6 +277,12 @@ void HkMemScanDisarm(void)
         KeWaitForSingleObject(g_WorkerThread, Executive, KernelMode, FALSE, NULL);
         ObDereferenceObject(g_WorkerThread);
         g_WorkerThread = NULL;
+    } else {
+        /* g_WorkerThread == NULL only if ObReferenceObjectByHandle failed in arm,
+         * but g_Armed was never set in that path so we cannot reach here normally.
+         * Belt-and-suspenders: wait on the done event in case a future code path
+         * changes that invariant. */
+        KeWaitForSingleObject(&g_WorkerDone, Executive, KernelMode, FALSE, NULL);
     }
     g_Armed = FALSE;
 }

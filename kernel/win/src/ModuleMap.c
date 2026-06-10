@@ -78,6 +78,12 @@ NTSTATUS HkModuleMapBuild(PHK_MODULE_MAP Map)
         return NT_SUCCESS(status) ? STATUS_UNSUCCESSFUL : status;
     }
 
+    /* Sanity cap before the margin arithmetic: if `needed` is already implausibly
+     * large (> 64 MB for a module list is unheard of) treat it as a corrupt or
+     * adversarial response and bail rather than let the addition wrap a ULONG. */
+    if (needed > 64u * 1024u * 1024u) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     bufLen = needed + (needed / 4) + 4096u; /* 25% + page margin for growth. */
     /* ExAllocatePool2 (not the deprecated ExAllocatePoolWithTag) — requires the
      * WDK for Windows 10 2004+ (build 19041); the CMake/vcxproj target SDKs
