@@ -99,7 +99,14 @@ if(WIN32)
         # win-kernel-memory-injection signal 18 userspace half: WinVerifyTrust
         # signer verdict over the kernel-shipped backing path+hash. Confined to
         # backends/win (guardrail #1); links wintrust below.
-        src/backends/win/ImageSigningWin.cpp)
+        src/backends/win/ImageSigningWin.cpp
+        # process-genealogy userspace sensors (signals 201/202/203/204). Documented
+        # Toolhelp/VirtualQuery/token/job APIs; the pure token-delta + reparent
+        # helpers are host-tested in genealogy_logic.h.
+        src/backends/win/ancestry_walker.cpp   # 201 chain
+        src/backends/win/region_walk.cpp        # 202 exec-region inventory
+        src/backends/win/token_check.cpp        # 203 token-integrity delta
+        src/backends/win/job_silo_check.cpp)    # 204 job/silo advisory
     if(HK_WIN_ETWTI)
         list(APPEND hk_sdk_backend src/backends/win/EtwTiConsumer.cpp)
     endif()

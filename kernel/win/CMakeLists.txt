@@ -119,7 +119,14 @@ set(HK_DRIVER_SRC
     src/HvSyntheticMsr.c
     src/HvEptProbe.c
     src/HvSecureKernelLiveness.c
-    src/HvApicIdtResidue.c)
+    src/HvApicIdtResidue.c
+    # process-genealogy kernel sensors (signals 199/200/202). 199 (reparent) is
+    # fully wired to the create-notify + the host-tested pure helper; 200 (launch
+    # timing) only timestamps — no kernel resume hook (guardrail #13); 202 records
+    # the loader module set for the server-side manual-map reconcile.
+    src/proc_genealogy.c
+    src/launch_timing.c
+    src/module_reconcile.c)
 
 # memory-integrity-selfcheck self-read IOCTL (signals 145/146/148/151/152). Default
 # OFF: the caller-identity binding that makes a self-foreign-read safe is unsettled,

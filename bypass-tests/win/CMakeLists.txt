@@ -25,6 +25,13 @@ add_executable(hk_bypass_hv_detection hv_detection_bypass.cpp)
 target_include_directories(hk_bypass_hv_detection PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
 add_test(NAME hk_bypass_hv_detection COMMAND hk_bypass_hv_detection)
 
+# process-genealogy gate (signals 199-204). DISABLED (HK_GENEALOGY_TEST_ENABLED
+# undefined): a compiled no-op that passes, like byovd_load.cpp; assertions
+# activate once the genealogy sensors are verified on the box.
+add_executable(hk_bypass_reparent_spoof reparent_spoof.cpp)
+target_include_directories(hk_bypass_reparent_spoof PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
+add_test(NAME hk_bypass_reparent_spoof COMMAND hk_bypass_reparent_spoof)
+
 # win-kernel-object-callbacks self-integrity surface gate. Phase 3 builds it
 # disabled (HK_SELFCHECK_TEST_ENABLED undefined); it activates when the kernel
 # unhook fixture and the HK_EVENT_CALLBACK_* schema bump land. The enabled body

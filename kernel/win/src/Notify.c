@@ -74,6 +74,11 @@ static VOID NTAPI HkProcessNotifyEx(_Inout_ PEPROCESS Process,
         payload.create_time_ns =
             (uint64_t)PsGetProcessCreateTimeQuadPart(Process) * 100ull;
         HkRingEmit(HK_EVENT_PROCESS_CREATE, &payload, sizeof(payload));
+        /* process-genealogy signal 199: emit the v5 create-ex record with the
+         * true creator vs inherited parent (PsGetCurrentProcessId is valid here,
+         * the creating thread's context, at PASSIVE_LEVEL). */
+        HkGenealogyClassify(ProcessId, CreateInfo->ParentProcessId,
+                            (LONG64)payload.create_time_ns);
     } else {
         hk_event_process_exit payload;
         RtlZeroMemory(&payload, sizeof(payload));
@@ -101,6 +106,14 @@ static VOID NTAPI HkImageNotify(_In_opt_ PUNICODE_STRING FullImageName,
     RtlZeroMemory(&payload, sizeof(payload));
     payload.pid = (uint32_t)(ULONG_PTR)ProcessId;
     payload.image_base = (uint64_t)(ULONG_PTR)ImageInfo->ImageBase;
+
+    /* process-genealogy: feed the launch-timing (200) + manual-map reconcile (202)
+     * sensors the image-load event. ImageInfo->ImageMappedToAllPids etc. are not
+     * used; HasBackingFile precursor is left for the box (no FILE_OBJECT in
+     * IMAGE_INFO directly). */
+    HkLaunchTimingOnImage(ProcessId, ImageInfo->ImageBase);
+    HkModuleReconcileOnImage(ProcessId, ImageInfo->ImageBase,
+                             (SIZE_T)ImageInfo->ImageSize, FALSE);
 
     /* BYOVD detection. The load-image notify callback CANNOT abort a load that
      * is already mapping; it can only detect and flag. True blocking requires

@@ -176,6 +176,13 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
         status = STATUS_SUCCESS;
     }
 
+    /* Arm the process-genealogy launch-timing sensor (signal 200). Non-fatal:
+     * signal 199 (reparent) rides the create-notify directly and is unaffected. */
+    status = HkLaunchTimingArm();
+    if (!NT_SUCCESS(status)) {
+        status = STATUS_SUCCESS;
+    }
+
     /* Arm the registry-tamper filter on Horkos's own keys (signals 5, 9).
      * Non-fatal: an altitude collision or denied registration degrades the
      * registry sensor but the rest of the driver runs. */
@@ -228,6 +235,7 @@ void HkEvtDriverUnload(_In_ WDFDRIVER Driver)
 
     /* Disarm in reverse order of arming, BEFORE deleting the control device,
      * so no callback can touch a freed ring. */
+    HkLaunchTimingDisarm();
     HkMemScanDisarm();
     HkNotifyDisarm();
 
