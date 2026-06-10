@@ -98,9 +98,14 @@
  * These must stay in sync with the #defines in lsm_file_open.bpf.c and
  * tracepoints.bpf.c.  A mismatch silently drops or mis-tags events.
  */
-static constexpr uint32_t kBpfTagFileOpen  = 0x10u;
-static constexpr uint32_t kBpfTagPtrace    = 0x20u;
-static constexpr uint32_t kBpfTagProcExec  = 0x21u;
+static constexpr uint32_t kBpfTagFileOpen     = 0x10u;
+static constexpr uint32_t kBpfTagPtrace       = 0x20u;
+static constexpr uint32_t kBpfTagProcExec     = 0x21u;
+/* Genealogy / loader-trust tags (signals 205/206). 0x22 collides with
+ * dlopen_uprobe.bpf.c and 0x23 collides with bprm_env.bpf.c, so these programs
+ * use 0x28/0x29. */
+static constexpr uint32_t kBpfTagLaunchTraced = 0x28u;
+static constexpr uint32_t kBpfTagLoaderTaint  = 0x29u;
 
 /* Module-trust domain (signals 98/99) — extends the core lsm_file_open +
  * tracepoints programs, so these arms are ALWAYS compiled (not under
@@ -117,6 +122,16 @@ static constexpr uint32_t kBpfTagMsrWrite  = 0xA1u;   /* tracepoints.bpf.c     *
  */
 static constexpr uint32_t kEvtDevmemAccess      = 12u;
 static constexpr uint32_t kEvtMsrWriteSensitive = 13u;
+
+/*
+ * HK-TODO(schema): the genealogy event discriminants (signals 205/206) are owned
+ * by the Schema phase and are NOT yet in the frozen event_schema.h. Mirrored here
+ * as provisional locals; Schema assigns the final distinct values. 29/30 sit
+ * above both the frozen event_schema.h range (1-18) and the Linux module-trust
+ * range (19-28, HostIntegritySensors.h).
+ */
+static constexpr uint32_t kEvtLaunchTraced      = 29u;
+static constexpr uint32_t kEvtLoaderTaint       = 30u;
 
 #ifdef HK_BPF_PROTON_WINE
 /* ---- Proton/Wine/Steam-Deck domain (signals 100-108) ----------------------
@@ -261,6 +276,18 @@ struct HkBpfMsrEvent {           /* tracepoints.bpf.c: hk_bpf_msr_event */
     uint64_t file_offset;
 };
 
+/* Genealogy domain (signals 205/206). Both BPF programs use the same compact
+ * wire layout (hk_bpf_launch_event in genealogy.bpf.c / loader_trust.bpf.c). */
+struct HkBpfLaunchEvent {        /* genealogy.bpf.c + loader_trust.bpf.c */
+    uint32_t schema_version;
+    uint32_t event_tag;
+    uint64_t timestamp_ns;
+    uint32_t pid;          /* tracee tgid (205) or execing tgid (206) */
+    uint32_t tracer_pid;   /* tracer tgid (205); 0 for 206 */
+    uint32_t taint_flags;  /* HK_TAINT_* (206); 0 for 205 */
+    char     comm[16];     /* tracer comm (205); execing comm (206) */
+};
+
 /* ---- Module-trust server-side payload mirrors (HK-TODO(schema)) ------------ */
 /* Mirror the impl-plan's hk_event_devmem_access / hk_event_msr_write payloads
  * (each 16 bytes). Sizes pinned so a future schema header diff is caught. */
@@ -280,6 +307,30 @@ struct HkEvtMsrWrite {           /* 16 bytes */
     uint32_t reserved;
 };
 static_assert(sizeof(HkEvtMsrWrite) == 16, "hk_event_msr_write must be 16 bytes");
+
+/*
+ * Genealogy domain provisional payloads (HK-TODO(schema)).
+ * Sizes: pid+tracer_pid+taint_flags = 12, comm[16] = 16 → 28 bytes each.
+ * Schema phase will assign the final discriminants and may repack; until then
+ * the full BPF comm[] is forwarded for server-side tracer allowlisting.
+ */
+struct HkEvtLaunchTraced {       /* 28 bytes: signal 205 */
+    uint32_t pid;
+    uint32_t tracer_pid;
+    uint32_t taint_flags;        /* 0 for signal 205 */
+    char     comm[16];           /* tracer comm; null-padded */
+};
+static_assert(sizeof(HkEvtLaunchTraced) == 28,
+              "HkEvtLaunchTraced must be 28 bytes");
+
+struct HkEvtLoaderTaint {        /* 28 bytes: signal 206 */
+    uint32_t pid;
+    uint32_t tracer_pid;         /* 0 for signal 206 */
+    uint32_t taint_flags;        /* HK_TAINT_* bitmask */
+    char     comm[16];
+};
+static_assert(sizeof(HkEvtLoaderTaint) == 28,
+              "HkEvtLoaderTaint must be 28 bytes");
 
 #ifdef HK_BPF_MEMORY_ACCESS
 /* ---- Memory-access BPF-side struct mirrors (match the new .bpf.c records) -- */
@@ -844,7 +895,17 @@ static int on_ringbuf_sample(void *ctx, void *data, size_t data_sz)
          * Resolve the fd→device in userspace (§1.2 / §7-A): drop the record unless
          * the fd is an /dev/cpu/N/msr node. The pwrite64 offset is the MSR index;
          * classify its sensitivity. A non-msr fd or an unresolvable fd is silently
-         * dropped (coverage, never a false MSR detection). */
+         * dropped (coverage, never a false MSR detection).
+         *
+         * Residual TOCTOU: between the BPF event and the readlink of
+         * /proc/<pid>/fd/<fd>, the pid or fd number may be reused by a different
+         * process or a different file. This can yield a false positive (a write to
+         * a reused fd that looks like an msr write) or a false negative (the msr fd
+         * is already closed). Mitigating exactly via start-time comparison is not
+         * feasible here: the ring-buffer event does not carry a process start time
+         * and reading /proc/<pid>/stat field 22 races the same reuse window.
+         * The consumer therefore treats this as low-confidence corroborating data
+         * only — it is never the sole signal that triggers a ban. */
         if (!horkos::modint::ResolveFdIsMsr(bpf_evt.requesting_pid, bpf_evt.fd)) {
             return 0;
         }
@@ -857,6 +918,43 @@ static int on_ringbuf_sample(void *ctx, void *data, size_t data_sz)
         payload.sensitive      =
             horkos::modint::IsSensitiveMsr(bpf_evt.file_offset) ? 1u : 0u;
         payload.reserved       = 0;
+        hdr.payload_bytes = static_cast<uint32_t>(sizeof(payload));
+        if (g_state.sink) g_state.sink(&hdr, &payload);
+
+    } else if (event_tag == kBpfTagLaunchTraced) {
+        /* Signal 205: exec-under-tracer (genealogy.bpf.c). */
+        if (data_sz < sizeof(HkBpfLaunchEvent)) return 0;
+        HkBpfLaunchEvent bpf_evt {};
+        std::memcpy(&bpf_evt, data, sizeof(bpf_evt));
+
+        hdr.type         = kEvtLaunchTraced;
+        hdr.timestamp_ns = bpf_evt.timestamp_ns;
+
+        HkEvtLaunchTraced payload {};
+        payload.pid         = bpf_evt.pid;
+        payload.tracer_pid  = bpf_evt.tracer_pid;
+        payload.taint_flags = bpf_evt.taint_flags;
+        static_assert(sizeof(payload.comm) == sizeof(bpf_evt.comm),
+                      "HkEvtLaunchTraced.comm size must match BPF comm field");
+        std::memcpy(payload.comm, bpf_evt.comm, sizeof(payload.comm));
+        hdr.payload_bytes = static_cast<uint32_t>(sizeof(payload));
+        if (g_state.sink) g_state.sink(&hdr, &payload);
+
+    } else if (event_tag == kBpfTagLoaderTaint) {
+        /* Signal 206: LD_PRELOAD/LD_AUDIT/LD_LIBRARY_PATH at execve
+         * (loader_trust.bpf.c). */
+        if (data_sz < sizeof(HkBpfLaunchEvent)) return 0;
+        HkBpfLaunchEvent bpf_evt {};
+        std::memcpy(&bpf_evt, data, sizeof(bpf_evt));
+
+        hdr.type         = kEvtLoaderTaint;
+        hdr.timestamp_ns = bpf_evt.timestamp_ns;
+
+        HkEvtLoaderTaint payload {};
+        payload.pid         = bpf_evt.pid;
+        payload.tracer_pid  = bpf_evt.tracer_pid;
+        payload.taint_flags = bpf_evt.taint_flags;
+        std::memcpy(payload.comm, bpf_evt.comm, sizeof(payload.comm));
         hdr.payload_bytes = static_cast<uint32_t>(sizeof(payload));
         if (g_state.sink) g_state.sink(&hdr, &payload);
 
@@ -938,10 +1036,14 @@ static int on_ringbuf_sample(void *ctx, void *data, size_t data_sz)
 
         /* Record the create in the join LRU so a subsequent fileless-exec of the
          * same (tgid,inode) inside the TTL can be confirmed. The create tag is
-         * emitted unconditionally (cheap/common evidence). */
+         * emitted unconditionally (cheap/common evidence). Eviction runs first to
+         * bound the map under a memfd flood; if the map is still at the cap after
+         * eviction, skip the insert (the bare create tag still rides through). */
+        static constexpr size_t kMemfdJoinCap = 4096;
         memfd_join_evict(bpf_evt.timestamp_ns);
-        g_state.memfd_join[memfd_join_key(bpf_evt.pid, bpf_evt.inode)] =
-            bpf_evt.timestamp_ns;
+        if (g_state.memfd_join.size() < kMemfdJoinCap)
+            g_state.memfd_join[memfd_join_key(bpf_evt.pid, bpf_evt.inode)] =
+                bpf_evt.timestamp_ns;
 
         hdr.type         = kEvtMemfdCreate;
         hdr.timestamp_ns = bpf_evt.timestamp_ns;

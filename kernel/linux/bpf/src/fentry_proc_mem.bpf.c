@@ -47,8 +47,10 @@ struct hk_bpf_proc_mem_open_event {
  * fentry/mem_open: mem_open(struct inode *inode, struct file *file).
  * The target task is recovered from the proc_inode that backs `inode`:
  *   struct proc_inode { ... struct pid *pid; ... struct inode vfs_inode; };
- * container_of(inode, struct proc_inode, vfs_inode)->pid -> pid_task(pid,
- * PIDTYPE_PID) -> task->tgid.
+ * container_of(inode, struct proc_inode, vfs_inode)->pid -> numeric pid from
+ * pid->numbers[0].nr -> bpf_task_from_pid (same kfunc used in
+ * fexit_process_vm.bpf.c:79). bpf_task_release must pair every successful
+ * bpf_task_from_pid call.
  *
  * HK-UNCERTAIN(mem-open-attachability): fs/proc/base.c:mem_open is `static` on
  * some kernels and may be absent from BTF/kallsyms; fentry then fails to attach.
@@ -60,61 +62,66 @@ struct hk_bpf_proc_mem_open_event {
  * HK-UNCERTAIN(proc-inode-core-read): recovering struct pid from the proc_inode
  * via container_of + BPF_CORE_READ relies on the proc_inode layout being in the
  * generated vmlinux.h. If proc_inode is opaque in the target BTF, this read
- * must move to a pid_task helper / get_proc_task kfunc. Verify against BTF.
+ * must move to a get_proc_task kfunc. Verify against BTF.
  */
 SEC("fentry/mem_open")
 int BPF_PROG(hk_fentry_mem_open, struct inode *inode, struct file *file)
 {
     struct hk_bpf_proc_mem_open_event *evt;
     struct proc_inode *pi;
-    struct pid *pid;
+    struct pid *pid_struct;
     struct task_struct *target;
     __u32 caller_tgid;
     __u32 target_tgid;
+    pid_t numeric_pid;
 
     (void)file;
 
     if (!inode)
         return 0;
 
-    /* container_of(inode, struct proc_inode, vfs_inode). bpf_core_read handles
-     * the offset via CO-RE; we compute the proc_inode base by subtracting the
-     * vfs_inode offset. bpf_core_field_offset gives the relocatable offset. */
+    /* container_of(inode, struct proc_inode, vfs_inode) via CO-RE. The
+     * __builtin_offsetof of vfs_inode is relocated at load time; this avoids the
+     * layout assumption that plagued the earlier pid_links subtraction. */
     pi = (struct proc_inode *)((char *)inode
             - __builtin_offsetof(struct proc_inode, vfs_inode));
 
-    pid = BPF_CORE_READ(pi, pid);
-    if (!pid)
+    pid_struct = BPF_CORE_READ(pi, pid);
+    if (!pid_struct)
         return 0;
 
-    /* pid_task(pid, PIDTYPE_PID): the first task in the PIDTYPE_PID list.
-     * struct pid { ... struct hlist_head tasks[PIDTYPE_MAX]; ... }; the task is
-     * the container_of the first hlist node by pid_links[PIDTYPE_PID]. Reading
-     * it via CO-RE is layout-sensitive; bpf_task_from_pid is cleaner but takes a
-     * numeric pid, which we do not have here. We read tasks[0] (PIDTYPE_PID). */
-    {
-        struct hlist_node *first;
-        first = BPF_CORE_READ(pid, tasks[0].first);
-        if (!first)
-            return 0;
-        /* task->pid_links[PIDTYPE_PID] is the hlist_node embedded in the task;
-         * recover the task base. PIDTYPE_PID == 0. */
-        target = (struct task_struct *)((char *)first
-                    - __builtin_offsetof(struct task_struct, pid_links));
-    }
+    /* Read the numeric pid from the root-namespace slot (numbers[0].nr). This
+     * gives us the value bpf_task_from_pid expects — the same kfunc pattern used in
+     * fexit_process_vm.bpf.c. bpf_task_from_pid requires kernel >= 5.17.
+     * HK-UNCERTAIN(pid-numbers-co-re): struct pid's numbers[] is a flexible
+     * array; CO-RE must be able to relocate numbers[0].nr from BTF. Confirm the
+     * target BTF exposes struct upid.nr at this path before relying on this read. */
+    numeric_pid = BPF_CORE_READ(pid_struct, numbers[0].nr);
+    if (numeric_pid <= 0)
+        return 0;
+
+    target = bpf_task_from_pid(numeric_pid);
+    if (!target)
+        return 0;
 
     target_tgid = (__u32)BPF_CORE_READ(target, tgid);
-    if (!hk_is_protected_tgid(target_tgid))
+    if (!hk_is_protected_tgid(target_tgid)) {
+        bpf_task_release(target);
         return 0;
+    }
 
     caller_tgid = (__u32)(bpf_get_current_pid_tgid() >> 32);
     /* Same-tgid self-open of /proc/self/mem is benign. */
-    if (caller_tgid == target_tgid)
+    if (caller_tgid == target_tgid) {
+        bpf_task_release(target);
         return 0;
+    }
 
     evt = bpf_ringbuf_reserve(&hk_ringbuf, sizeof(*evt), 0);
-    if (!evt)
+    if (!evt) {
+        bpf_task_release(target);
         return 0;
+    }
 
     evt->schema_version = HK_SCHEMA_VERSION;
     evt->event_tag      = HK_BPF_PROC_MEM_OPEN;
@@ -122,6 +129,7 @@ int BPF_PROG(hk_fentry_mem_open, struct inode *inode, struct file *file)
     evt->caller_pid     = caller_tgid;
     evt->target_pid     = target_tgid;
 
+    bpf_task_release(target);
     bpf_ringbuf_submit(evt, 0);
     return 0;
 }

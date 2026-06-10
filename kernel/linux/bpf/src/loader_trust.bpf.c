@@ -28,7 +28,8 @@
 #include "hk_protected.bpf.h"
 
 #define HK_SCHEMA_VERSION    5u
-#define HK_EVENT_LOADER_TAINT 0x23u
+/* 0x23 is claimed by bprm_env.bpf.c (HK_EVENT_BPRM_ENV); 0x29 is free. */
+#define HK_EVENT_LOADER_TAINT 0x29u
 
 #define HK_TAINT_LD_PRELOAD     0x1u
 #define HK_TAINT_LD_AUDIT       0x2u

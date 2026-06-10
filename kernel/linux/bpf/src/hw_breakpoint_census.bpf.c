@@ -101,12 +101,11 @@ int hk_hwbp_census_probe(struct bpf_raw_tracepoint_args *ctx)
     return 0;
 }
 
-/* The emit path, kept reachable so it is type-checked and ready for the validated
- * attach. Marked used via __attribute__((unused)) is not available under -Werror in a
- * clean way here; instead the function is referenced from the (currently inert) census
- * probe once the attach lands. To keep -Werror green it is declared static and the
- * structure is exercised through the probe above (which the verifier loads). */
-static __always_inline int hk_emit_census(__u32 owner_pid, __u32 owner_tid)
+/* The emit path, kept reachable so it is type-checked and verifier-visible until
+ * the real attach point is confirmed. noinline + __attribute__((used)) prevents
+ * the compiler from removing it as dead code under -Werror even while the probe
+ * body holds it at an inert return. */
+static __attribute__((used)) __noinline int hk_emit_census(__u32 owner_pid, __u32 owner_tid)
 {
     struct hk_bpf_hwbp_census_event *evt;
 
@@ -126,16 +125,16 @@ static __always_inline int hk_emit_census(__u32 owner_pid, __u32 owner_tid)
     return 0;
 }
 
-/* Reference hk_emit_census from a second (also inert) probe so it is not dropped as an
- * unused static under -Werror, while keeping the real attach a documented stub. */
+/* Keepalive probe: references hk_emit_census through a verifier-visible,
+ * runtime-variable guard (the volatile hk_game_tgid config map read) so the
+ * call site is never constant-folded away by the compiler. The sentinel value
+ * 0xFFFFFFFFu is never written by the loader, so this path is inert at runtime
+ * while still being verifier-visible. */
 SEC("raw_tracepoint/sys_exit")
 int hk_hwbp_census_keepalive(struct bpf_raw_tracepoint_args *ctx)
 {
     (void)ctx;
-    /* Never actually fires the census on sys_exit; the call is unreachable at runtime
-     * (the if is always false while the attach is a stub) but keeps hk_emit_census
-     * referenced for the verifier/compiler. */
-    if (hk_game_tgid == 0xFFFFFFFFu)
+    if (hk_game_tgid == 0xFFFFFFFFu)  /* never true; hk_game_tgid is volatile */
         return hk_emit_census(0u, 0u);
     return 0;
 }
