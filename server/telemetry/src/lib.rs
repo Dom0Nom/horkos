@@ -20,6 +20,7 @@ pub mod linux_proton;
 pub mod loader_inject;
 pub mod macos_codesign;
 pub mod macos_inject;
+pub mod mem_events;
 pub mod pointer_model;
 pub mod render_hook;
 pub mod schema;

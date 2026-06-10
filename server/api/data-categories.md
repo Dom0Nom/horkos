@@ -420,6 +420,44 @@ Note: `instr.reserved` is padding and carries no data (n/a). The `confidence_tie
 (0..=2) and `severity_tier` (0..=3) are validated against their enum range on
 ingest (`server/telemetry/src/anti_analysis.rs`).
 
+### 12. Memory & image anomalies (Windows kernel scan, `event_schema.h`)
+
+Source: the Windows kernel memory-scan worker (win-kernel-memory-injection,
+catalog signals 10-18). The kernel attaches read-only to a target process,
+walks its VAD tree / loader lists / on-disk image backing, and emits raw
+structural evidence on the large-record wire plane (`hk_event_mem_record`,
+`ioctl.h`), decoded server-side by `server/telemetry/src/mem_events.rs`. The
+kernel ships raw observations + structural annotations (e.g. `has_jit_owner`)
+only — never a verdict; all fusion and ban authority is server-side. Retention
+90 days. Legal basis: Legitimate interest — anti-cheat enforcement. Operator:
+Horkos Service Operator.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `vad_type` | kernel mem-scan — normalized VadType (signals 10/14/15, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `region_base` | kernel mem-scan — region start VA (`event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `region_size` | kernel mem-scan — region byte size (`event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `protection` | kernel mem-scan — normalized RWX mask (`event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `region_flags` | kernel mem-scan — unbacked/large-page/JIT-owner annotations (`event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `vad_says_exec` / `pte_says_exec` | kernel mem-scan — W^X divergence inputs (signal 11, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `first_diff_rva` | kernel mem-scan — first unexplained code byte RVA (signal 12, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `live_section_sha256` | kernel mem-scan — live code-section hash (signal 12, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `disk_section_sha256` | kernel mem-scan — on-disk code-section hash (signal 12, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `module_path` | kernel mem-scan — backing module path, truncated (signals 12/13/16, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `section_name` | kernel mem-scan — code section name, e.g. `.text` (signal 12, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `image_anomaly.flags` | kernel mem-scan — ghost/hollow + backing-state bits (signals 13/16, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `thread_start_address` | kernel mem-scan — thread Win32 start / TLS callback VA (signal 17, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `resolved_vad_type` | kernel mem-scan — VadType the origin resolved into (signal 17, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `file_sha256` | kernel mem-scan — backing file hash (signal 18, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `file_path` | kernel mem-scan — backing file path, truncated (signal 18, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `signer_verdict` | userspace `ImageSigningWin.cpp` (WinVerifyTrust) — kernel ships UNKNOWN, userspace fills (signal 18, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+
+Note: `pid` / `thread_id` are process/thread identifiers already declared for the
+process and handle categories (§1/§2a). Per-signal `reserved` words are padding
+(n/a). All variable-length path fields are bounds-checked on ingest
+(`server/telemetry/src/mem_events.rs`) — an out-of-range `*_len` is rejected as a
+typed `MemEventError`, never sliced.
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`
