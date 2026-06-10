@@ -110,7 +110,16 @@ set(HK_DRIVER_SRC
     src/HollowDetect.c
     src/ExecOrigin.c
     src/MemScanPte.c
-    src/ModuleStomp.c)
+    src/ModuleStomp.c
+    # win-hypervisor-detection kernel sensors (signals 39/41/42/44). 42 (synthetic
+    # MSR, guarded __readmsr) is the lowest-uncertainty and is always driven; 39
+    # (EPT, MmMapIoSpaceEx) emits nothing until HK_HV_EPT_ENABLED; 41/44 (secure-
+    # kernel / APIC-IDT, observe-only) only run under HK_HV_KERNEL_EXPERIMENTAL.
+    # The TUs always compile; only HkHvKernelSample's calls are flag-gated.
+    src/HvSyntheticMsr.c
+    src/HvEptProbe.c
+    src/HvSecureKernelLiveness.c
+    src/HvApicIdtResidue.c)
 
 # memory-integrity-selfcheck self-read IOCTL (signals 145/146/148/151/152). Default
 # OFF: the caller-identity binding that makes a self-foreign-read safe is unsettled,

@@ -18,6 +18,13 @@ add_executable(hk_bypass_module_stomp_scan module_stomp_scan.cpp)
 target_include_directories(hk_bypass_module_stomp_scan PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
 add_test(NAME hk_bypass_module_stomp_scan COMMAND hk_bypass_module_stomp_scan)
 
+# win-hypervisor-detection gate (signals 37-45). DISABLED (HK_HV_TEST_ENABLED
+# undefined): a compiled no-op that passes, like byovd_load.cpp; assertions
+# activate once the HV sensors are verified on the box.
+add_executable(hk_bypass_hv_detection hv_detection_bypass.cpp)
+target_include_directories(hk_bypass_hv_detection PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
+add_test(NAME hk_bypass_hv_detection COMMAND hk_bypass_hv_detection)
+
 # win-kernel-object-callbacks self-integrity surface gate. Phase 3 builds it
 # disabled (HK_SELFCHECK_TEST_ENABLED undefined); it activates when the kernel
 # unhook fixture and the HK_EVENT_CALLBACK_* schema bump land. The enabled body
