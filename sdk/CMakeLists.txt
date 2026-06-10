@@ -95,7 +95,11 @@ if(WIN32)
     set(hk_sdk_backend
         src/backends/win/DriverProbeWin.cpp
         src/backends/win/MinifilterCensusWin.cpp
-        src/backends/win/ThreadProvenanceWin.cpp)
+        src/backends/win/ThreadProvenanceWin.cpp
+        # win-kernel-memory-injection signal 18 userspace half: WinVerifyTrust
+        # signer verdict over the kernel-shipped backing path+hash. Confined to
+        # backends/win (guardrail #1); links wintrust below.
+        src/backends/win/ImageSigningWin.cpp)
     if(HK_WIN_ETWTI)
         list(APPEND hk_sdk_backend src/backends/win/EtwTiConsumer.cpp)
     endif()
@@ -295,6 +299,8 @@ target_link_libraries(hk_sdk PRIVATE hk_dma_detect)
 if(WIN32)
     # fltlib provides FilterInstanceFindFirst/Next for the minifilter census.
     target_link_libraries(hk_sdk PRIVATE fltlib)
+    # wintrust: WinVerifyTrust for ImageSigningWin.cpp (signal 18).
+    target_link_libraries(hk_sdk PRIVATE wintrust)
     if(HK_NET_SENSORS)
         # network-anomaly Windows link deps, confined to the Windows branch
         # (guardrail #1). ws2_32: Winsock (WSAIoctl SIO_TCP_INFO/SIO_IDEAL_SEND_BACKLOG,
