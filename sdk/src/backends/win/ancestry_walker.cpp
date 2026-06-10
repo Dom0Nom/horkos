@@ -17,58 +17,62 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace hk {
 namespace sdk {
 namespace genealogy {
 
-/* Map PID -> (parent PID, image base name) for the current snapshot. */
-static bool ParentAndImage(DWORD pid, DWORD* parent, std::string* image)
+struct ProcEntry {
+    DWORD parent_pid;
+    std::string image; /* szExeFile base name */
+};
+
+/* Walk from `game_pid` up the parent chain, bounded, returning the ordered
+ * root->game image base names. A single Toolhelp snapshot is taken once; all
+ * ancestor lookups walk the in-memory map rather than reopening the snapshot
+ * per level. PID reuse is bounded by the single snapshot; the server keys the
+ * chain by PID+create-time for cross-snapshot identity.
+ * szExeFile is the base image name; the full path needs QueryFullProcessImageName
+ * (HK-UNCERTAIN per access rights) — the base name is the verifiable subset the
+ * server matches. */
+std::vector<std::string> collect_ancestry(DWORD game_pid)
 {
+    std::vector<std::string> chain;
+
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    bool found = false;
     if (snap == INVALID_HANDLE_VALUE) {
-        return false;
+        return chain;
     }
+
+    std::unordered_map<DWORD, ProcEntry> proc_map;
     PROCESSENTRY32 pe;
     pe.dwSize = sizeof(pe);
     if (Process32First(snap, &pe)) {
         do {
-            if (pe.th32ProcessID == pid) {
-                *parent = pe.th32ParentProcessID;
-                /* szExeFile is the base image name; the full path needs
-                 * QueryFullProcessImageName (HK-UNCERTAIN per access rights) — the
-                 * base name is the verifiable subset the server matches. */
-                *image = pe.szExeFile;
-                found = true;
-                break;
-            }
+            ProcEntry entry;
+            entry.parent_pid = pe.th32ParentProcessID;
+            entry.image = pe.szExeFile;
+            proc_map[pe.th32ProcessID] = std::move(entry);
         } while (Process32Next(snap, &pe));
     }
     CloseHandle(snap);
-    return found;
-}
 
-/* Walk from `game_pid` up the parent chain, bounded, returning the ordered
- * root->game image base names. PID reuse is bounded by the snapshot + the depth
- * cap; the server keys the chain by PID+create-time for cross-snapshot identity. */
-std::vector<std::string> collect_ancestry(DWORD game_pid)
-{
-    std::vector<std::string> chain;
     DWORD pid = game_pid;
     for (int depth = 0; depth < 32; ++depth) {
-        DWORD parent = 0;
-        std::string image;
-        if (!ParentAndImage(pid, &parent, &image)) {
+        auto it = proc_map.find(pid);
+        if (it == proc_map.end()) {
             break;
         }
-        chain.push_back(image);
+        chain.push_back(it->second.image);
+        DWORD parent = it->second.parent_pid;
         if (parent == 0 || parent == pid) {
-            break; /* reached the root / a self-cycle. */
+            break; /* reached the root / a self-cycle */
         }
         pid = parent;
     }
+
     /* chain is game->root; reverse to root->game for the server. */
     std::reverse(chain.begin(), chain.end());
     return chain;

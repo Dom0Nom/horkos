@@ -158,11 +158,23 @@ int minifilter_census()
             static_cast<DWORD>(buffer.size()),
             &bytesReturned);
 
-        /* TODO(buffer-grow): if hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
-         * the 2048-byte scratch is too small for this instance's full info; grow
-         * `buffer` to bytesReturned and retry rather than ending the scan. Left as
-         * a robustness TODO — needs on-box FltMgr to exercise; the classifier
-         * (the unit-tested part) is unaffected. */
+        if (hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) {
+            /* The current instance's full info exceeds the buffer. Grow to the
+             * reported size (cursor has not advanced on ERROR_INSUFFICIENT_BUFFER)
+             * and retry so one long filter name cannot truncate the census. Cap at
+             * a sanity limit to avoid unbounded allocation on a bogus return value. */
+            const DWORD grow_to = (bytesReturned > 0 && bytesReturned <= 65536u)
+                                      ? bytesReturned
+                                      : 65536u;
+            buffer.resize(grow_to);
+            bytesReturned = 0;
+            hr = FilterInstanceFindNext(
+                findHandle,
+                InstanceFullInformation,
+                buffer.data(),
+                static_cast<DWORD>(buffer.size()),
+                &bytesReturned);
+        }
     } while (SUCCEEDED(hr));
 
     FilterInstanceFindClose(findHandle);

@@ -127,9 +127,20 @@ Headers parse(const uint8_t* buf, size_t len) noexcept {
         }
     }
 
-    /* Section table immediately follows the optional header. */
+    /* Section table immediately follows the optional header.
+     * Validate the chain e_lfanew + 4 + 20 + opt_size before deriving sect_table
+     * using 64-bit accumulation to prevent wrap on 32-bit size_t. */
     if (num_sections > HK_PE_MAX_SECTIONS) {
         return h; /* impossible section count — reject */
+    }
+    {
+        const uint64_t sect_table64 = static_cast<uint64_t>(e_lfanew)
+                                    + 4u   /* NT signature */
+                                    + 20u  /* file header */
+                                    + static_cast<uint64_t>(opt_size);
+        if (sect_table64 > static_cast<uint64_t>(len)) {
+            return h; /* offset chain overflows buffer — reject */
+        }
     }
     const size_t sect_table = opt_hdr + opt_size;
     for (uint16_t i = 0; i < num_sections; ++i) {
@@ -158,7 +169,9 @@ const SectionRange* section_for_rva(const Headers& h, uint32_t rva) noexcept {
     if (!h.valid) return nullptr;
     for (uint32_t i = 0; i < h.section_count; ++i) {
         const SectionRange& s = h.sections[i];
-        if (rva >= s.rva && rva < s.rva + s.virtual_size) {
+        /* Guard against s.rva + s.virtual_size wrapping past 2^32. */
+        if (s.virtual_size == 0u) continue;
+        if (rva >= s.rva && rva - s.rva < s.virtual_size) {
             return &s;
         }
     }
@@ -173,6 +186,10 @@ bool rva_to_file_offset(const Headers& h, uint32_t rva, uint32_t* out_off) noexc
     const uint32_t delta = rva - s->rva;
     if (delta >= s->raw_size) {
         return false; /* RVA is in the section's zero-fill tail (no file bytes) */
+    }
+    /* Guard against s->raw_ptr + delta wrapping past 2^32. */
+    if (delta > UINT32_MAX - s->raw_ptr) {
+        return false;
     }
     *out_off = s->raw_ptr + delta;
     return true;

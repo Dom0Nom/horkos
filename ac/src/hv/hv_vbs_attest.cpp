@@ -20,11 +20,14 @@
 #include <windows.h>
 #include <wbemidl.h>
 
-/* Read one UINT32 property from the single Win32_DeviceGuard instance. Returns
- * FALSE if WMI is unavailable or the property is absent. COM init/uninit is per
- * call; every HRESULT is checked. HK-UNCERTAIN: Win32_DeviceGuard property
- * availability varies by SKU/build — confirm on the box; absence reads as 0. */
-static BOOL HkReadDeviceGuardU32(const wchar_t* prop, uint32_t* value, uint32_t* arr0)
+/* Read VirtualizationBasedSecurityStatus and CodeIntegrityPolicyEnforcementStatus
+ * from the single Win32_DeviceGuard instance in one WMI session. Returns FALSE if
+ * WMI is unavailable or neither property is present. COM init/uninit is balanced per
+ * call unless COM was already initialised (RPC_E_CHANGED_MODE), in which case we
+ * use the existing apartment without uninitialising on exit.
+ * HK-UNCERTAIN: Win32_DeviceGuard property availability varies by SKU/build —
+ * confirm on the box; absence reads as 0. */
+static BOOL HkReadDeviceGuardProps(uint32_t* vbs_status, uint32_t* ci_policy)
 {
     HRESULT hr;
     IWbemLocator* loc = nullptr;
@@ -33,15 +36,29 @@ static BOOL HkReadDeviceGuardU32(const wchar_t* prop, uint32_t* value, uint32_t*
     IWbemClassObject* obj = nullptr;
     ULONG returned = 0;
     BOOL ok = FALSE;
-    BSTR ns = SysAllocString(L"ROOT\\Microsoft\\Windows\\DeviceGuard");
-    BSTR query = SysAllocString(L"SELECT * FROM Win32_DeviceGuard");
-    BSTR lang = SysAllocString(L"WQL");
+    BOOL com_needs_uninit = FALSE;
+    BSTR ns = nullptr;
+    BSTR query = nullptr;
+    BSTR lang = nullptr;
 
     hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr)) goto done;
+    if (SUCCEEDED(hr)) {
+        com_needs_uninit = TRUE;
+    } else if (hr == RPC_E_CHANGED_MODE) {
+        /* COM already initialised with a different apartment model — usable as-is;
+         * do not balance with CoUninitialize since we did not increment the refcount. */
+    } else {
+        return FALSE; /* genuine COM init failure */
+    }
+
+    ns    = SysAllocString(L"ROOT\\Microsoft\\Windows\\DeviceGuard");
+    query = SysAllocString(L"SELECT * FROM Win32_DeviceGuard");
+    lang  = SysAllocString(L"WQL");
+    if (!ns || !query || !lang) goto release;
+
     hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
                           IID_IWbemLocator, (void**)&loc);
-    if (FAILED(hr) || loc == nullptr) goto uninit;
+    if (FAILED(hr) || loc == nullptr) goto release;
     hr = loc->ConnectServer(ns, nullptr, nullptr, nullptr, 0, nullptr, nullptr, &svc);
     if (FAILED(hr) || svc == nullptr) goto release;
     hr = CoSetProxyBlanket((IUnknown*)svc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, nullptr,
@@ -55,15 +72,23 @@ static BOOL HkReadDeviceGuardU32(const wchar_t* prop, uint32_t* value, uint32_t*
     if (hr == WBEM_S_NO_ERROR && returned == 1 && obj != nullptr) {
         VARIANT v;
         VariantInit(&v);
-        if (value != nullptr && SUCCEEDED(obj->Get(prop, 0, &v, nullptr, nullptr))) {
+        if (vbs_status != nullptr &&
+            SUCCEEDED(obj->Get(L"VirtualizationBasedSecurityStatus", 0, &v, nullptr, nullptr))) {
             if (v.vt == VT_I4 || v.vt == VT_UI4) {
-                *value = (uint32_t)v.ulVal;
+                *vbs_status = (uint32_t)v.ulVal;
                 ok = TRUE;
             }
         }
         VariantClear(&v);
-        (void)arr0; /* SecurityServicesRunning is an array; first element via a
-                       separate path — left for the box (HK-UNCERTAIN). */
+        VariantInit(&v);
+        if (ci_policy != nullptr &&
+            SUCCEEDED(obj->Get(L"CodeIntegrityPolicyEnforcementStatus", 0, &v, nullptr, nullptr))) {
+            if (v.vt == VT_I4 || v.vt == VT_UI4) {
+                *ci_policy = (uint32_t)v.ulVal;
+                ok = TRUE;
+            }
+        }
+        VariantClear(&v);
         obj->Release();
     }
 
@@ -71,38 +96,29 @@ release:
     if (en) en->Release();
     if (svc) svc->Release();
     if (loc) loc->Release();
-uninit:
-    CoUninitialize();
-done:
-    if (ns) SysFreeString(ns);
+    if (ns)    SysFreeString(ns);
     if (query) SysFreeString(query);
-    if (lang) SysFreeString(lang);
+    if (lang)  SysFreeString(lang);
+    if (com_needs_uninit) CoUninitialize();
     return ok;
 }
 
 extern "C" int hv_sample_vbs_attest(hv_vbs_attest* out)
 {
-    uint32_t v = 0;
-
     if (out == nullptr) {
         return HK_AC_NOT_IMPLEMENTED;
     }
     RtlSecureZeroMemory(out, sizeof(*out));
 
-    if (HkReadDeviceGuardU32(L"VirtualizationBasedSecurityStatus", &v, nullptr)) {
-        out->vbs_status = v;
-    }
-    v = 0;
-    if (HkReadDeviceGuardU32(L"CodeIntegrityPolicyEnforcementStatus", &v, nullptr)) {
-        out->ci_policy = v;
-    }
+    HkReadDeviceGuardProps(&out->vbs_status, &out->ci_policy);
     /* SecurityServicesRunning array read deferred (HK-UNCERTAIN). */
     out->security_services = 0;
 
-    /* HK-UNCERTAIN: Attestation::quote() is a NotImplemented stub until a TPM2
-     * backend lands (guardrail #10). With no quote, attest_quote_avail stays 0 and
-     * the pure core hv_vbs_contradiction withholds the contradiction (report-only,
-     * never enforced) — exactly the plan's signal-40 posture. */
+    /* HK-UNCERTAIN: Attestation::quote(nonce, nonce_len, out) is a NotImplemented
+     * stub until a TPM2 backend lands (guardrail #10). The nonce is a server-issued
+     * challenge bound into the quote (TPM qualifyingData). With no real backend,
+     * attest_quote_avail stays 0 and the pure core hv_vbs_contradiction withholds
+     * the contradiction (report-only, never enforced) — the plan's signal-40 posture. */
     out->attest_quote_avail = 0;
     out->attest_contradiction = 0;
 

@@ -39,11 +39,12 @@ SelfCheck::SelfCheck() noexcept
 SelfCheck::~SelfCheck() = default;
 
 bool SelfCheck::arm(const ImageBaseline& baseline) noexcept {
-    (void)baseline;
+    if (!image_baseline_valid(baseline)) {
+        armed_ = false;
+        return false;
+    }
     /* HK-TODO(arm): once image_baseline.cpp's parse lands a populated baseline,
-     * validate it here and cache the expected tables. A failed/empty baseline must
-     * leave armed_==false so run_once() emits nothing (fail-closed) rather than
-     * sampling against a baseline it does not trust. */
+     * validate it here and cache the expected tables. */
     armed_ = true;
     last_flag_ = HK_SELF_FLAG_NONE;
     return armed_;

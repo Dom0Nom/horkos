@@ -275,7 +275,7 @@ HK_STATIC_ASSERT(sizeof(hk_event_mem_unsigned_image) == 264,
 typedef struct hk_event_hv_synth_msr {
     uint32_t flags;            /* HK_HV_MSR_*. */
     uint32_t gp_fault_mask;    /* bit per synthetic MSR whose read #GP'd. */
-    uint64_t ref_tsc_vs_rdtsc; /* signed reference-TSC vs rdtsc skew sample, ns. */
+    int64_t ref_tsc_vs_rdtsc; /* signed reference-TSC vs rdtsc skew sample, ns. */
 } hk_event_hv_synth_msr;
 
 HK_STATIC_ASSERT(sizeof(hk_event_hv_synth_msr) == 16,
