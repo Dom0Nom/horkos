@@ -144,6 +144,19 @@ The merge-gate suite is only partially armed:
 
 ## 7. Code-review findings (2026-06-10 full-codebase review)
 
+**STATUS: all findings below FIXED on 2026-06-10**, commits `420ecfe`
+(linux), `09cc194` (win-kernel), `95a6868` (server), `cb34004` (ac/sdk),
+`249281f` (macos/dma), `2fd1c02` (toolchain/attestation/platform). Host
+verification after fixes: cargo build/test/clippy/fmt green, **361/361
+ctest**, lit 4/4, macOS syntax clean. Windows-kernel and eBPF fixes remain
+UNVERIFIED until target builds (§1 unchanged). Two findings resolved by
+documentation rather than behavior change: ResolveFdIsMsr TOCTOU
+(low-confidence note), CFF ReturnInst bypass (documented intentional).
+Notable extras during fixing: genealogy BPF tags 0x22/0x23 also collided
+with dlopen/bprm tags (renumbered 0x28/0x29); Loader genealogy locals moved
+to 29/30; horkosd needed `extern "C"` on the XPC SPI + Security framework
+link. List kept for context.
+
 Six parallel subsystem reviews (read-only; Windows/Linux kernel code reviewed
 without compiling). Severity: 🔴 = bug/security, 🟡 = risk, ❓ = design question.
 
