@@ -20,14 +20,12 @@
 //! type, NO `unwrap()`/`expect()` outside `#[cfg(test)]`. A malformed/short wire
 //! record yields a typed `KernelEventError`, never a panic.
 //!
-//! HK-TODO(schema): the event-type discriminants (`HK_EVENT_KSYM_DRIFT` = 19 ..
-//! `HK_EVENT_SENSOR_UNAVAILABLE` = 28) and the bumped `HK_EVENT_SCHEMA_VERSION`
-//! are owned by the Schema phase and are NOT yet in the frozen
-//! `sdk/include/horkos/event_schema.h`. The decoders are written against the
-//! plan's pinned field layout/sizes so they are ready when the schema lands; the
-//! discriminants are mirrored here as local consts (range 19..=28, free in the
-//! frozen schema — types 1..=18 are taken) and in the matching C producer header
-//! `kernel/linux/userspace/HostIntegritySensors.h` (`kEvt*`).
+//! Schema: the event-type discriminants (`HK_EVENT_KSYM_DRIFT` = 19 ..
+//! `HK_EVENT_SENSOR_UNAVAILABLE` = 28) are now FROZEN in
+//! `sdk/include/horkos/event_schema.h` (schema v6). The consts below mirror the
+//! enum exactly and match the C producer header
+//! `kernel/linux/userspace/HostIntegritySensors.h` (`kEvt*`). The decoders are
+//! written against the plan's pinned field layout/sizes.
 
 use thiserror::Error;
 

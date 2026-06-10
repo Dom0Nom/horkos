@@ -45,8 +45,16 @@
  * v5 added the process-genealogy launch-trust event (type 18,
  * hk_event_process_create_ex, 24 bytes) — the first payload to exceed 16 bytes
  * on the MAIN ring, so HK_EVENT_PAYLOAD_MAX grows 16->24 and hk_event_record
- * 40->48 in lockstep (ioctl.h); existing <=16-byte payloads are unaffected. */
-#define HK_EVENT_SCHEMA_VERSION 5u
+ * 40->48 in lockstep (ioctl.h); existing <=16-byte payloads are unaffected.
+ * v6 froze the previously-provisional discriminant families into the enum: the
+ * Linux module-trust family (types 19..28), the self-integrity family
+ * (types 29..37 — renumbered from the old self_wire.h 14..22 macros, which
+ * collided with the HV + create-ex ranges), and the timing freq-skew record
+ * (type 38). This change is discriminant-only: the self-integrity records are
+ * large (120/144 bytes) and still await the large-record transport plane
+ * (HK-TODO(schema): vm_access/self large-record IOCTL plane, kernel-side); the
+ * 16-byte ring and HK_EVENT_PAYLOAD_MAX are unchanged. */
+#define HK_EVENT_SCHEMA_VERSION 6u
 
 /* -------------------------------------------------------------------------
  * Event type enumeration.
@@ -82,6 +90,41 @@ typedef enum hk_event_type {
      * carries the true creator PID that signal 199 needs and that is not
      * derivable server-side. */
     HK_EVENT_PROCESS_CREATE_EX = 18, /* signals 199/200/201 ancestry + launch flags. */
+
+    /* Linux module-trust family (schema v6). Decoded by
+     * server/telemetry/src/kernel_events.rs; produced by
+     * kernel/linux/userspace/HostIntegritySensors.h (kEvt* constants in lockstep).
+     * These records ride the Loader sink byte stream, not the 48-byte ring. */
+    HK_EVENT_KSYM_DRIFT         = 19, /* signal 91: kallsyms drift. */
+    HK_EVENT_MODULE_VIEW_DIFF   = 20, /* signal 92: module cross-view diff. */
+    HK_EVENT_FTRACE_HOOK        = 21, /* signal 93: ftrace ownership. */
+    HK_EVENT_KPROBE_SENSITIVE   = 22, /* signal 94: sensitive-symbol kprobe. */
+    HK_EVENT_MODULE_DISK_DRIFT  = 23, /* signal 95: module disk drift. */
+    HK_EVENT_KERNEL_POSTURE     = 24, /* signal 96: kernel posture (trust-tier weight). */
+    HK_EVENT_FOREIGN_BPF        = 25, /* signal 97: foreign BPF. */
+    HK_EVENT_DEVMEM_ACCESS      = 26, /* signal 98: /dev/mem access. */
+    HK_EVENT_MSR_WRITE_SENSITIVE = 27, /* signal 99: sensitive MSR write. */
+    HK_EVENT_SENSOR_UNAVAILABLE = 28, /* coverage-gap marker (trust-tier weight). */
+
+    /* Self-integrity family (schema v6). Mirrored by
+     * server/telemetry/src/self_events.rs and the producer ac/src/selfcheck TUs
+     * (formerly local HK_EVENT_SELF_* macros in self_wire.h, now frozen here to
+     * resolve the 14..18 collision with the HV + create-ex ranges). These are
+     * LARGE records (120/144 bytes) and require the large-record transport plane
+     * (HK-TODO(schema): vm_access/self large-record IOCTL plane, kernel-side). */
+    HK_EVENT_SELF_CROSSVIEW     = 29, /* signal 145: PE/text cross-view. */
+    HK_EVENT_SELF_PAGE_COW      = 30, /* signal 146: per-page share/CoW state. */
+    HK_EVENT_SELF_RETADDR       = 31, /* signal 147: return-address provenance. */
+    HK_EVENT_SELF_HWBP          = 32, /* signal 148: hardware breakpoint (DR0-DR7). */
+    HK_EVENT_SELF_IAT_TARGET    = 33, /* signal 149: IAT/scoped-import target. */
+    HK_EVENT_SELF_VEH_UNWIND    = 34, /* signal 150: VEH/unwind integrity. */
+    HK_EVENT_SELF_LOADER        = 35, /* signal 151: loader xref consistency. */
+    HK_EVENT_SELF_WX_DRIFT      = 36, /* signal 152: kernel-PTE W^X drift. */
+    HK_EVENT_SELF_TLS_INIT      = 37, /* signal 153: TLS-callback init integrity. */
+
+    /* Timing side-channel family (schema v6). Mirrored by the signal-155
+     * correlator (ac/src/timing/timing_kernel_correlate.cpp), 16-byte record. */
+    HK_EVENT_TIMING_FREQ_SKEW   = 38, /* signal 155: kernel freq-skew correlation. */
 } hk_event_type;
 
 /* hk_event_process_create_ex.proc_flags bits (process-genealogy, signals

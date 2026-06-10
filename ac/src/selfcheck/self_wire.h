@@ -32,20 +32,14 @@
 #include "horkos/event_schema.h"  /* HK_STATIC_ASSERT only (no field reuse). */
 
 /* -------------------------------------------------------------------------
- * Event-type discriminants (continue after the memory-injection block which the
- * plan ends at 13). LOCAL until the Schema phase appends them to hk_event_type.
+ * Event-type discriminants. FROZEN in hk_event_type (event_schema.h) as types
+ * 29..37 since schema v6 — formerly the local 14..22 macros here, which collided
+ * with the HV (14..17) and create-ex (18) ranges. The enum constants arrive via
+ * the event_schema.h include above; do NOT redefine them as macros (a macro
+ * would textually replace the enum tokens and break the enum). The self records
+ * are large (120/144 bytes) and still await the large-record transport plane
+ * (HK-TODO(schema): vm_access/self large-record IOCTL plane, kernel-side).
  * ------------------------------------------------------------------------- */
-#ifndef HK_EVENT_SELF_CROSSVIEW
-#  define HK_EVENT_SELF_CROSSVIEW   14u
-#  define HK_EVENT_SELF_PAGE_COW    15u
-#  define HK_EVENT_SELF_RETADDR     16u
-#  define HK_EVENT_SELF_HWBP        17u
-#  define HK_EVENT_SELF_IAT_TARGET  18u
-#  define HK_EVENT_SELF_VEH_UNWIND  19u
-#  define HK_EVENT_SELF_LOADER      20u
-#  define HK_EVENT_SELF_WX_DRIFT    21u
-#  define HK_EVENT_SELF_TLS_INIT    22u
-#endif
 
 /* The shared self-check frame cap (must match selfcheck.h HK_SELF_MAX_FRAMES). */
 #ifndef HK_SELF_MAX_FRAMES

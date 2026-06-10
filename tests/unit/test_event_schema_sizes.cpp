@@ -21,12 +21,27 @@ TEST(EventSchema, ProcessExitSize) {
     EXPECT_EQ(sizeof(hk_event_process_exit), 16u);
 }
 
-TEST(EventSchema, SchemaVersionIsFive) {
+TEST(EventSchema, SchemaVersionIsSix) {
     /* v3 added the memory/image-anomaly event family (types 5..13);
      * v4 added the hypervisor kernel-event family (types 14..17);
      * v5 added the process-genealogy create-ex event (type 18, 24 bytes) and
-     * grew HK_EVENT_PAYLOAD_MAX 16->24 / hk_event_record 40->48. */
-    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 5u);
+     * grew HK_EVENT_PAYLOAD_MAX 16->24 / hk_event_record 40->48;
+     * v6 froze the Linux module-trust (19..28), self-integrity (29..37,
+     * renumbered from the old self_wire 14..22 collision), and timing freq-skew
+     * (38) discriminant families into hk_event_type. */
+    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 6u);
+}
+
+TEST(EventSchema, FrozenDiscriminantsAreCollisionFree) {
+    /* The v6 renumber: self-integrity no longer overlaps the HV or create-ex
+     * ranges that previously aliased the provisional self_wire 14..22 macros. */
+    EXPECT_EQ(HK_EVENT_SENSOR_UNAVAILABLE, 28);
+    EXPECT_EQ(HK_EVENT_SELF_CROSSVIEW, 29);
+    EXPECT_EQ(HK_EVENT_SELF_TLS_INIT, 37);
+    EXPECT_EQ(HK_EVENT_TIMING_FREQ_SKEW, 38);
+    /* The old collision values belong to their rightful owners. */
+    EXPECT_EQ(HK_EVENT_HV_SYNTH_MSR, 14);
+    EXPECT_EQ(HK_EVENT_PROCESS_CREATE_EX, 18);
 }
 
 TEST(EventSchema, ImageLoadSize) {

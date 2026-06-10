@@ -12,18 +12,13 @@
  * Interface: implements timing_collect_kernel() in
  *       ac/include/horkos/timing/timing_signals.h; consumes sdk/include/horkos/ioctl.h.
  *
- * HK-TODO(schema): the wire event type HK_EVENT_TIMING_FREQ_SKEW (= 5) and the
- * 16-byte hk_event_timing_freq_skew payload are NOT yet in the frozen
- * sdk/include/horkos/event_schema.h (still v2, no type 5; HK_EVENT_SCHEMA_VERSION not
- * yet bumped 2->3). The plan (§"Kernel event-schema addition") specifies that edit, but
- * it is owned by the Schema phase and MUST NOT be made from this domain TU. Until it
- * lands, a drained record carrying the provisional type 5 cannot be decoded as a
- * DISTINCT, server-understood type (5 collides pre-Schema with several other domains'
- * provisional "next free type"), so this correlator does NOT attempt to interpret
- * drained payloads as freq-skew and returns false (no kernel summary). The drain + fold
- * code below is written against the plan's pinned 16-byte layout so it activates as soon
- * as the Schema phase assigns the real type. The kernel-private mirror of the payload is
- * declared here (only when absent) so the fold compiles.
+ * Schema: the wire event type HK_EVENT_TIMING_FREQ_SKEW is now FROZEN in
+ * sdk/include/horkos/event_schema.h as type 38 (schema v6), no longer colliding
+ * with any other domain's provisional "next free type". The 16-byte
+ * hk_event_timing_freq_skew payload mirror is declared below (the discriminant is
+ * the enum constant, not a local macro). The drain + fold code is written against
+ * the pinned 16-byte layout; the live drain remains gated on the kernel emitter
+ * that produces these records on-target (kernel-side, UNVERIFIED on this host).
  */
 
 #include "horkos/timing/timing_signals.h"
@@ -34,13 +29,11 @@
 namespace hk {
 namespace timing {
 
-/* Kernel-private mirror of the (pre-Schema) freq-skew payload. Pinned to 16 bytes to
- * match the plan and stay within the frozen HK_EVENT_PAYLOAD_MAX so no ring resize is
- * needed once the type lands. Declared only when the frozen symbol is absent so there
- * is no collision once the Schema phase appends it. */
-#ifndef HK_EVENT_TIMING_FREQ_SKEW
-#  define HK_EVENT_TIMING_FREQ_SKEW 5u /* HK-TODO(schema): move to hk_event_type */
-
+/* Kernel-private mirror of the freq-skew payload. Pinned to 16 bytes to stay
+ * within the frozen HK_EVENT_PAYLOAD_MAX so no ring resize is needed. The wire
+ * discriminant HK_EVENT_TIMING_FREQ_SKEW is now FROZEN in hk_event_type
+ * (event_schema.h, type 38, schema v6); it is no longer a local macro (a macro
+ * would textually replace the enum token). */
 typedef struct hk_event_timing_freq_skew { /* 16 bytes */
     uint32_t eff_mhz;       /* APERF/MPERF-derived effective frequency */
     uint32_t nominal_mhz;   /* CPUID 0x15 nominal base frequency */
@@ -49,10 +42,9 @@ typedef struct hk_event_timing_freq_skew { /* 16 bytes */
 } hk_event_timing_freq_skew;
 
 /* flags bits for hk_event_timing_freq_skew.flags. */
-#  define HK_TIMING_FLAG_MSR_GP_FAULTED 0x00000001u
-#  define HK_TIMING_FLAG_HV_PRESENT     0x00000002u
-#  define HK_TIMING_FLAG_TSC_INVARIANT  0x00000004u
-#endif /* HK_EVENT_TIMING_FREQ_SKEW */
+#define HK_TIMING_FLAG_MSR_GP_FAULTED 0x00000001u
+#define HK_TIMING_FLAG_HV_PRESENT     0x00000002u
+#define HK_TIMING_FLAG_TSC_INVARIANT  0x00000004u
 
 #if defined(HK_PLATFORM_WINDOWS)
 

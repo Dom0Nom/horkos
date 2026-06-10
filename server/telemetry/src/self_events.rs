@@ -16,28 +16,27 @@
 //! `unwrap()`/`expect()` outside `#[cfg(test)]`. A malformed/short record or a hostile
 //! length field yields a typed `SelfEventError`, never a panic.
 //!
-//! HK-TODO(schema): the event types (`HK_EVENT_SELF_CROSSVIEW` = 14 .. = 22), the
-//! `hk_event_self_*` payload structs, and the large-record drain plane
-//! (`HK_EVENT_MEM_PAYLOAD_MAX` / `HK_IOCTL_DRAIN_MEM_EVENTS`) these records ride are
-//! owned by the Schema phase and are NOT yet in the frozen
-//! `sdk/include/horkos/event_schema.h`. The decoders below are written against the
-//! plan's pinned field layout/sizes so they are ready when the schema lands; the
-//! event-type discriminants are mirrored here as local consts until then. They must be
-//! dispatched by the resolved type once Schema assigns the final numbering.
+//! Schema: the event types (`HK_EVENT_SELF_CROSSVIEW` = 29 .. = 37) are now FROZEN
+//! in `sdk/include/horkos/event_schema.h` (schema v6) — renumbered from the old
+//! provisional 14..22, which collided with the HV (14..17) and create-ex (18)
+//! ranges. The `hk_event_self_*` payload structs are large (120/144 bytes) and
+//! still ride the large-record drain plane (`HK_EVENT_MEM_PAYLOAD_MAX` /
+//! `HK_IOCTL_DRAIN_MEM_EVENTS`), whose self-record transport is HK-TODO(schema)
+//! kernel-side work. The decoders below mirror the frozen discriminants.
 
 use thiserror::Error;
 
-/// Event-type discriminants. HK-TODO(schema): mirror of the values the Schema phase
-/// appends to `hk_event_type` (continuing after the memory-injection block).
-pub const HK_EVENT_SELF_CROSSVIEW: u32 = 14;
-pub const HK_EVENT_SELF_PAGE_COW: u32 = 15;
-pub const HK_EVENT_SELF_RETADDR: u32 = 16;
-pub const HK_EVENT_SELF_HWBP: u32 = 17;
-pub const HK_EVENT_SELF_IAT_TARGET: u32 = 18;
-pub const HK_EVENT_SELF_VEH_UNWIND: u32 = 19;
-pub const HK_EVENT_SELF_LOADER: u32 = 20;
-pub const HK_EVENT_SELF_WX_DRIFT: u32 = 21;
-pub const HK_EVENT_SELF_TLS_INIT: u32 = 22;
+/// Event-type discriminants. FROZEN in `hk_event_type` (event_schema.h) as types
+/// 29..37 (schema v6); mirror exactly.
+pub const HK_EVENT_SELF_CROSSVIEW: u32 = 29;
+pub const HK_EVENT_SELF_PAGE_COW: u32 = 30;
+pub const HK_EVENT_SELF_RETADDR: u32 = 31;
+pub const HK_EVENT_SELF_HWBP: u32 = 32;
+pub const HK_EVENT_SELF_IAT_TARGET: u32 = 33;
+pub const HK_EVENT_SELF_VEH_UNWIND: u32 = 34;
+pub const HK_EVENT_SELF_LOADER: u32 = 35;
+pub const HK_EVENT_SELF_WX_DRIFT: u32 = 36;
+pub const HK_EVENT_SELF_TLS_INIT: u32 = 37;
 
 /// `match_matrix` bits (set = the two views AGREE).
 pub const HK_SELF_MATCH_INPROC_KERNEL: u32 = 1 << 0;
