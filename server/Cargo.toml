@@ -27,6 +27,11 @@ hyper              = { version = "1.5", features = ["server", "http1"] }
 serde              = { version = "1.0", features = ["derive"] }
 serde_json         = "1.0"
 
+# Crypto (ban-engine rule-bundle verification).
+ed25519-dalek      = { version = "2.2", default-features = false, features = ["std"] }
+hex                = "0.4"
+time               = { version = "0.3", features = ["parsing"] }
+
 # Errors.
 thiserror          = "2.0"
 anyhow             = "1.0"   # binary-only — never used in library code per CLAUDE.md guardrail #8

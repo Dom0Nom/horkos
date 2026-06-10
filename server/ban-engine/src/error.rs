@@ -23,6 +23,9 @@ pub enum BanEngineError {
     #[error("verifier not implemented")]
     VerifierNotImplemented,
 
+    #[error("bundle trust root invalid (expected 32-byte hex Ed25519 key)")]
+    InvalidTrustRoot,
+
     #[error("invalid fusion parameter: {0}")]
     InvalidFusionParams(&'static str),
 
@@ -46,6 +49,10 @@ impl IntoResponse for BanEngineError {
             BanEngineError::VerifierNotImplemented => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 json!({ "status": "verifier_not_implemented" }),
+            ),
+            BanEngineError::InvalidTrustRoot => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({ "status": "trust_root_invalid" }),
             ),
             BanEngineError::InvalidFusionParams(msg) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
