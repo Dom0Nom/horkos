@@ -70,6 +70,12 @@
 /* Bound for in-kernel string scans before hashing (verifier-provable). */
 #define HK_PW_HASH_MAX 256
 
+/* Verifier constraint: `len` MUST be a compile-time constant or a value provably
+ * bounded by HK_PW_HASH_MAX at the call site. The loop bound is fixed at
+ * HK_PW_HASH_MAX iterations; if `len` is not a compile-time constant the verifier
+ * may reject the program because it cannot prove the loop terminates within the
+ * instruction limit. Callers must either pass a literal or clamp to HK_PW_HASH_MAX
+ * before calling. */
 static __always_inline __u64 hk_fnv64(const char *buf, __u32 len)
 {
     __u64 h = HK_FNV64_OFFSET;

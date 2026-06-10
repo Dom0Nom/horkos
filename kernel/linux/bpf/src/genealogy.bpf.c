@@ -28,7 +28,8 @@
 #include "hk_protected.bpf.h"
 
 #define HK_SCHEMA_VERSION    5u   /* mirrors HK_EVENT_SCHEMA_VERSION (v5). */
-#define HK_EVENT_LAUNCH_TRACED 0x22u
+/* 0x22 is claimed by dlopen_uprobe.bpf.c (HK_EVENT_DLOPEN); 0x28 is free. */
+#define HK_EVENT_LAUNCH_TRACED 0x28u
 
 struct hk_bpf_launch_event {
     __u32 schema_version;
@@ -65,7 +66,7 @@ int BPF_PROG(hk_ptrace_access_check, struct task_struct *child, unsigned int mod
     if (!hk_is_protected_tgid(child_tgid)) {
         return ret;
     }
-    tracer_pid = (__u32)bpf_get_current_pid_tgid();
+    tracer_pid = (__u32)(bpf_get_current_pid_tgid() >> 32);
     bpf_map_update_elem(&hk_traced, &child_tgid, &tracer_pid, BPF_ANY);
     return ret; /* audit-only. */
 }

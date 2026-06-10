@@ -98,8 +98,14 @@ int hk_tp_proton_env(struct trace_event_raw_sched_process_exec *ctx)
         if (rc < 0)
             break;
 
-        /* Walk entry boundaries inside this chunk. Bounded by chunk size. */
-        for (__u32 off = 0; off + HK_PW_PROTON_KEYLEN < HK_PW_ENV_CHUNK; off++) {
+        /* Walk entry boundaries inside this chunk. Bounded by chunk size.
+         * `<=` allows keys whose first byte starts at the last KEYLEN bytes of
+         * the chunk; vstart == HK_PW_ENV_CHUNK in that case, so the value-hash
+         * inner loop hits the `idx >= HK_PW_ENV_CHUNK` guard immediately and
+         * produces an empty-value hash — acceptable for cross-chunk keys. The
+         * verifier can prove all chunk[] accesses in bounds because the guards
+         * in the inner loop are explicit (if (idx >= HK_PW_ENV_CHUNK) break). */
+        for (__u32 off = 0; off + HK_PW_PROTON_KEYLEN <= HK_PW_ENV_CHUNK; off++) {
             int at_boundary = (off == 0) || (chunk[off - 1] == '\0');
             if (!at_boundary)
                 continue;

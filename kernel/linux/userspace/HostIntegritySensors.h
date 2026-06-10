@@ -36,17 +36,22 @@
 
 namespace horkos::modint {
 
-/* ---- Provisional event-type discriminants (HK-TODO(schema)) ---------------- */
-constexpr uint32_t kEvtKsymDrift          = 5u;
-constexpr uint32_t kEvtModuleViewDiff     = 6u;
-constexpr uint32_t kEvtFtraceHook         = 7u;
-constexpr uint32_t kEvtKprobeSensitive    = 8u;
-constexpr uint32_t kEvtModuleDiskDrift    = 9u;
-constexpr uint32_t kEvtKernelPosture      = 10u;
-constexpr uint32_t kEvtForeignBpf         = 11u;
-constexpr uint32_t kEvtDevmemAccess       = 12u;
-constexpr uint32_t kEvtMsrWriteSensitive  = 13u;
-constexpr uint32_t kEvtSensorUnavailable  = 14u;
+/* ---- Provisional event-type discriminants (HK-TODO(schema)) ----------------
+ * Range 19..28 is free in event_schema.h (types 1-18 are taken):
+ *   1..4  = core events; 5..13 = Windows mem-injection family (v3 schema);
+ *   14..17 = HV/virtualization family (v4 schema); 18 = process-create-ex (v5).
+ * The Rust server decoder in telemetry/src/kernel_events.rs mirrors these
+ * values and must be updated in lockstep with any change here. */
+constexpr uint32_t kEvtKsymDrift          = 19u;
+constexpr uint32_t kEvtModuleViewDiff     = 20u;
+constexpr uint32_t kEvtFtraceHook         = 21u;
+constexpr uint32_t kEvtKprobeSensitive    = 22u;
+constexpr uint32_t kEvtModuleDiskDrift    = 23u;
+constexpr uint32_t kEvtKernelPosture      = 24u;
+constexpr uint32_t kEvtForeignBpf         = 25u;
+constexpr uint32_t kEvtDevmemAccess       = 26u;
+constexpr uint32_t kEvtMsrWriteSensitive  = 27u;
+constexpr uint32_t kEvtSensorUnavailable  = 28u;
 
 /* ---- Signal ids used in SENSOR_UNAVAILABLE.signal_id (catalog numbers) ----- */
 constexpr uint32_t kSignalKsymDrift     = 91u;
