@@ -6,6 +6,18 @@ add_executable(hk_bypass_byovd byovd_load.cpp)
 target_include_directories(hk_bypass_byovd PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
 add_test(NAME hk_bypass_byovd COMMAND hk_bypass_byovd)
 
+# win-kernel-memory-injection scan-plane gate (signals 10-18). Both ship DISABLED
+# (HK_MEMSCAN_TEST_ENABLED undefined): compiled no-ops that pass, exactly like
+# byovd_load.cpp. Their assertions activate once the scan plane is verified on the
+# Windows box.
+add_executable(hk_bypass_manual_map_scan manual_map_scan.cpp)
+target_include_directories(hk_bypass_manual_map_scan PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
+add_test(NAME hk_bypass_manual_map_scan COMMAND hk_bypass_manual_map_scan)
+
+add_executable(hk_bypass_module_stomp_scan module_stomp_scan.cpp)
+target_include_directories(hk_bypass_module_stomp_scan PRIVATE ${CMAKE_SOURCE_DIR}/sdk/include)
+add_test(NAME hk_bypass_module_stomp_scan COMMAND hk_bypass_module_stomp_scan)
+
 # win-kernel-object-callbacks self-integrity surface gate. Phase 3 builds it
 # disabled (HK_SELFCHECK_TEST_ENABLED undefined); it activates when the kernel
 # unhook fixture and the HK_EVENT_CALLBACK_* schema bump land. The enabled body
