@@ -1,3 +1,4 @@
-1.047816e+00 cff.test
-1.039931e+00 opaque.test
-1.038486e+00 strenc.test
+1.645370e-01 cff.test
+1.651409e-01 opaque.test
+1.717820e-01 strenc.test
+1.728570e-01 strenc_ctor_guard.test

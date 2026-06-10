@@ -1,0 +1,19 @@
+# String encryption ctor-reachability guard: a string used by an annotated
+# function that is ALSO transitively reachable from a global constructor must
+# NOT be encrypted (it would be read as ciphertext by the ctor before hk_strdec
+# runs at the same priority-0 slot). A string used by an annotated function that
+# is NOT ctor-reachable must still be encrypted.
+# RUN: %opt -load-pass-plugin=%plugin -passes='hk-strenc,verify' -S %S/fixtures/ctor_reachable.ll | %FileCheck %s
+
+# @.str_secret is reachable from @ctor_fn (via @secret) — must remain plaintext.
+# CHECK: @.str_secret = private unnamed_addr constant{{.*}}c"ctor-reach\00"
+
+# @.str_safe is not ctor-reachable — must be encrypted (plaintext gone, now a
+# writable global rather than a constant).
+# CHECK: @.str_safe = private unnamed_addr global
+# CHECK-NOT: c"safe-str
+
+# The decrypt constructor must be registered for the safe string.
+# CHECK: @llvm.global_ctors = {{.*}}@hk_strdec
+# CHECK: define internal void @hk_strdec()
+# CHECK: xor i8

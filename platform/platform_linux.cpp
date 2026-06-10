@@ -52,6 +52,15 @@ bool is_debugger_attached() {
 }
 
 /* -------------------------------------------------------------------------
+ * macOS platform-trust reads (signal 124). Not available on Linux; return the
+ * header-documented "unavailable" values so any TU that includes platform.h
+ * can link regardless of which platform backend is selected by CMake.
+ * ------------------------------------------------------------------------- */
+bool csr_active_config(uint32_t * /*out_config*/) { return false; }
+bool sip_enabled() { return true; }
+uint32_t read_boot_args(char * /*out*/, uint32_t /*cap*/) { return 0; }
+
+/* -------------------------------------------------------------------------
  * Client self-integrity reads (memory-integrity-selfcheck, signals 145-153).
  * On Linux the foreign read of the AC task's own memory comes from the eBPF
  * self-read program (bpf_probe_read_user over the AC task) on Deck/Game-Mode, or

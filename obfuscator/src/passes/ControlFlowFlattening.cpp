@@ -121,8 +121,17 @@ bool flatten(Function &F) {
     auto reroute = [&](BasicBlock *BB) {
         Instruction *T = BB->getTerminator();
         auto *BI = dyn_cast<BranchInst>(T);
-        if (!BI)
-            return; // ret / unreachable: leave as-is.
+        if (!BI) {
+            // ReturnInst and UnreachableInst are intentional direct exits of the
+            // flattened region. A ReturnInst must leave the function immediately
+            // (routing it back through the dispatcher would change semantics);
+            // UnreachableInst has no successor to rewrite. Both are left in place
+            // — the flattened function still exits correctly, and the CFG is
+            // opaque for all intra-function edges that do have BranchInst
+            // terminators. canFlatten() above has already excluded all other
+            // non-branch terminator kinds (invoke, indirectbr, etc.).
+            return;
+        }
 
         IRBuilder<> B(BI);
         if (BI->isUnconditional()) {
