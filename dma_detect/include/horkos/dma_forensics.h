@@ -56,7 +56,7 @@ typedef struct hk_dma_device_forensics {
 
     /* --- sig 127 (DSN forgery) / 128 (ext-config stability) --- */
     uint8_t    dsn_present;             /* DSN ext-cap (0x0003) found.            */
-    uint8_t    dsn_oui_matches_vendor;  /* EUI-64 OUI consistent with VID (1=yes).*/
+    uint8_t    dsn_oui_locally_administered; /* EUI-64 OUI locally-administered bit set (1=suspicious).*/
     uint8_t    extcfg_aliases_low;      /* 0x100-0x1FF mirrors 0x000-0x0FF.       */
     uint8_t    rsvdp_nonzero;           /* An RsvdP invariant byte was non-zero.  */
     uint8_t    extcfg_read_unstable;    /* Repeated reads not byte-identical.     */

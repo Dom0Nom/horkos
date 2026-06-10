@@ -68,7 +68,7 @@ inline void put_u64(uint8_t *&p, uint64_t v) {
  *   device_id         u16   (2)
  *   subsys_vendor_id  u16   (2)
  *   dsn_present       u8    (1)
- *   dsn_oui_matches   u8    (1)
+ *   dsn_oui_locally   u8    (1)
  *   extcfg_aliases    u8    (1)
  *   rsvdp_nonzero     u8    (1)
  *   extcfg_unstable   u8    (1)
@@ -136,7 +136,7 @@ extern "C" uint32_t hk_dma_forensics_serialize_device(
     put_u16(p, d->subsys_vendor_id);
 
     put_u8(p, d->dsn_present);
-    put_u8(p, d->dsn_oui_matches_vendor);
+    put_u8(p, d->dsn_oui_locally_administered);
     put_u8(p, d->extcfg_aliases_low);
     put_u8(p, d->rsvdp_nonzero);
     put_u8(p, d->extcfg_read_unstable);

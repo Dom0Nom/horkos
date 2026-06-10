@@ -128,14 +128,19 @@ extern "C" size_t HKThreadScan(const HKGameTaskHandle *game,
          * precise entry-pc recovery (thread start routine via the thread's
          * initial frame) is unverified and must be validated on hardware before
          * 114 is relied upon. Anon current-pc is still a useful coarse signal. */
-        if (!got_pc) {
-            continue;
+        uint32_t kind = HK_REGION_ANON;
+        if (got_pc) {
+            kind = HKResolveEntryRegion(entry_pc, images, image_count,
+                                        jit, jit_count);
         }
 
-        uint32_t kind = HKResolveEntryRegion(entry_pc, images, image_count,
-                                             jit, jit_count);
-        if (kind == HK_REGION_IMAGE) {
-            continue;  /* normal thread inside a known image */
+        /* task_threads() returns a send right per thread_act_t; we must
+         * deallocate each port after use on ALL exit paths (including the
+         * early continue below). */
+        mach_port_deallocate(mach_task_self(), threads[i]);
+
+        if (!got_pc || kind == HK_REGION_IMAGE) {
+            continue;
         }
 
         hk_es_thread_origin ev;
@@ -148,7 +153,8 @@ extern "C" size_t HKThreadScan(const HKGameTaskHandle *game,
         ++emitted;
     }
 
-    /* MUST deallocate the kernel-allocated thread array (per-poll leak otherwise). */
+    /* Deallocate the kernel-allocated thread port array. Individual port send
+     * rights were already released in the loop above. */
     vm_deallocate(mach_task_self(),
                   reinterpret_cast<vm_address_t>(threads),
                   thread_count * sizeof(*threads));

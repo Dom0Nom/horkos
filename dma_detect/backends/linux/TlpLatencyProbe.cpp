@@ -84,7 +84,15 @@ extern "C" void hk_dma_linux_fill_tlp_latency(hk_dma_device_forensics *d) {
     if (n < 8) return; /* too few samples for a robust median/IQR. */
 
     std::qsort(samples, static_cast<size_t>(n), sizeof(uint64_t), cmp_u64);
-    uint64_t median = samples[n / 2];
+    /* For even n, use the average of the two middle elements to avoid the
+     * upper-middle bias that samples[n/2] alone produces. */
+    uint64_t median;
+    if (n % 2 == 0) {
+        median = (samples[n / 2 - 1] / 2u) + (samples[n / 2] / 2u)
+                 + ((samples[n / 2 - 1] & 1u) + (samples[n / 2] & 1u)) / 2u;
+    } else {
+        median = samples[n / 2];
+    }
     uint64_t q1     = samples[n / 4];
     uint64_t q3     = samples[(3 * n) / 4];
     uint64_t iqr    = (q3 >= q1) ? (q3 - q1) : 0ull;

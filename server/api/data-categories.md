@@ -521,6 +521,51 @@ in §1. The launcher baseline (accepted roots / LOLBin catalog / per-launcher
 integrity) is a signed rule bundle (`server/api/launcher-baseline.md`), not a
 collected field.
 
+### 15. DMA / peripheral hardware trust (`dma_forensics.h`)
+
+Source: the cross-platform DMA forensics sensor (`dma_detect/`, catalog signals
+127-135). One `hk_dma_device_forensics` record per enumerated PCIe device, serialized
+as a 100-byte little-endian flat image by `dma_detect/src/forensics_report.cpp`
+(`hk_dma_forensics_serialize_device`) and decoded by
+`server/telemetry/src/dma_forensics.rs`. Every probe is read-only; no device state
+is mutated (exception: the sig-130 option-ROM probe briefly enables ROM decode and
+restores it, only when no driver owns the ROM region). Fields with `scan_error != 0`
+are untrustworthy and the server must not read positive facts from them.
+Retention 90 days. Legal basis: Legitimate interest — anti-cheat enforcement.
+Operator: Horkos Service Operator.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `bdf.domain`, `bdf.bus`, `bdf.devfn` | PCIe routing id from sysfs/SetupAPI/IOKit (`dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `vendor_id` | sysfs `vendor` / PnP / IOKit property (`dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `device_id` | sysfs `device` / PnP / IOKit property (`dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `subsys_vendor_id` | sysfs `subsystem_vendor` / PnP / IOKit property (`dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `dsn_present` | PCIe DSN ext-cap (0x0003) found in extended config (sig 127, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `dsn_oui_locally_administered` | EUI-64 OUI locally-administered bit set — 1 = suspicious, never a real IEEE OUI (sig 127, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `extcfg_aliases_low` | ext-config 0x100-0x1FF mirrors legacy 0x000-0x0FF (sig 128, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `rsvdp_nonzero` | a PCIe-spec RsvdP reserved byte was non-zero (sig 128, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `extcfg_read_unstable` | repeated config reads not byte-identical (sig 128, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `msix_containment_violation` | MSI-X table or PBA escapes its referenced BAR (sig 129, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `msix_table_size` | MSI-X Table Size field + 1, entry count (sig 129, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `rom_present` | option ROM region present (sig 130, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `rom_pcir_id_mismatch` | PCIR VID/DID does not match config VID/DID (sig 130, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `bar_profile_count`, `bar_size[6]`, `bar_flags[6]` | decoded BAR lengths and type flags per BAR (sig 131, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `acs_source_validation`, `acs_p2p_redirect` | ACS SV/P2P-RR control bits on the path bridge (sig 133, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `iommu_group_membership` | device count in this device's IOMMU group (sig 133, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `bus_master_enabled` | PCI_COMMAND Bus Master Enable bit (structural gate, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `driver_bound` | a kernel driver owns this device (structural gate, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `tlp_latency_median_ns`, `tlp_latency_iqr_ns` | config-read TLP round-trip median + IQR (sig 132, LOW WEIGHT, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `tlp_same_root_port_group` | coarse root-port cohort id for within-cohort comparison (sig 132, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `iommu_fault_count` | IOMMU fault count attributed to this BDF (sig 135, `dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `scan_error` | per-device scan errno/HRESULT/IOReturn; non-zero means record is untrustworthy (`dma_forensics.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+
+Note: PCIe BDF tuples identify a bus slot, not a player. They are device hardware
+identifiers (§4-adjacent) used solely for anomaly gating; they do not identify a
+natural person. `dsn_oui_locally_administered` is a one-bit structural fact about
+the OUI prefix — it carries no unique-identifier weight. The sig-132 TLP-latency
+fields are LOW WEIGHT and cannot by themselves produce a verdict
+(`bypass_latency_only` merge-gate).
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`
