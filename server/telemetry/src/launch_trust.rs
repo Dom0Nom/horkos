@@ -95,6 +95,9 @@ pub struct LaunchTrustVerdict {
 
 impl LaunchTrustReport {
     fn validate(&self) -> Result<(), LaunchTrustError> {
+        if self.ancestry_image_hashes.is_empty() {
+            return Err(LaunchTrustError::EmptyChain);
+        }
         if self.ancestry_image_hashes.len() > MAX_CHAIN {
             return Err(LaunchTrustError::ChainTooLong(
                 self.ancestry_image_hashes.len(),
@@ -231,6 +234,7 @@ mod tests {
     fn token_delta_matching_baseline_not_flagged() {
         let r = LaunchTrustReport {
             token_integrity_delta: 0x1000, // matches the admin-launcher baseline.
+            ancestry_image_hashes: vec!["store_client".into()],
             ..Default::default()
         };
         let v = r.correlate(&store_baseline()).expect("correlate");
@@ -241,6 +245,7 @@ mod tests {
     fn token_delta_off_baseline_flagged() {
         let r = LaunchTrustReport {
             token_integrity_delta: 0x2000,
+            ancestry_image_hashes: vec!["store_client".into()],
             ..Default::default()
         };
         let v = r.correlate(&store_baseline()).expect("correlate");
@@ -252,6 +257,7 @@ mod tests {
         let r = LaunchTrustReport {
             job_silo_anomaly: true,
             token_integrity_delta: 0x1000,
+            ancestry_image_hashes: vec!["store_client".into()],
             ..Default::default()
         };
         let v = r.correlate(&store_baseline()).expect("correlate");
@@ -270,5 +276,54 @@ mod tests {
             r.correlate(&store_baseline()),
             Err(LaunchTrustError::ChainTooLong(_, _))
         ));
+    }
+
+    #[test]
+    fn empty_chain_is_rejected() {
+        let r = LaunchTrustReport {
+            ancestry_image_hashes: vec![],
+            ..Default::default()
+        };
+        assert!(matches!(
+            r.correlate(&store_baseline()),
+            Err(LaunchTrustError::EmptyChain)
+        ));
+    }
+
+    #[test]
+    fn zero_baseline_delta_unelevated_game_not_flagged() {
+        // A game launched unelevated under an unelevated launcher: both process
+        // tokens share the same integrity level, so the delta is 0. A baseline
+        // that declares expected_token_delta = 0 (no elevation) must NOT flag a
+        // matching delta of 0. A delta != 0 (e.g. +0x1000) must be flagged.
+        let unelevated_baseline = LauncherBaseline {
+            expected_token_delta: 0,
+            accepted_roots: vec!["store_client".into()],
+            ..LauncherBaseline::default()
+        };
+
+        let no_elevation = LaunchTrustReport {
+            token_integrity_delta: 0,
+            ancestry_image_hashes: vec!["store_client".into()],
+            ..Default::default()
+        };
+        let v = no_elevation
+            .correlate(&unelevated_baseline)
+            .expect("correlate");
+        assert!(
+            !v.token_divergence_confirmed,
+            "delta == baseline (both 0) must not be flagged"
+        );
+
+        let elevated = LaunchTrustReport {
+            token_integrity_delta: 0x1000,
+            ancestry_image_hashes: vec!["store_client".into()],
+            ..Default::default()
+        };
+        let v2 = elevated.correlate(&unelevated_baseline).expect("correlate");
+        assert!(
+            v2.token_divergence_confirmed,
+            "delta != baseline (0x1000 vs 0) must be flagged"
+        );
     }
 }

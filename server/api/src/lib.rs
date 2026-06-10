@@ -9,7 +9,10 @@
 pub mod error;
 pub mod routes;
 
-use axum::Router;
+use axum::{extract::DefaultBodyLimit, Router};
+
+/// Maximum accepted request body for all routes on this server.
+const MAX_BODY_BYTES: usize = 256 * 1024;
 
 /// Build the fully composed application router.
 ///
@@ -26,4 +29,5 @@ pub fn build_router() -> Router {
         .merge(telemetry::router())
         .merge(ban_engine::router())
         .merge(license_server::router())
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
 }

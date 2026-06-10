@@ -194,3 +194,29 @@ async fn ort_marker_route_unaffected() {
 fn ort_marker_string_present() {
     assert_eq!(telemetry::ort_linked_marker(), "ort: linked");
 }
+
+#[tokio::test]
+async fn oversized_body_returns_413() {
+    let app = telemetry::router();
+
+    // Construct a body that exceeds the 256 KiB limit (257 KiB of 'x').
+    let oversized = vec![b'x'; 257 * 1024];
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri("/api/telemetry")
+                .header("content-type", "application/json")
+                .body(Body::from(oversized))
+                .expect("request"),
+        )
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        response.status(),
+        StatusCode::PAYLOAD_TOO_LARGE,
+        "a body over 256 KiB must be rejected with 413"
+    );
+}

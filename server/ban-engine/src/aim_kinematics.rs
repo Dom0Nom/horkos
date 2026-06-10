@@ -309,11 +309,16 @@ pub fn segment_switches(ticks: &[TickPayload]) -> Vec<SwitchFeatures> {
 /// Signed ns delta between two timestamps, in ms. Returns 0 if either side is 0
 /// (unknown) or if `to < from` (clock went backwards / out-of-order window) —
 /// the model treats 0 as "unknown" rather than a fabricated negative latency.
+///
+/// The division is carried in f64 to preserve precision for gaps larger than
+/// ~16ms where a direct u64->f32 cast would lose low-order bits; the result is
+/// narrowed to f32 only at the output boundary.
 fn ts_delta_ms(from_ns: u64, to_ns: u64) -> f32 {
     if from_ns == 0 || to_ns == 0 || to_ns < from_ns {
         return 0.0;
     }
-    (to_ns - from_ns) as f32 / NS_PER_MS
+    let delta_ns = (to_ns - from_ns) as f64;
+    (delta_ns / NS_PER_MS as f64) as f32
 }
 
 /// Population variance of a residual sample. Returns 0 for fewer than two
