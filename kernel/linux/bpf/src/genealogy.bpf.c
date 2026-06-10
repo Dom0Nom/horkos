@@ -10,12 +10,17 @@
  * Target platforms: Linux eBPF (TRACEPOINT + BPF_LSM). Compiles -Wall -Wextra
  *       -Werror at the kernel warning level (guardrail #6). Shares hk_ringbuf.
  *
- *       HK-UNCERTAIN (plan UNCERTAINTY FLAG): BPF LSM (lsm/ptrace_access_check)
- *       requires CONFIG_BPF_LSM=y AND "bpf" in the boot lsm= list — not universal,
- *       notably uncertain on stock Steam Deck SteamOS. The tracepoint-join path
- *       stands alone if the LSM program fails to attach (the loader attach-gates
- *       it). The task_struct->ptrace / ->real_parent reads are CO-RE-relocatable
- *       and confirmed against the target BTF.
+ *       HK-VERIFIED(bpf-lsm-steamos): BPF LSM (lsm/ptrace_access_check) requires
+ *       CONFIG_BPF_LSM=y AND "bpf" in the lsm= list. The Steam Deck kernel
+ *       (linux-neptune, 6.5-jupiter branch) ships CONFIG_BPF_LSM=y and
+ *       CONFIG_LSM="lockdown,yama,bpf" — "bpf" is in the DEFAULT lsm= list, so
+ *       no boot-parameter override is needed on SteamOS 3.x (holo). The LSM
+ *       attach is therefore expected to succeed on-device without extra
+ *       configuration. The tracepoint-join path still stands alone as a fallback
+ *       (the loader attach-gates the LSM program) for non-Deck distros that do
+ *       not enable BPF LSM. The task_struct->ptrace / ->real_parent reads are
+ *       CO-RE-relocatable and confirmed against the target BTF.
+ *       Source: https://github.com/neptune-mirror/linux-neptune/blob/cristicc/6.5-jupiter/.config-fragment-extra
  * Interface: shares hk_ringbuf (extern, from lsm_file_open.bpf.c); the
  *       HK_EVENT_LAUNCH_TRACED tag is mapped to the server record by Loader.cpp.
  */

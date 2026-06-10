@@ -19,17 +19,21 @@
  * #8-spirit (non-blocking: the port reads are bounded mach calls, but to stay off the
  * deadline-bound ES queue the CALLER dispatches this onto the sink queue).
  *
- * HK-UNCERTAIN(es-foreign-taskport): whether task_get_exception_ports can be called
- * against a FOREIGN (game) task from within an EndpointSecurity client, and which task
- * port the es_message_t process context legitimately yields, is UNVERIFIED. ES clients
- * are not general task-port holders; obtaining a target task port may require
- * task_name_for_pid (a NAME port, which is INSUFFICIENT for task_get_exception_ports —
- * that needs a control port) or processor_set introspection, or it may not be possible
- * without additional entitlement. Per guardrail #13 the foreign-task port acquisition is
- * NOT guessed: HkExceptionPortAudit audits ONLY mach_task_self() (the daemon's own task,
- * always available) as a structural proof-of-mechanism, and leaves the foreign-task
- * resolution a documented stub that returns HK_EXCPORT_RESULT_UNAVAILABLE. Resolve the
- * task-port acquisition path on-box before auditing a foreign task.
+ * HK-VERIFIED(es-foreign-taskport): obtaining a foreign CONTROL task port requires
+ * either task_for_pid() or task_read_for_pid(). As of current macOS policy (confirmed
+ * against Apple DTS guidance), task_for_pid requires BOTH the caller holding the
+ * com.apple.security.cs.debugger entitlement (or the legacy task_for_pid-allow) AND
+ * the target process carrying com.apple.security.get-task-allow — Apple has restricted
+ * task_for_pid to developer-tool use cases only and warns that non-tool uses may be
+ * blocked in future OS versions. task_get_exception_ports requires a CONTROL port;
+ * a NAME port (task_name_for_pid) is insufficient. An ES client/daemon does NOT
+ * automatically hold these entitlements and MUST NOT assume task_for_pid will succeed
+ * on a hardened game target. The stub correctly remains fail-closed
+ * (HK_EXCPORT_RESULT_UNAVAILABLE for the foreign-task path). Activating the
+ * foreign-task branch requires on-box confirmation of the entitlement posture and
+ * Apple approval for the use case.
+ * Source: https://developer.apple.com/forums/thread/734461
+ *         https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.cs.debugger
  */
 
 #import <Foundation/Foundation.h>
@@ -67,7 +71,7 @@ typedef struct HkExcPortAudit {
  * Audit the exception ports registered on `task` for the audited masks. Sets
  * out->foreign_owner_mask for any mask whose handler port is non-null AND not the OS
  * default. "Foreign vs self" requires comparing the owning task of each handler port
- * against `task` — which is itself part of the HK-UNCERTAIN above (resolving a port's
+ * against `task` — which is itself part of the foreign-taskport constraint above (resolving a port's
  * owning task from an ES client). Here we only record WHETHER a non-default handler is
  * installed per mask; the self/foreign discrimination is left to the server using the
  * port's signed-owner correlation (the client cannot trust an in-process answer).
@@ -116,7 +120,7 @@ static void audit_task_ports(task_t task, HkExcPortAudit *out)
  *
  * pid          : the observed target's pid (from the es_message_t process context).
  * audit_token  : the target's audit token (reserved for the server-side owner
- *                correlation; not used to acquire the task port here — see HK-UNCERTAIN).
+ *                correlation; not used to acquire the task port here — see file header for the entitlement constraint).
  * out          : filled with the audit result. Always written (never left uninitialised),
  *                so a caller that emits unconditionally has a well-defined record.
  *
@@ -134,12 +138,13 @@ extern "C" void HkExceptionPortAudit(int pid,
     (void)pid;
     (void)audit_token;
 
-    /* HK-UNCERTAIN(es-foreign-taskport): acquiring the GAME task's control port from an
-     * ES client is unverified (see file header). Until resolved, audit our OWN task as a
-     * structural proof-of-mechanism and mark the record audited_self=1 so the server
-     * does NOT treat a self-audit as a foreign-debugger finding. task_for_pid / a NAME
-     * port is deliberately NOT used (a NAME port cannot drive task_get_exception_ports,
-     * and task_for_pid needs entitlement/SIP posture we do not assert here). */
+    /* Foreign-task audit is blocked on the entitlement constraint documented in the
+     * file header (requires com.apple.security.cs.debugger + target must carry
+     * com.apple.security.get-task-allow; Apple restricts task_for_pid to developer
+     * tools). Until that path is activated on-box, audit our OWN task as a structural
+     * proof-of-mechanism and mark audited_self=1 so the server does NOT treat a
+     * self-audit as a foreign-debugger finding. A NAME port is deliberately NOT used
+     * (task_get_exception_ports requires a CONTROL port, not a NAME port). */
     out->audited_self = 1u;
     audit_task_ports(mach_task_self(), out);
 

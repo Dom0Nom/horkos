@@ -52,8 +52,12 @@ struct hk_bpf_proc_mem_open_event {
  * fexit_process_vm.bpf.c:79). bpf_task_release must pair every successful
  * bpf_task_from_pid call.
  *
- * HK-UNCERTAIN(mem-open-attachability): fs/proc/base.c:mem_open is `static` on
- * some kernels and may be absent from BTF/kallsyms; fentry then fails to attach.
+ * HK-UNCERTAIN(mem-open-attachability): fs/proc/base.c:mem_open is declared
+ * `static` in the kernel source; whether it appears in BTF/kallsyms depends on
+ * whether the target kernel was compiled with CONFIG_KALLSYMS_ALL or equivalent
+ * BTF export of static functions. If absent, fentry fails to attach.
+ * The signature `static int mem_open(struct inode *inode, struct file *file)` is
+ * stable across v6.x (no renames found); it is the BPF_PROG form used below.
  * The loader MUST design in a fallback to lsm/file_open filtered by the proc-mem
  * inode (i_op == proc_mem_inode_operations / dname == "mem" under /proc) — not
  * bolt it on later. CONFIRM mem_open is in BTF on the target kernels before

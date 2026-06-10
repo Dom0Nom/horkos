@@ -71,8 +71,11 @@ void ExtractLaunchTrust(const es_message_t* msg, LaunchTrustExtract* out)
                  target->team_id);
     CopyEsString(out->signing_id, sizeof(out->signing_id), target->signing_id);
     /* The chain comparison vs the accepted launcher Team IDs/cdhashes is done by
-     * the server; the client only ships this tuple. cdhash extraction
-     * (target->cdhash) is HK-UNCERTAIN across ES versions — added on the box. */
+     * the server; the client only ships this tuple.
+     * HK-VERIFIED(es-process-cdhash): es_process_t.cdhash is a uint8_t[20] array
+     * (CS_CDHASH_LEN == 20, SHA-1 of the code directory). Available since macOS
+     * 10.15 (ES framework v1) — present on all targeted deployment versions.
+     * Source: https://developer.apple.com/documentation/endpointsecurity/es_process_t/cdhash */
 }
 
 } // namespace macos

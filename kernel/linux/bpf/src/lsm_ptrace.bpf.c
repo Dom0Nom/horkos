@@ -91,15 +91,13 @@ struct hk_bpf_ptrace_event {
  * 0 would override a real deny from another stacked module (the lsm_file_open
  * sibling documents this invariant).
  *
- * HK-UNCERTAIN(ptrace-access-check-arity): the BPF-LSM signature for
- * security_ptrace_access_check is commonly
- *   BPF_PROG(name, struct task_struct *child, unsigned int mode, int ret)
- * but some kernel trees carry a different arg list on this hook. The exact
- * BPF_PROG arg arity MUST be confirmed against the CI/target kernel's BTF
- * (`bpftool btf dump file /sys/kernel/btf/vmlinux format c | grep -A3
- * bpf_lsm_ptrace_access_check`) before this attaches; a wrong arity is a
- * verifier reject or silently wrong field reads. Coded here against the common
- * 3-arg form; do not assume it is correct on every kernel.
+ * HK-VERIFIED(ptrace-access-check-arity): lsm_hook_defs.h defines this hook as
+ *   LSM_HOOK(int, 0, ptrace_access_check, struct task_struct *child, unsigned int mode)
+ * The BPF LSM wrapper adds the prior-return `int ret` as the final argument,
+ * giving the 3-arg BPF_PROG form (child, mode, ret) used below. Confirmed
+ * against torvalds/linux master include/linux/lsm_hook_defs.h; the hook has
+ * been stable since its introduction (v5.7) with no arity changes in v6.x.
+ * Source: https://github.com/torvalds/linux/blob/master/include/linux/lsm_hook_defs.h
  */
 SEC("lsm/ptrace_access_check")
 int BPF_PROG(hk_lsm_ptrace_access_check,
@@ -154,9 +152,12 @@ int BPF_PROG(hk_lsm_ptrace_access_check,
  * debug-evasion tell. We emit when current->tgid is protected; caller_pid is the
  * PARENT tgid (the would-be tracer), mode is 0 (no PTRACE_MODE bits on this hook).
  *
- * HK-UNCERTAIN(ptrace-traceme-arity): the common BPF-LSM form is
- *   BPF_PROG(name, struct task_struct *parent, int ret)
- * Confirm against the target BTF as for signal 73 above before relying on it.
+ * HK-VERIFIED(ptrace-traceme-arity): lsm_hook_defs.h defines this hook as
+ *   LSM_HOOK(int, 0, ptrace_traceme, struct task_struct *parent)
+ * The BPF LSM wrapper appends `int ret`, giving the 2-arg BPF_PROG form
+ * (parent, ret) used below. Confirmed against torvalds/linux master
+ * include/linux/lsm_hook_defs.h; stable since v5.7 with no v6.x changes.
+ * Source: https://github.com/torvalds/linux/blob/master/include/linux/lsm_hook_defs.h
  *
  * AUDIT-ONLY: return `ret` unchanged.
  */

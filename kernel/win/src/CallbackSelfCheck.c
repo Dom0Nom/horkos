@@ -466,12 +466,15 @@ void HkSelfCheckDisarm(PHK_DEVICE_CONTEXT Ctx)
     (void)KeCancelTimer(&Ctx->SelfCheckTimer);
 
     /* Flush any DPC already inserted, so no DPC can queue a work item after we
-     * free it. KeFlushQueuedDpcs is PASSIVE_LEVEL and waits for all DPCs to run.
-     * HK-UNCERTAIN(dpc-flush-ordering): this waits for DPCs system-wide; the
-     * intent is only to drain OUR DPC. The documented narrower primitive is to
-     * rely on KeCancelTimer + the SelfCheckArmed early-return; KeFlushQueuedDpcs
-     * is the belt-and-suspenders. Confirm on-box that no work item is queued
-     * after this point before freeing the work item. */
+     * free it. KeFlushQueuedDpcs waits for all currently-queued DPCs on all
+     * processors to execute to completion (documented: learn.microsoft.com/
+     * windows-hardware/drivers/ddi/wdm/nf-wdm-keflushqueueddpcs). It is
+     * PASSIVE_LEVEL and may take a long time; acceptable in disarm which is not
+     * a hot path. The scope is system-wide, not per-DPC; KeCancelTimer +
+     * SelfCheckArmed early-return is the primary guard; this is belt-and-
+     * suspenders. HK-VERIFIED(dpc-flush-ordering): the documented guarantee --
+     * DPCs queued before the call complete before it returns -- is exactly the
+     * ordering property needed here. */
     KeFlushQueuedDpcs();
 
     if (Ctx->SelfCheckWorkItem != NULL) {

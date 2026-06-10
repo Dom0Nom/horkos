@@ -58,9 +58,18 @@ HK_STATIC_ASSERT(sizeof(hk_event_timing_freq_skew) == 16,
 #  define HK_TIMING_FLAG_TSC_INVARIANT  0x00000004u
 #endif /* HK_EVENT_TIMING_FREQ_SKEW */
 
-/* Architectural MSR numbers (Intel SDM Vol.4 / AMD APM). IA32_MPERF/IA32_APERF are the
- * fixed-function "maximum-performance" and "actual-performance" counters; their ratio
- * over a window is the effective vs nominal frequency factor. */
+/* Architectural MSR numbers.
+ * HK-VERIFIED (Intel SDM Vol.4, Table 2-2, MSRs 0E7H/0E8H; AMD APM Vol.2 MSR
+ * MPERF/APERF): IA32_MPERF (0xE7) and IA32_APERF (0xE8) are fixed-function
+ * counters defined in both Intel and AMD architectures. RDMSR requires CPL 0
+ * (ring 0) -- generates #GP(0) otherwise. At ring 0 the instruction has no
+ * IRQL restriction from the CPU side; it executes at any Windows IRQL as long
+ * as the calling thread is in kernel mode (MSVC __readmsr intrinsic docs: "only
+ * available in kernel mode"). The remaining uncertainty is NOT readability but
+ * the enclosing busy-loop: a loop long enough to accumulate a meaningful
+ * APERF/MPERF delta must not stall the system, and the scheduler migration
+ * window must be controlled -- those constraints are documented in the
+ * HK-UNCERTAIN block below. The MSR read itself is safe at any IRQL. */
 #define HK_IA32_MPERF 0xE7u
 #define HK_IA32_APERF 0xE8u
 
@@ -124,23 +133,26 @@ void HkTimingFreqSkewProbe(PHK_DEVICE_CONTEXT Ctx)
     flags |= HkHypervisorPresent();
 
     /* -----------------------------------------------------------------------
-     * HK-UNCERTAIN(155-irql-cpupin): the APERF/MPERF busy-loop MUST run pinned to a
-     * single CPU at a known, bounded IRQL — otherwise the scheduler can migrate the
-     * loop mid-window (corrupting the APERF/MPERF ratio) or, if IRQL is raised too
-     * high, a watchdog timeout / BSOD results. The exact primitive is NOT settled:
-     *   - KeSetSystemAffinityThreadEx pins the thread to one CPU at PASSIVE_LEVEL, but
-     *     does not prevent DPC/interrupt interference within the window.
-     *   - Raising to DISPATCH_LEVEL via KeRaiseIrql reduces preemption but __readmsr +
-     *     a busy-loop at DISPATCH must be SHORT (no >~ a few us) to avoid the DPC
-     *     watchdog; the exact safe window length is build/host dependent.
-     *   - KeIpiGenericCall runs the read on a target CPU at IPI level (no migration),
-     *     but a busy-LOOP at IPI level is unacceptable (it stalls the whole system).
-     * Per guardrail #13 this is NOT guessed: the MSR reads + busy-loop are left
-     * UNIMPLEMENTED below. The probe currently computes only the nominal/HV-present
-     * half (pure CPUID, migration-safe) and emits eff_mhz=0 (unmeasured) so the record
-     * shape + emit path are exercised without the unverified raised-IRQL/pinned MSR
-     * window. Resolve the IRQL/CPU-pin choice (WDK docs / a kernel dev) and validate
-     * on-box BEFORE enabling the __readmsr(IA32_APERF/MPERF) busy-loop window.
+     * HK-UNCERTAIN(155-cpupin-looplen): RDMSR itself is ring-0-only with no IRQL
+     * restriction from the CPU side (HK-VERIFIED above). The remaining unsettled
+     * question is the enclosing busy-loop design:
+     *   - CPU affinity: KeSetSystemAffinityThreadEx pins to one LP at PASSIVE_LEVEL
+     *     so the scheduler cannot migrate, but DPCs and interrupts can still fire
+     *     within the window, perturbing the APERF/MPERF ratio. Raising IRQL to
+     *     DISPATCH_LEVEL blocks DPC preemption; it does NOT prevent hardware
+     *     interrupts, but those are rare enough for a short window. A loop at
+     *     DISPATCH must complete in a few microseconds to stay under the DPC watchdog.
+     *   - KeIpiGenericCall runs on the target LP at IPI level with no migration, but
+     *     a busy-loop at IPI level stalls other CPUs -- not acceptable.
+     *   - The unsettled question is the LOOP DURATION: how many APERF ticks
+     *     constitute a statistically significant sample at DISPATCH_LEVEL on a slow
+     *     VM, and whether that duration stays within the DPC watchdog on all builds.
+     *     This requires measurement on the Windows box. The MSR read itself is NOT
+     *     the blocker.
+     * Per guardrail #13 the loop body remains UNIMPLEMENTED until loop duration and
+     * IRQL/affinity strategy are validated on-box. The probe captures the
+     * nominal/HV-present half (pure CPUID, fully safe) and emits eff_mhz=0 so the
+     * record shape and emit path are exercised without the unverified loop window.
      * -----------------------------------------------------------------------
      *
      * The intended (post-verification) body, for reference, is:
