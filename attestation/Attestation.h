@@ -37,9 +37,18 @@ public:
     Attestation(const Attestation&) = delete;
     Attestation& operator=(const Attestation&) = delete;
 
-    /* Request a hardware-backed quote. On stub backends this returns
-       AttestationStatus::NotImplemented and leaves quote untouched. */
-    virtual AttestationStatus quote(AttestationQuote& quote_out) = 0;
+    /* Request a hardware-backed quote bound to a server-issued nonce.
+     *
+     * nonce / nonce_len: a freshness challenge issued by the server for this
+     * request; must be bound into the quote so replayed quotes are rejected by
+     * the verifier. On TPM backends nonce is passed as qualifyingData to
+     * TPM2_Quote; on Secure Enclave backends it is included in the signed
+     * payload. Callers must supply a non-null nonce of at least 8 bytes.
+     *
+     * On stub backends this returns AttestationStatus::NotImplemented and
+     * leaves quote_out untouched. */
+    virtual AttestationStatus quote(const uint8_t* nonce, size_t nonce_len,
+                                    AttestationQuote& quote_out) = 0;
 
     /* Factory: selects the backend for the current platform.
        Returns a stub on platforms without a real TPM/SE backend yet. */

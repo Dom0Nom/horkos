@@ -26,6 +26,15 @@ bool is_debugger_attached() {
 }
 
 /* -------------------------------------------------------------------------
+ * macOS platform-trust reads (signal 124). Not available on Windows; return the
+ * header-documented "unavailable" values so any TU that includes platform.h
+ * can link regardless of which platform backend is selected by CMake.
+ * ------------------------------------------------------------------------- */
+bool csr_active_config(uint32_t * /*out_config*/) { return false; }
+bool sip_enabled() { return true; }
+uint32_t read_boot_args(char * /*out*/, uint32_t /*cap*/) { return 0; }
+
+/* -------------------------------------------------------------------------
  * Client self-integrity reads (memory-integrity-selfcheck, signals 145-153).
  * On Windows the authoritative reads come from the KMDF driver via
  * HK_IOCTL_SELF_READ_VA. The driver must FIRST prove the caller is the

@@ -15,6 +15,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/GlobalVariable.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h" // appendToGlobalCtors
 
 #include <vector>
@@ -75,6 +76,65 @@ bool usedOnlyInAnnotated(GlobalVariable *GV,
     return true;
 }
 
+// Collects every function transitively reachable from all global constructors
+// registered in llvm.global_ctors, excluding hk_strdec itself (which we are
+// about to register). Indirect calls are conservatively treated as reaching
+// every function in the module — the returned set is therefore a superset (safe
+// to skip encryption when a string's user appears here, wasteful but not wrong).
+SmallPtrSet<Function *, 32> collectCtorReachableFunctions(Module &M) {
+    SmallPtrSet<Function *, 32> Reachable;
+    SmallVector<Function *, 16> Work;
+
+    GlobalVariable *CtorList = M.getNamedGlobal("llvm.global_ctors");
+    if (!CtorList || !CtorList->hasInitializer())
+        return Reachable;
+
+    auto *CA = dyn_cast<ConstantArray>(CtorList->getInitializer());
+    if (!CA)
+        return Reachable;
+
+    bool HasIndirect = false;
+    for (unsigned I = 0, E = CA->getNumOperands(); I < E; ++I) {
+        auto *Entry = dyn_cast<ConstantStruct>(CA->getOperand(I));
+        if (!Entry)
+            continue;
+        // Struct layout: { i32 priority, ptr fn, ptr data }
+        auto *Fn = dyn_cast<Function>(Entry->getOperand(1)->stripPointerCasts());
+        if (!Fn || Fn->isDeclaration())
+            continue;
+        if (Reachable.insert(Fn).second)
+            Work.push_back(Fn);
+    }
+
+    while (!Work.empty()) {
+        Function *F = Work.pop_back_val();
+        for (BasicBlock &BB : *F) {
+            for (Instruction &I : BB) {
+                auto *CB = dyn_cast<CallBase>(&I);
+                if (!CB)
+                    continue;
+                Function *Callee = CB->getCalledFunction();
+                if (!Callee) {
+                    // Indirect call — conservatively mark every function.
+                    HasIndirect = true;
+                    goto done;
+                }
+                if (!Callee->isDeclaration() && Reachable.insert(Callee).second)
+                    Work.push_back(Callee);
+            }
+        }
+    }
+done:
+    if (HasIndirect) {
+        // Treat every non-declaration as potentially reachable from a ctor.
+        Reachable.clear();
+        for (Function &F : M)
+            if (!F.isDeclaration())
+                Reachable.insert(&F);
+    }
+    return Reachable;
+}
+
 } // namespace
 
 PreservedAnalyses hk::StringEncryptionPass::run(Module &M,
@@ -83,17 +143,49 @@ PreservedAnalyses hk::StringEncryptionPass::run(Module &M,
     if (Annotated.empty())
         return PreservedAnalyses::all();
 
+    // Collect functions reachable from any global constructor (conservative).
+    // A string used by such a function must NOT be encrypted: the ctor may run
+    // before hk_strdec (same priority-0 ctor slot, link-order-defined) and would
+    // read ciphertext. This check is skipped for hk_strdec itself, which we have
+    // not yet registered and which is the only annotated ctor we control.
+    SmallPtrSet<Function *, 32> CtorReachable = collectCtorReachableFunctions(M);
+
     SmallPtrSet<GlobalVariable *, 32> Candidates;
     for (Function *F : Annotated)
         if (!F->isDeclaration())
             collectStrings(*F, Candidates);
 
-    // Keep only strings used exclusively by annotated functions; a string shared
-    // with a non-annotated reader would be read as ciphertext there.
+    // Keep only strings used exclusively by annotated functions AND not reachable
+    // from any global constructor. A string shared with a non-annotated reader, or
+    // reachable from a ctor that could run before hk_strdec, would be read as
+    // ciphertext by that reader.
     SmallPtrSet<GlobalVariable *, 32> Targets;
-    for (GlobalVariable *GV : Candidates)
-        if (usedOnlyInAnnotated(GV, Annotated))
+    for (GlobalVariable *GV : Candidates) {
+        if (!usedOnlyInAnnotated(GV, Annotated))
+            continue;
+        // Reject if any annotated user is also reachable from a ctor.
+        bool CtorExposed = false;
+        for (User *U : GV->users()) {
+            SmallVector<User *, 8> UWork;
+            UWork.push_back(U);
+            SmallPtrSet<User *, 8> Seen;
+            while (!UWork.empty() && !CtorExposed) {
+                User *CU = UWork.pop_back_val();
+                if (!Seen.insert(CU).second)
+                    continue;
+                if (auto *I = dyn_cast<Instruction>(CU)) {
+                    Function *F = I->getFunction();
+                    if (F && CtorReachable.count(F))
+                        CtorExposed = true;
+                } else if (isa<Constant>(CU)) {
+                    for (User *UU : CU->users())
+                        UWork.push_back(UU);
+                }
+            }
+        }
+        if (!CtorExposed)
             Targets.insert(GV);
+    }
 
     if (Targets.empty())
         return PreservedAnalyses::all();
@@ -146,8 +238,13 @@ PreservedAnalyses hk::StringEncryptionPass::run(Module &M,
     }
     B.CreateRetVoid();
 
-    // Priority 0 = runs FIRST, before any other global constructor, so code
-    // reachable from static init reads decrypted strings (65535 would run last).
+    // Priority 0 is the LOWEST numeric priority. The C++ standard guarantees that
+    // constructors with a lower priority value run before those with a higher value,
+    // but it gives NO ordering guarantee between constructors at the SAME priority.
+    // A third-party or compiler-emitted ctor also registered at priority 0 may run
+    // before hk_strdec in link order — any string reachable from such a ctor (even
+    // transitively through an annotated function it happens to call) would be read
+    // as ciphertext. The ctor-reachability guard above rejects those cases.
     appendToGlobalCtors(M, Ctor, /*Priority=*/0);
 
     return PreservedAnalyses::none();

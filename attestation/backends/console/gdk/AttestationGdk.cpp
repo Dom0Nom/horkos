@@ -18,7 +18,8 @@ namespace {
 
 class AttestationGdk final : public Attestation {
 public:
-    AttestationStatus quote(AttestationQuote& /*quote_out*/) override {
+    AttestationStatus quote(const uint8_t* /*nonce*/, size_t /*nonce_len*/,
+                            AttestationQuote& /*quote_out*/) override {
         return AttestationStatus::NotImplemented;
     }
 };
