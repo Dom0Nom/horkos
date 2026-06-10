@@ -40,18 +40,18 @@ TEST(IntegrityFinding, PayloadIsSixteenBytes)
 
 TEST(IntegrityFinding, FitsExistingPayloadMaxNoRingResize)
 {
-    // The whole point of the 16-byte pin: it must fit the EXISTING payload max so
-    // the ring/record layout is untouched.
-    EXPECT_EQ(HK_EVENT_PAYLOAD_MAX, 16u);
+    // The 16-byte finding must fit the payload max so the ring layout is sound.
+    // (HK_EVENT_PAYLOAD_MAX grew 16->24 in schema v5 for hk_event_process_create_ex;
+    // the 16-byte finding still fits comfortably.)
+    EXPECT_EQ(HK_EVENT_PAYLOAD_MAX, 24u);
     EXPECT_LE(sizeof(hk_event_integrity_finding_replica),
               static_cast<size_t>(HK_EVENT_PAYLOAD_MAX));
 }
 
 TEST(IntegrityFinding, RecordAndStatusEnvelopeUnchanged)
 {
-    // Re-pin the envelope invariants the plan promises stay green after the
-    // integrity additions (no hk_event_record growth, no hk_status growth).
-    EXPECT_EQ(sizeof(hk_event_record), 40u);
+    // The record grew 40->48 with the v5 payload-max bump; hk_status is unchanged.
+    EXPECT_EQ(sizeof(hk_event_record), 48u);
     EXPECT_EQ(sizeof(hk_status), 32u);
 }
 

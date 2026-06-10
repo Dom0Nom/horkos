@@ -492,6 +492,35 @@ on ingest in `server/telemetry/src/hv.rs`) is new here. Signal 40 (`vbs.*`) is
 report-only until a real Attestation backend lands; the kernel `kern.sk_flags` /
 `kern.apic_idt_flags` are observe-only, low-weight corroborators.
 
+### 14. Launch trust / process genealogy (`launch_trust.rs`)
+
+Source: the process-genealogy sensors (win-kernel `proc_genealogy.c` /
+`launch_timing.c` / `module_reconcile.c`, win-userspace `ancestry_walker.cpp` /
+`token_check.cpp` / `job_silo_check.cpp`, Linux `genealogy.bpf.c` /
+`loader_trust.bpf.c`, macOS `genealogy_handler.cpp`, catalog signals 199-207).
+The kernel ships `true_creator_pid` + `proc_flags` on the v5
+`hk_event_process_create_ex` record; the rest rides the `LaunchTrustReport` JSON
+plane (`server/telemetry/src/launch_trust.rs`), correlated against a signed-
+launcher / LOLBin / overlay baseline. The client ships raw launch facts + flags;
+ALL FP gating is server-side. Retention 90 days (aligned with §1 process info).
+Legal basis: Legitimate interest — anti-cheat enforcement. Operator: Horkos
+Service Operator.
+
+| Field | Source | Retention default | Legal basis | Operator-of-record |
+|---|---|---|---|---|
+| `true_creator_pid` | win-kernel create-notify (signal 199, `event_schema.h`) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `proc_flags` | reparent/suspended/lolbin/traced/loader-taint flags (199-206) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `ancestry_image_hashes` | ancestry-chain image identities, root->game (signal 201) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `token_integrity_delta` | game vs launcher integrity-level delta (signal 203) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `job_silo_anomaly` | job/silo containment, advisory-only (signal 204) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `responsible_team_id` | macOS NOTIFY_EXEC responsible Team ID (signal 207) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+| `loader_taint_flags` | LD_PRELOAD/LD_AUDIT/LD_LIBRARY_PATH at execve (signal 206, Linux) | 90 days | Legitimate interest — anti-cheat enforcement | Horkos Service Operator |
+
+Note: `game_pid` / `declared_parent_pid` are process identifiers already declared
+in §1. The launcher baseline (accepted roots / LOLBin catalog / per-launcher
+integrity) is a signed rule bundle (`server/api/launcher-baseline.md`), not a
+collected field.
+
 ## Cross-references
 
 - Wire format source of truth: `sdk/include/horkos/event_schema.h`

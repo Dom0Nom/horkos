@@ -42,6 +42,10 @@ add_executable(hk_unit_tests
     # CPUID, no MSR, no Windows runner. The ac/src/hv/*.cpp samplers + kernel HV
     # sensors that fill these inputs are Windows-only and not built here.
     test_hv_logic.cpp
+    # process-genealogy pure helpers (signals 199/203). Header-only in
+    # sdk/include/horkos/genealogy_logic.h (plain C, no OS); reparent comparison +
+    # token-integrity delta over synthetic values.
+    test_genealogy_logic.cpp
     test_integrity_finding_size.cpp
     # macos-codesign-integrity schema pin + pure FP-gate cores (signals 118-126).
     # The probe TUs split a PURE decision core from the impure csops()/Sec*/ES

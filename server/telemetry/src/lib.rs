@@ -17,6 +17,7 @@ pub mod hv;
 pub mod input_cadence;
 pub mod input_prov;
 pub mod kernel_events;
+pub mod launch_trust;
 pub mod linux_proton;
 pub mod loader_inject;
 pub mod macos_codesign;

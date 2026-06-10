@@ -66,12 +66,14 @@ extern "C" {
  * payload the schema defines. Fixed size so the ring buffer is an array of
  * these and the DRAIN envelope can be a flat copy.
  * ------------------------------------------------------------------------- */
-#define HK_EVENT_PAYLOAD_MAX 16u  /* Largest payload struct in event_schema.h. */
+/* Grown 16 -> 24 in schema v5: hk_event_process_create_ex (24 bytes) is the first
+ * main-ring payload to exceed 16. All earlier payloads are <= 16 and unaffected. */
+#define HK_EVENT_PAYLOAD_MAX 24u  /* Largest payload struct in event_schema.h. */
 
 typedef struct hk_event_record {
     hk_event_header header;                 /* 24 bytes. */
-    uint8_t         payload[HK_EVENT_PAYLOAD_MAX]; /* 16 bytes. */
-} hk_event_record;                          /* 40 bytes total. */
+    uint8_t         payload[HK_EVENT_PAYLOAD_MAX]; /* 24 bytes. */
+} hk_event_record;                          /* 48 bytes total. */
 
 /* -------------------------------------------------------------------------
  * HK_IOCTL_DRAIN_EVENTS output envelope.
@@ -101,6 +103,8 @@ typedef struct hk_status {
 #define HK_STATUS_FLAG_RING_OVERFLOW 0x00000001u
 #define HK_STATUS_FLAG_OB_ACTIVE     0x00000002u
 #define HK_STATUS_FLAG_BYOVD_ARMED   0x00000004u
+#define HK_STATUS_FLAG_GENEALOGY_ACTIVE 0x00000008u /* process-genealogy sensors armed. */
+#define HK_STATUS_FLAG_TIMING_ACTIVE    0x00000010u /* launch-timing sensor armed. */
 
 /* -------------------------------------------------------------------------
  * HK_IOCTL_PUSH_POLICY input.
@@ -120,7 +124,7 @@ typedef struct hk_policy {
  * build on both sides (Step 3.5). Uses HK_STATIC_ASSERT from event_schema.h so
  * it compiles on a plain-C99 kernel build, not only C11/C++.
  * ------------------------------------------------------------------------- */
-HK_STATIC_ASSERT(sizeof(hk_event_record) == 40, "hk_event_record wire size drift");
+HK_STATIC_ASSERT(sizeof(hk_event_record) == 48, "hk_event_record wire size drift");
 HK_STATIC_ASSERT(sizeof(hk_drain_header) == 16, "hk_drain_header wire size drift");
 HK_STATIC_ASSERT(sizeof(hk_status) == 32,       "hk_status wire size drift");
 HK_STATIC_ASSERT(sizeof(hk_policy) == 16,       "hk_policy wire size drift");

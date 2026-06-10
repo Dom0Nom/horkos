@@ -21,10 +21,12 @@ TEST(EventSchema, ProcessExitSize) {
     EXPECT_EQ(sizeof(hk_event_process_exit), 16u);
 }
 
-TEST(EventSchema, SchemaVersionIsFour) {
+TEST(EventSchema, SchemaVersionIsFive) {
     /* v3 added the memory/image-anomaly event family (types 5..13);
-     * v4 added the hypervisor/virtualization kernel-event family (types 14..17). */
-    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 4u);
+     * v4 added the hypervisor kernel-event family (types 14..17);
+     * v5 added the process-genealogy create-ex event (type 18, 24 bytes) and
+     * grew HK_EVENT_PAYLOAD_MAX 16->24 / hk_event_record 40->48. */
+    EXPECT_EQ(HK_EVENT_SCHEMA_VERSION, 5u);
 }
 
 TEST(EventSchema, ImageLoadSize) {

@@ -41,8 +41,12 @@
  * hk_event_mem_record) — the 16-byte hk_event_record plane is unchanged. v4
  * added the hypervisor/virtualization kernel-event family (types 14..17), four
  * compact 16-byte payloads that ride the existing hk_event_record ring; the
- * bulky raw HV vectors/histograms ride the usermode JSON report plane instead. */
-#define HK_EVENT_SCHEMA_VERSION 4u
+ * bulky raw HV vectors/histograms ride the usermode JSON report plane instead.
+ * v5 added the process-genealogy launch-trust event (type 18,
+ * hk_event_process_create_ex, 24 bytes) — the first payload to exceed 16 bytes
+ * on the MAIN ring, so HK_EVENT_PAYLOAD_MAX grows 16->24 and hk_event_record
+ * 40->48 in lockstep (ioctl.h); existing <=16-byte payloads are unaffected. */
+#define HK_EVENT_SCHEMA_VERSION 5u
 
 /* -------------------------------------------------------------------------
  * Event type enumeration.
@@ -74,7 +78,40 @@ typedef enum hk_event_type {
     HK_EVENT_HV_EPT_SPLIT   = 15, /* signal 39: EPT exec/read view split. */
     HK_EVENT_HV_SK_LIVENESS = 16, /* signal 41: secure-kernel liveness (observe). */
     HK_EVENT_HV_APIC_IDT    = 17, /* signal 44: APIC/IDT virtualization residue. */
+    /* Process-genealogy launch trust (schema v5). The 24-byte create-ex record
+     * carries the true creator PID that signal 199 needs and that is not
+     * derivable server-side. */
+    HK_EVENT_PROCESS_CREATE_EX = 18, /* signals 199/200/201 ancestry + launch flags. */
 } hk_event_type;
+
+/* hk_event_process_create_ex.proc_flags bits (process-genealogy, signals
+ * 199-206). Set kernel-side except LOLBIN_ANCESTOR (server, after catalog match)
+ * and the Linux loader-taint/traced bits (folded from the BPF tags by Loader.cpp). */
+#define HK_PROC_FLAG_REPARENT_SUSPECT 0x00000001u /* 199: true creator != parent. */
+#define HK_PROC_FLAG_SUSPENDED_LAUNCH 0x00000002u /* 200: image-load before resume. */
+#define HK_PROC_FLAG_LOLBIN_ANCESTOR  0x00000004u /* 201: server sets after match. */
+#define HK_PROC_FLAG_TRACED_LAUNCH    0x00000008u /* 205: exec under a tracer (Linux). */
+#define HK_PROC_FLAG_LOADER_TAINT     0x00000010u /* 206: LD_PRELOAD/PT_INTERP (Linux). */
+
+/* Manual-map suspect flag rides the existing hk_event_image_load.flags word
+ * (signal 202; BYOVD is 0x1). */
+#define HK_IMAGE_FLAG_MANUAL_MAP_SUSPECT 0x00000002u
+
+/* -------------------------------------------------------------------------
+ * Payload: HK_EVENT_PROCESS_CREATE_EX (process-genealogy). 24 bytes. Extends
+ * hk_event_process_create with the true creator PID (signal 199) and the launch-
+ * trust flag word. This is the payload that pins HK_EVENT_PAYLOAD_MAX at 24.
+ * ------------------------------------------------------------------------- */
+typedef struct hk_event_process_create_ex {
+    uint32_t pid;
+    uint32_t parent_pid;       /* inherited InheritedFromUniqueProcessId. */
+    uint64_t create_time_ns;   /* FILETIME epoch ns, as hk_event_process_create. */
+    uint32_t true_creator_pid; /* PsGetCurrentProcessId() in the notify (signal 199). */
+    uint32_t proc_flags;       /* HK_PROC_FLAG_*. */
+} hk_event_process_create_ex;
+
+HK_STATIC_ASSERT(sizeof(hk_event_process_create_ex) == 24,
+    "hk_event_process_create_ex size mismatch");
 
 /* -------------------------------------------------------------------------
  * Normalized constants for the memory/image-anomaly family. The kernel scan
