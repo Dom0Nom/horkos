@@ -45,9 +45,13 @@ pub mod snapshot;
 #[cfg(feature = "gamestate-analyzers")]
 pub mod stats;
 
-use axum::{routing::post, Json, Router};
+use axum::{extract::DefaultBodyLimit, routing::post, Json, Router};
 use error::TelemetryError;
 use schema::{TickPayload, SCHEMA_VERSION};
+
+/// Maximum accepted request body for any telemetry route. Telemetry ticks are
+/// compact JSON; 256 KiB is generous headroom while capping unbounded uploads.
+const MAX_BODY_BYTES: usize = 256 * 1024;
 
 pub fn router() -> Router {
     Router::new()
@@ -59,6 +63,7 @@ pub fn router() -> Router {
         .merge(input_cadence::router())
         .merge(pointer_model::router())
         .merge(timing::router())
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
 }
 
 #[tracing::instrument(skip_all, fields(player_id, tick))]

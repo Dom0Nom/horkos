@@ -20,15 +20,14 @@
 //! type, NO `unwrap()`/`expect()` outside `#[cfg(test)]`. A malformed/short wire
 //! record yields a typed `KernelEventError`, never a panic.
 //!
-//! HK-TODO(schema): the event-type discriminants (`HK_EVENT_KSYM_DRIFT` = 5 ..
-//! `HK_EVENT_SENSOR_UNAVAILABLE` = 14) and the bumped `HK_EVENT_SCHEMA_VERSION`
-//! (2 -> 3) are owned by the Schema phase and are NOT yet in the frozen
+//! HK-TODO(schema): the event-type discriminants (`HK_EVENT_KSYM_DRIFT` = 19 ..
+//! `HK_EVENT_SENSOR_UNAVAILABLE` = 28) and the bumped `HK_EVENT_SCHEMA_VERSION`
+//! are owned by the Schema phase and are NOT yet in the frozen
 //! `sdk/include/horkos/event_schema.h`. The decoders are written against the
 //! plan's pinned field layout/sizes so they are ready when the schema lands; the
-//! discriminants are mirrored here as local consts until then. The values 5-14
-//! collide pre-Schema with the vm-access / memory-access provisional
-//! discriminants — this decoder must be dispatched by the resolved type once
-//! Schema lands, not by the provisional numbers.
+//! discriminants are mirrored here as local consts (range 19..=28, free in the
+//! frozen schema — types 1..=18 are taken) and in the matching C producer header
+//! `kernel/linux/userspace/HostIntegritySensors.h` (`kEvt*`).
 
 use thiserror::Error;
 
@@ -36,18 +35,31 @@ use thiserror::Error;
 /// (bumps 2 -> 3 in lockstep when the Schema phase lands these payloads).
 pub const KERNEL_EVENT_MIRROR_VERSION: u32 = 3;
 
-/// Event-type discriminants for the module-trust records. HK-TODO(schema): mirror
-/// of the values the Schema phase appends to `hk_event_type`.
-pub const HK_EVENT_KSYM_DRIFT: u32 = 5;
-pub const HK_EVENT_MODULE_VIEW_DIFF: u32 = 6;
-pub const HK_EVENT_FTRACE_HOOK: u32 = 7;
-pub const HK_EVENT_KPROBE_SENSITIVE: u32 = 8;
-pub const HK_EVENT_MODULE_DISK_DRIFT: u32 = 9;
-pub const HK_EVENT_KERNEL_POSTURE: u32 = 10;
-pub const HK_EVENT_FOREIGN_BPF: u32 = 11;
-pub const HK_EVENT_DEVMEM_ACCESS: u32 = 12;
-pub const HK_EVENT_MSR_WRITE_SENSITIVE: u32 = 13;
-pub const HK_EVENT_SENSOR_UNAVAILABLE: u32 = 14;
+/// Event-type discriminants for the Linux module-trust records.
+///
+/// These start at 19 to avoid every frozen range in `event_schema.h`:
+///   1..=4  — core events (process/image/handle)
+///   5..=13 — Windows mem-injection family (HK_EVENT_MEM_UNBACKED_EXEC..
+///             HK_EVENT_MEM_UNSIGNED_IMAGE; v3 schema)
+///   14..=17 — HV/virtualization family (HK_EVENT_HV_SYNTH_MSR..
+///              HK_EVENT_HV_APIC_IDT; v4 schema)
+///   18     — HK_EVENT_PROCESS_CREATE_EX (launch-trust; v5 schema)
+///   19..=28 — Linux module-trust family (this file; assigned here, pending
+///             Schema-phase ratification that appends them to hk_event_type).
+///
+/// The matching C producer constants live in
+/// `kernel/linux/userspace/HostIntegritySensors.h` (`kEvt*`); those must be
+/// updated in lockstep with any change here.
+pub const HK_EVENT_KSYM_DRIFT: u32 = 19;
+pub const HK_EVENT_MODULE_VIEW_DIFF: u32 = 20;
+pub const HK_EVENT_FTRACE_HOOK: u32 = 21;
+pub const HK_EVENT_KPROBE_SENSITIVE: u32 = 22;
+pub const HK_EVENT_MODULE_DISK_DRIFT: u32 = 23;
+pub const HK_EVENT_KERNEL_POSTURE: u32 = 24;
+pub const HK_EVENT_FOREIGN_BPF: u32 = 25;
+pub const HK_EVENT_DEVMEM_ACCESS: u32 = 26;
+pub const HK_EVENT_MSR_WRITE_SENSITIVE: u32 = 27;
+pub const HK_EVENT_SENSOR_UNAVAILABLE: u32 = 28;
 
 // ---- ksym-drift reasons (mirror HkKsymDriftReason) -------------------------
 pub const HK_KSYM_OOB: u32 = 0;

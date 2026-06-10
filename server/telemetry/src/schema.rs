@@ -18,6 +18,11 @@ use serde::{Deserialize, Serialize};
 use crate::anti_analysis::AntiAnalysisPayload;
 use crate::hv::HvReport;
 
+/// Serde default for `tx_cadence_skew_ns`: `i64::MIN` is the no-data sentinel.
+fn default_tx_cadence_skew_ns() -> i64 {
+    i64::MIN
+}
+
 /// Version of the per-tick JSON ingest contract (distinct from the kernel
 /// event schema's `HK_EVENT_SCHEMA_VERSION`). Bump on every additive change.
 ///
@@ -294,7 +299,9 @@ pub struct TickPayload {
     /// 181 — sustained (QPC app-send minus NIC/kernel HW-TX) cadence skew (ns).
     /// `i64::MIN` is the no-data sentinel (NIC/driver does not expose TX
     /// timestamps) — the server treats it as absent, never as a positive.
-    #[serde(default)]
+    /// Old clients that omit the field also yield the sentinel, so the server
+    /// never mistakes "field absent" for "zero skew".
+    #[serde(default = "default_tx_cadence_skew_ns")]
     pub tx_cadence_skew_ns: i64,
     /// 182 — sustained monotonic-vs-realtime clock-domain rate drift (ppm). The
     /// NTP-step-vs-smooth-scale discrimination is server-side.
@@ -397,8 +404,9 @@ mod tests {
         let p: TickPayload = serde_json::from_str(v1).expect("v1 deserializes");
         assert_eq!(p.schema_version, 1);
         assert_eq!(p.player_id, 7);
-        // network-anomaly (v4) fields default to zero / sentinel-free empty.
-        assert_eq!(p.tx_cadence_skew_ns, 0);
+        // tx_cadence_skew_ns absent -> i64::MIN sentinel (not zero) so "no data"
+        // is unambiguous. All other network-anomaly (v4) fields default to zero.
+        assert_eq!(p.tx_cadence_skew_ns, i64::MIN);
         assert_eq!(p.clock_ratio_ppm, 0);
         assert_eq!(p.route_change_unattested, 0);
         assert_eq!(p.flow_owner_local, 0);

@@ -136,7 +136,7 @@ impl Analyzer for RefreshAliasing {
             return None;
         }
         let peak = dominant_peak(&self.series)?;
-        if peak.snr < SNR_FLOOR {
+        if !peak.snr.is_finite() || peak.snr < SNR_FLOOR {
             return None;
         }
         // Exclude legitimate cadences: a peak at the client refresh / frame / server

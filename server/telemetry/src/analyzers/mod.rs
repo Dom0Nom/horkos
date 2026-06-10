@@ -71,6 +71,11 @@ pub trait Analyzer: Send {
 /// analyzer per signal and fans each fed tick out to all of them. The HTTP ingest
 /// path (`lib.rs`) constructs one registry per tracked session; `drain_suspicions`
 /// collects the events to forward to `ban-engine`.
+///
+/// Lifecycle: construct one `AnalyzerRegistry` per player session and discard it
+/// when the session ends. Never reuse an instance across matches — analyzers
+/// accumulate per-session state (latency series, EWMA estimators, burst windows)
+/// that is only meaningful within a single continuous session.
 pub struct AnalyzerRegistry {
     player_id: u64,
     analyzers: Vec<Box<dyn Analyzer>>,
@@ -100,15 +105,22 @@ impl AnalyzerRegistry {
         self.player_id
     }
 
-    /// Fan one paired (tick, snapshot) out to every analyzer. A single analyzer's
-    /// `feed` error is propagated (the caller decides whether to drop the tick); it
-    /// never aborts the others mid-fan because the error returns before mutation of
-    /// the remaining analyzers is observable to the caller.
+    /// Fan one paired (tick, snapshot) out to every analyzer. All analyzers are
+    /// fed regardless of individual errors so their tick state stays in sync.
+    /// Returns the first error encountered, or `Ok(())` if all succeeded.
     pub fn feed(&mut self, tick: &TickPayload, snap: &Snapshot) -> Result<(), TelemetryError> {
+        let mut first_err: Option<TelemetryError> = None;
         for a in self.analyzers.iter_mut() {
-            a.feed(tick, snap)?;
+            if let Err(e) = a.feed(tick, snap) {
+                if first_err.is_none() {
+                    first_err = Some(e);
+                }
+            }
         }
-        Ok(())
+        match first_err {
+            None => Ok(()),
+            Some(e) => Err(e),
+        }
     }
 
     /// Collect every analyzer's current `SuspicionEvent` (those past threshold).

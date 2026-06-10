@@ -239,15 +239,17 @@ pub fn dominant_peak(series: &[f64]) -> Option<SpectralPeak> {
     if peak_mag <= 0.0 {
         return None; // flat / no structure
     }
-    // SNR = peak over the mean of the OTHER bins.
+    // SNR = peak over the mean of the OTHER bins. Clamped to a finite cap so
+    // callers can always check `is_finite()` or compare directly.
     let sum_other: f64 = mags.iter().sum::<f64>() - peak_mag;
     let denom = (mags.len() as f64 - 1.0).max(1.0);
     let noise_mean = sum_other / denom;
     let snr = if noise_mean > 0.0 {
         peak_mag / noise_mean
     } else {
-        // Single non-zero bin: a perfectly periodic series — maximal SNR.
-        f64::INFINITY
+        // Single non-zero bin: a perfectly periodic series — use a large finite
+        // sentinel rather than f64::INFINITY so zscore propagation never sees NaN.
+        1000.0_f64
     };
     // Bin index in the half-spectrum is (peak_idx + 1); normalized frequency = bin/n.
     let freq = (peak_idx as f64 + 1.0) / n as f64;
@@ -406,5 +408,28 @@ mod tests {
         assert!(is_harmonic_of(0.25, &[0.125], 1e-3));
         // An off-harmonic peak (0.20) of the same fundamental is NOT excluded.
         assert!(!is_harmonic_of(0.20, &[0.125], 1e-3));
+    }
+
+    #[test]
+    fn dominant_peak_single_bin_snr_is_finite() {
+        // A pure sinusoid at exactly one non-DC bin has zero energy in all
+        // other bins (noise floor = 0). The SNR must be finite so downstream
+        // zscore propagation never receives NaN or infinity.
+        let n = 32usize;
+        let bin = 4usize; // normalized freq = 4/32 = 0.125
+        let series: Vec<f64> = (0..n)
+            .map(|i| (2.0 * std::f64::consts::PI * bin as f64 * i as f64 / n as f64).sin())
+            .collect();
+        let peak = dominant_peak(&series).expect("single-bin sinusoid has a peak");
+        assert!(
+            peak.snr.is_finite(),
+            "SNR must be finite for a single non-zero bin, got {}",
+            peak.snr
+        );
+        assert!(
+            peak.snr > 1.0,
+            "SNR must be positive for a clean sinusoid, got {}",
+            peak.snr
+        );
     }
 }
