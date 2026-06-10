@@ -75,6 +75,11 @@ add_executable(hk_unit_tests
     # (not built here); the kinematic segmenters (166-169) are server-side Rust.
     test_aim_accumulator.cpp
     ${CMAKE_SOURCE_DIR}/sdk/src/input/AimAccumulator.cpp
+    # behavioral-aim: the platform-free per-tick TickPayload serializer + its
+    # tick-echo test. No platform header (guardrail #4); the TU is compiled
+    # directly into this host target.
+    test_telemetry_serialize.cpp
+    ${CMAKE_SOURCE_DIR}/sdk/src/TelemetrySerialize.cpp
     # network-anomaly cross-platform cores (signals 182/184/187 + the aggregator).
     # The cores (ClockDomainProbe/SendBacklogProbe/ProbeChannel/NetCollect) carry no
     # platform header — they dispatch OS reads through the net_backend.h / net_probes.h

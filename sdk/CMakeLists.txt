@@ -278,6 +278,10 @@ endif()
 
 add_library(hk_sdk STATIC
     src/sdk.cpp
+    # behavioral-aim: the platform-free per-tick TickPayload serializer that
+    # echoes the server sim tick (TelemetrySerialize.cpp). No platform header;
+    # host-tested (tests/unit/test_telemetry_serialize.cpp, guardrail #4).
+    src/TelemetrySerialize.cpp
     ${hk_sdk_backend})
 
 # src/backends is on the include path so the device-trust sensor TUs resolve their

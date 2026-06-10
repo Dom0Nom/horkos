@@ -55,6 +55,28 @@ int horkos_drm_validate(void);
 int horkos_ac_start(void);
 
 /*
+ * horkos_set_tick_sink — register the host's telemetry transport. The SDK calls
+ * `sink(json, len, user)` once per `horkos_submit_tick` with the serialized
+ * TickPayload JSON; the host owns the actual send (HTTP POST to the AC server).
+ * Passing NULL clears the sink (submitted ticks are then dropped). The SDK bakes
+ * in no network stack — transport is the integrator's, behind this seam.
+ */
+typedef void (*hk_tick_sink_fn)(const char* json, uint64_t len, void* user);
+void horkos_set_tick_sink(hk_tick_sink_fn sink, void* user);
+
+/*
+ * horkos_submit_tick — the per-frame entry point. The host game calls this once
+ * per tick with the SERVER simulation tick it last consumed plus the assembled
+ * aim features (see sdk/src/TelemetrySerialize.h `hk_tick_input`). The SDK
+ * serializes a TickPayload whose `tick` field ECHOES `server_tick` and hands the
+ * JSON to the registered sink. `tick_input` is
+ * `const hk::sdk::telemetry::hk_tick_input*` (typed `void*` here to keep this C
+ * surface free of the C++ POD). Returns HK_SDK_OK, HK_SDK_ERROR on a
+ * null/oversized payload, or HK_SDK_DEGRADED when no sink is registered.
+ */
+int horkos_submit_tick(const void* tick_input);
+
+/*
  * horkos_shutdown — stop the AC and release SDK resources.
  */
 int horkos_shutdown(void);
