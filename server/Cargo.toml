@@ -5,6 +5,7 @@ members = [
     "telemetry",
     "ban-engine",
     "license-server",
+    "attestation-verify",
 ]
 
 [workspace.package]
@@ -31,6 +32,11 @@ serde_json         = "1.0"
 ed25519-dalek      = { version = "2.2", default-features = false, features = ["std"] }
 hex                = "0.4"
 time               = { version = "0.3", features = ["parsing"] }
+
+# TPM attestation verification (server/attestation-verify): ECDSA-P256 AK
+# signatures over the TPMS_ATTEST structure, SHA-256 digest.
+p256               = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }
+sha2               = "0.10"
 
 # Errors.
 thiserror          = "2.0"
