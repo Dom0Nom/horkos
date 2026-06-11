@@ -78,6 +78,9 @@ add_executable(hk_unit_tests
     # DRM licence verifier (Ed25519 via libsodium). Links hk_drm (which brings
     # libsodium PUBLIC) below; the test signs claims with libsodium directly.
     test_drm.cpp
+    # AC client lifecycle (start/stop state machine + detection-flag channel).
+    # Links hk_ac (already linked below); pure, no platform TU.
+    test_ac_lifecycle.cpp
     # behavioral-aim: the platform-free per-tick TickPayload serializer + its
     # tick-echo test. No platform header (guardrail #4); the TU is compiled
     # directly into this host target.
