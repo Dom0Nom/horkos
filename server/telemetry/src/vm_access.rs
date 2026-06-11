@@ -17,24 +17,23 @@
 //! NO `unwrap()`/`expect()` outside `#[cfg(test)]`. A malformed/short wire record
 //! yields a typed `VmAccessError`, never a panic.
 //!
-//! HK-TODO(schema): the event types (`HK_EVENT_VM_ACCESS` = 5 .. = 8) and the grown
-//! `HK_EVENT_PAYLOAD_MAX` (16 -> 28, re-pinning `hk_event_record`) are owned by the
-//! Schema phase and are NOT yet in the frozen `sdk/include/horkos/event_schema.h`.
-//! The decoders below are written against the plan's pinned field layout/sizes so
-//! they are ready when the schema lands; the event-type discriminants are mirrored
-//! here as local consts until then. The value `5` collides pre-Schema with the
-//! thread-origin / callback-integrity / driver-integrity domains — the Schema phase
-//! assigns the final distinct values; this decoder must be dispatched by the
-//! resolved type, not by the provisional `5`, once Schema lands.
+//! Schema: the event types (`HK_EVENT_VM_ACCESS` = 39 .. `HK_EVENT_PROTECT_DRIFT`
+//! = 42) are now FROZEN in `sdk/include/horkos/event_schema.h` (schema v6),
+//! renumbered from the old provisional 5..8 which collided with the
+//! memory-injection block. These payloads (32/24 bytes) exceed
+//! `HK_EVENT_PAYLOAD_MAX` (24) and ride the LARGE-record drain plane
+//! (`HK_IOCTL_DRAIN_LARGE_EVENTS` / `hk_event_large_record`, ioctl.h), not the
+//! main ring. The decoders below dispatch on the frozen type. The KMDF drain
+//! handler that fills the envelope is Windows kernel-side (UNVERIFIED off-target).
 
 use thiserror::Error;
 
-/// Event-type discriminants for the VM-access records. HK-TODO(schema): mirror of
-/// the values the Schema phase appends to `hk_event_type`.
-pub const HK_EVENT_VM_ACCESS: u32 = 5;
-pub const HK_EVENT_HANDLE_PROVENANCE: u32 = 6;
-pub const HK_EVENT_FOREIGN_HOLDER: u32 = 7;
-pub const HK_EVENT_PROTECT_DRIFT: u32 = 8;
+/// Event-type discriminants for the VM-access records. FROZEN in `hk_event_type`
+/// (event_schema.h) as types 39..42 (schema v6); mirror exactly.
+pub const HK_EVENT_VM_ACCESS: u32 = 39;
+pub const HK_EVENT_HANDLE_PROVENANCE: u32 = 40;
+pub const HK_EVENT_FOREIGN_HOLDER: u32 = 41;
+pub const HK_EVENT_PROTECT_DRIFT: u32 = 42;
 
 /// `access_kind` bits (mirror of `HK_VM_*`).
 pub const HK_VM_READ: u32 = 0x0000_0001;

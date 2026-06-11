@@ -54,6 +54,12 @@ extern "C" {
     HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x803, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
 #define HK_IOCTL_SCAN_PROCESS \
     HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x804, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
+/* Large-record plane (schema v6). Drains hk_event_large_record (see below) for
+ * the external-memory-access family (event types 39-42, signals 64-72) and the
+ * self-integrity family (types 29-37, signals 145-153), whose payloads exceed
+ * HK_EVENT_PAYLOAD_MAX. */
+#define HK_IOCTL_DRAIN_LARGE_EVENTS \
+    HK_CTL_CODE(HK_FILE_DEVICE_UNKNOWN, 0x805, HK_METHOD_BUFFERED, HK_FILE_ANY_ACCESS)
 
 /* User-visible device name. Kernel creates \Device\Horkos with a symlink at
  * \DosDevices\Horkos; userspace opens \\.\Horkos. */
@@ -153,6 +159,28 @@ typedef struct hk_scan_request {
     uint32_t flags;         /* reserved (e.g. force-resample). */
     uint32_t reserved;      /* must be zero. */
 } hk_scan_request;
+
+/* -------------------------------------------------------------------------
+ * Generic large-record plane (schema v6).
+ * The external-memory-access payloads (event types 39-42: hk_event_vm_access 32B,
+ * hk_event_handle_provenance 24B, ...) and the self-integrity payloads (types
+ * 29-37: hk_event_self_retaddr 144B, hk_event_self_crossview 120B, ...) exceed
+ * the 24-byte main-ring HK_EVENT_PAYLOAD_MAX. Like the memory-scan plane, a
+ * fixed-size record sized to the largest of these is drained via
+ * HK_IOCTL_DRAIN_LARGE_EVENTS rather than bloating the main ring; the server
+ * demuxes on header.type. The KMDF drain handler that fills this envelope is
+ * Windows kernel-side (UNVERIFIED on non-Windows hosts); this header + the
+ * server-side decoders (vm_access.rs / self_events.rs) are the host-buildable,
+ * host-tested contract.
+ * ------------------------------------------------------------------------- */
+#define HK_EVENT_LARGE_PAYLOAD_MAX 256u /* >= sizeof(hk_event_self_retaddr) (144). */
+#define HK_LARGE_RING_CAPACITY     256u /* power of two; big slots stay bounded. */
+
+typedef struct hk_event_large_record {
+    hk_event_header header;                             /* 24 bytes (shared). */
+    uint8_t         payload[HK_EVENT_LARGE_PAYLOAD_MAX]; /* 256 bytes. */
+} hk_event_large_record;                                /* 280 bytes total. */
+HK_STATIC_ASSERT(sizeof(hk_event_large_record) == 280, "hk_event_large_record wire size drift");
 
 /* HK_IOCTL_DRAIN_MEM_EVENTS reuses hk_drain_header as its envelope but strides
  * hk_event_mem_record. The largest memory payload must fit the record. */

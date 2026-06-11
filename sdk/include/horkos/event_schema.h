@@ -125,6 +125,16 @@ typedef enum hk_event_type {
     /* Timing side-channel family (schema v6). Mirrored by the signal-155
      * correlator (ac/src/timing/timing_kernel_correlate.cpp), 16-byte record. */
     HK_EVENT_TIMING_FREQ_SKEW   = 38, /* signal 155: kernel freq-skew correlation. */
+
+    /* External-memory-access family (schema v6). Decoded by
+     * server/telemetry/src/vm_access.rs. These payloads (32/24 bytes) exceed
+     * HK_EVENT_PAYLOAD_MAX and ride the LARGE-record drain plane
+     * (HK_IOCTL_DRAIN_LARGE_EVENTS / hk_event_large_record in ioctl.h), NOT the
+     * 24-byte main ring — see the large-record plane note there. */
+    HK_EVENT_VM_ACCESS          = 39, /* signals 64-66: cross-process Read/Write/Alloc/ProtectVm. */
+    HK_EVENT_HANDLE_PROVENANCE  = 40, /* signals 67-69: Ob handle provenance / granted-access delta. */
+    HK_EVENT_FOREIGN_HOLDER     = 41, /* signals 70-71: foreign handle-table holders. */
+    HK_EVENT_PROTECT_DRIFT      = 42, /* signal 72: page-protection drift. */
 } hk_event_type;
 
 /* hk_event_process_create_ex.proc_flags bits (process-genealogy, signals

@@ -74,18 +74,21 @@ TEST(VmAccessSchema, PayloadSizesMatchWireLayout)
     EXPECT_EQ(sizeof(hk_event_protect_drift_replica), 24u);
 }
 
-TEST(VmAccessSchema, LargePayloadsExceedCurrentEnvelope)
+TEST(VmAccessSchema, LargePayloadsExceedMainRingButFitLargePlane)
 {
-    // Schema v5 (process-genealogy) grew HK_EVENT_PAYLOAD_MAX 16->24. The 24-byte
-    // handle-provenance payload now fits the main-ring envelope; the 32-byte
-    // vm_access payload still exceeds it and must ride a large-record plane (like
-    // the mem-injection plane) when its domain lands. Asserting the boundary
-    // documents which vm-access payloads can cross the 16-byte ring and which cannot.
+    // The 32-byte vm_access payload exceeds the 24-byte main-ring envelope, so it
+    // cannot cross HK_IOCTL_DRAIN_EVENTS. Schema v6 added the large-record plane
+    // (HK_IOCTL_DRAIN_LARGE_EVENTS / hk_event_large_record) sized to hold these
+    // (and the larger self-integrity payloads); assert both boundaries.
     EXPECT_EQ(HK_EVENT_PAYLOAD_MAX, 24u);
     EXPECT_GT(sizeof(hk_event_vm_access_replica),
               static_cast<size_t>(HK_EVENT_PAYLOAD_MAX));
+    EXPECT_LE(sizeof(hk_event_vm_access_replica),
+              static_cast<size_t>(HK_EVENT_LARGE_PAYLOAD_MAX));
     EXPECT_LE(sizeof(hk_event_handle_provenance_replica),
-              static_cast<size_t>(HK_EVENT_PAYLOAD_MAX));
+              static_cast<size_t>(HK_EVENT_LARGE_PAYLOAD_MAX));
+    // The large-record envelope is a fixed 280 bytes (24-byte header + 256).
+    EXPECT_EQ(sizeof(hk_event_large_record), 280u);
 }
 
 TEST(VmAccessSchema, EnvelopeUnchangedPreSchema)
