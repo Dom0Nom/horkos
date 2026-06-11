@@ -100,3 +100,29 @@ TEST(MinifilterAltitude, OccupancyAloneIsNeverAVerdict)
     auto adjacent = MakeRow(385201.5, true, true, AuthResult::Trusted, false);
     EXPECT_EQ(Verdict::Benign, ClassifyNeighbor(adjacent, kHorkos));
 }
+
+TEST(MinifilterAltitude, AllocatedBandsMatchPublishedTable)
+{
+    using hk::sdk::mf::is_allocated_altitude;
+    // In-band altitudes (Microsoft load-order groups) are allocated.
+    EXPECT_TRUE(is_allocated_altitude(425000.0));  // Filter
+    EXPECT_TRUE(is_allocated_altitude(325000.0));  // Anti-Virus
+    EXPECT_TRUE(is_allocated_altitude(325000.3));  // fractional within Anti-Virus
+    EXPECT_TRUE(is_allocated_altitude(45000.0));   // Bottom
+    EXPECT_TRUE(is_allocated_altitude(170000.0));  // Imaging (lower edge)
+    EXPECT_TRUE(is_allocated_altitude(175000.0));  // Imaging (upper edge)
+    EXPECT_TRUE(is_allocated_altitude(15000.0));   // Infrastructure (<20000)
+}
+
+TEST(MinifilterAltitude, GapAltitudesAreUnallocated)
+{
+    using hk::sdk::mf::is_allocated_altitude;
+    // Gaps between Microsoft bands were never allocated — squats.
+    EXPECT_FALSE(is_allocated_altitude(35000.0));   // gap System..Bottom (30000-39999)
+    EXPECT_FALSE(is_allocated_altitude(55000.0));   // gap Bottom..Copy Protection
+    EXPECT_FALSE(is_allocated_altitude(177000.0));  // gap Imaging..(175001-179999)
+    EXPECT_FALSE(is_allocated_altitude(315000.0));  // gap Replication..Anti-Virus
+    EXPECT_FALSE(is_allocated_altitude(500000.0));  // above all bands
+    EXPECT_FALSE(is_allocated_altitude(0.0));       // not a real altitude
+    EXPECT_FALSE(is_allocated_altitude(-1.0));
+}

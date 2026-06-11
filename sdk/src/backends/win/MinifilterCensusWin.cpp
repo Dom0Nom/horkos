@@ -50,22 +50,12 @@ bool ParseAltitude(const wchar_t* s, double& out)
     return true;
 }
 
-/* Placeholder for the allocated-altitude lookup. The real implementation matches
- * against Microsoft's published Allocated Altitudes table (shipped as data, kept
- * current per the plan's FP note). Host unit tests exercise the classifier with
- * explicit allocated/unallocated rows, so this stub does not gate the test.
- * Returns true (allocated) conservatively for any well-formed altitude in a
- * known group band; a production build replaces this with the full table. */
+/* Allocated-altitude lookup: delegates to the pure, host-tested band table in
+ * minifilter_altitude.h (Microsoft's published load-order-group altitude
+ * ranges). A filter squatting in a gap between bands reads as unallocated. */
 bool IsAllocatedAltitude(double altitude)
 {
-    /* Conservative default: treat the documented FSFilter group bands as
-     * allocated so legitimate filters are not flagged. Squats in gaps between
-     * bands (or absurd values) read as unallocated. This is intentionally coarse
-     * until the full table is wired (see plan §"Signal 6 FP surface"). */
-    if (altitude <= 0.0 || altitude >= 1000000.0) {
-        return false;
-    }
-    return true; /* TODO(altitude-table): replace with the published table */
+    return hk::sdk::mf::is_allocated_altitude(altitude);
 }
 
 /* Authenticode verification of a filter's backing image. Not yet wired to
