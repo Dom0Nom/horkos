@@ -628,6 +628,8 @@ name = "license-server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "ed25519-dalek",
+ "hex",
  "http",
  "http-body-util",
  "serde",
