@@ -6,16 +6,13 @@
 //! server-issued nonce, and verifies the Attestation Key (AK) signature.
 //!
 //! What is verified (the honest PoC subset — matches handoff §8):
-//!   - `magic == TPM_GENERATED_VALUE` (the structure was produced by a TPM, not
-//!     forged in software — a TPM will not sign a TPMS_ATTEST with this magic
-//!     over attacker-chosen data).
-//!   - `type == TPM_ST_ATTEST_QUOTE`.
-//!   - `extraData == nonce` (freshness / anti-replay — the server's challenge is
-//!     bound into the signed structure).
-//!   - the AK signature over the raw attest bytes verifies against the pinned AK
-//!     public key (ECDSA-P256; a common TPM AK type).
-//! The PCR digest and reset/restart counters are returned for the caller's
-//! policy layer.
+//! `magic == TPM_GENERATED_VALUE` (the structure was produced by a TPM, not
+//! forged in software — a TPM will not sign a TPMS_ATTEST with this magic over
+//! attacker-chosen data); `type == TPM_ST_ATTEST_QUOTE`; `extraData == nonce`
+//! (freshness / anti-replay — the server's challenge is bound into the signed
+//! structure); and the AK signature over the raw attest bytes verifies against
+//! the pinned AK public key (ECDSA-P256, a common TPM AK type). The PCR digest
+//! and reset/restart counters are returned for the caller's policy layer.
 //!
 //! NOT verified here (documented PoC limits, handoff §8): the EK certificate
 //! chain to a TPM vendor root (no manufacturer roots in a PoC), and the AK
@@ -116,7 +113,7 @@ impl<'a> Reader<'a> {
 /// Parse + structurally validate a `TPMS_ATTEST`, returning the bound nonce
 /// (extraData) and the quote facts. Does NOT verify the signature (see
 /// `verify_quote`); split out so the parse is independently testable.
-pub fn parse_attest<'a>(attest: &'a [u8]) -> Result<(&'a [u8], VerifiedQuote), AttestError> {
+pub fn parse_attest(attest: &[u8]) -> Result<(&[u8], VerifiedQuote), AttestError> {
     let mut r = Reader::new(attest);
 
     let magic = r.u32("magic")?;
@@ -196,6 +193,29 @@ pub fn verify_quote(
         .map_err(|_| AttestError::SignatureInvalid)?;
 
     Ok(quote)
+}
+
+/// Verify a macOS Secure Enclave attestation: an ECDSA-P256 signature over a
+/// signed payload (the server nonce, possibly prefixed with enrolment context)
+/// against the SE public key. The SE path is NOT a TPM quote — there is no
+/// TPMS_ATTEST structure — so freshness is enforced by the caller checking that
+/// `payload` contains the issued nonce. Returns `Ok(())` on a valid signature.
+///
+/// PoC limit (handoff §8): a locally-verifiable SE signature proves possession
+/// of an SE-resident key but NOT remote-attestable device identity — that needs
+/// Apple's DCAppAttest / App Attest entitlement, which a PoC does not provision.
+pub fn verify_se_signature(
+    payload: &[u8],
+    signature: &[u8],
+    se_pub_sec1: &[u8],
+) -> Result<(), AttestError> {
+    let vk = VerifyingKey::from_sec1_bytes(se_pub_sec1).map_err(|_| AttestError::BadAkKey)?;
+    let sig = Signature::from_der(signature)
+        .or_else(|_| Signature::from_slice(signature))
+        .map_err(|_| AttestError::BadSignature)?;
+    let sig = sig.normalize_s().unwrap_or(sig);
+    vk.verify(payload, &sig)
+        .map_err(|_| AttestError::SignatureInvalid)
 }
 
 #[cfg(test)]
