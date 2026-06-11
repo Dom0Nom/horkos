@@ -36,7 +36,7 @@ capability.
 | `obfuscator/` | Standalone LLVM-19 pass plugin (CFF, opaque predicates, string encryption) + `lit` tests. Never shipped; heavy on the AC binary, attribute-opt-in (`hk_obfuscate`) on GAME init/licence/integrity/attestation only — never hot loops |
 | `platform/` | The PAL. **The only place raw OS APIs are allowed** (plus `backends/` folders). Everything else uses `HK_PLATFORM_*` macros, never `_WIN32`/`__linux__`/`__APPLE__` |
 | `sdk/` | Game-facing client SDK: wire schemas (`include/horkos/*.h`), usermode sensors (render-hook, input-provenance, net-timing probes), per-OS `backends/` |
-| `server/` | Rust workspace (axum + tokio): `telemetry/` (ingest + analyzers), `ban-engine/` (fusion + ban path), `api/`, `license-server/` |
+| `server/` | Rust workspace (axum + tokio): `telemetry/` (ingest + analyzers + snapshot ring), `ban-engine/` (fusion + ban path + ONNX scoring + Ed25519 bundle), `api/` (composed app + live pipeline), `license-server/` (Ed25519 licence lifecycle), `attestation-verify/` (TPM quote + SE signature verifier), `ml/` (aim-model training) |
 | `tests/unit/` | Host-runnable GoogleTest suites for pure-logic pieces (parsers, decoders, accumulators) |
 
 ## Data flow
