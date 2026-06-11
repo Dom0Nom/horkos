@@ -23,8 +23,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      # libsodium: the DRM licence verifier (drm/) links it for Ed25519.
+      # libsodium (DRM Ed25519) + libtss2 (Linux TPM attestation backend).
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsodium-dev libtss2-dev
+      - name: Install libsodium (macOS)
+        if: runner.os == 'macOS'
+        run: brew install libsodium
+      - name: Install libsodium (Windows)
+        if: runner.os == 'Windows'
+        run: vcpkg install libsodium:x64-windows
       - name: Configure
-        run: cmake -S . -B build
+        run: cmake -S . -B build ${{ runner.os == 'Windows' && format('-DCMAKE_TOOLCHAIN_FILE={0}/scripts/buildsystems/vcpkg.cmake', env.VCPKG_INSTALLATION_ROOT) || '' }}
       - name: Build
         run: cmake --build build --config Release -j
       - name: Test
