@@ -29,9 +29,9 @@
 
 use thiserror::Error;
 
-/// Kernel-event mirror version. HK-TODO(schema): tracks `HK_EVENT_SCHEMA_VERSION`
-/// (bumps 2 -> 3 in lockstep when the Schema phase lands these payloads).
-pub const KERNEL_EVENT_MIRROR_VERSION: u32 = 3;
+/// Kernel-event mirror version. Tracks `HK_EVENT_SCHEMA_VERSION` (now 6); the
+/// module-trust discriminants below are frozen in `hk_event_type`.
+pub const KERNEL_EVENT_MIRROR_VERSION: u32 = 6;
 
 /// Event-type discriminants for the Linux module-trust records.
 ///
@@ -42,8 +42,7 @@ pub const KERNEL_EVENT_MIRROR_VERSION: u32 = 3;
 ///   14..=17 — HV/virtualization family (HK_EVENT_HV_SYNTH_MSR..
 ///              HK_EVENT_HV_APIC_IDT; v4 schema)
 ///   18     — HK_EVENT_PROCESS_CREATE_EX (launch-trust; v5 schema)
-///   19..=28 — Linux module-trust family (this file; assigned here, pending
-///             Schema-phase ratification that appends them to hk_event_type).
+///   19..=28 — Linux module-trust family (this file; FROZEN in hk_event_type, v6)
 ///
 /// The matching C producer constants live in
 /// `kernel/linux/userspace/HostIntegritySensors.h` (`kEvt*`); those must be

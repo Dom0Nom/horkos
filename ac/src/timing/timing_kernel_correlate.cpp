@@ -65,13 +65,14 @@ bool timing_collect_kernel(timing_kernel_summary* out) noexcept {
     }
     std::memset(out, 0, sizeof(*out));
 
-    /* HK-TODO(schema): drain \\.\Horkos via HK_IOCTL_DRAIN_EVENTS, walk the
-     * hk_event_record stream, and for each record whose header.type ==
-     * HK_EVENT_TIMING_FREQ_SKEW, fold_freq_skew(payload, out). Gated on the frozen
-     * schema carrying the real type so a provisional-5 record is not mis-decoded as
-     * another domain's type-5 payload. Until HK_TIMING_SCHEMA_READY is defined (only
-     * once the Schema phase lands HK_EVENT_TIMING_FREQ_SKEW in event_schema.h), report
-     * no kernel summary rather than guessing. */
+    /* The wire type HK_EVENT_TIMING_FREQ_SKEW is now FROZEN in event_schema.h
+     * (type 38, schema v6). The remaining gate is the KERNEL drain transport:
+     * drain \\.\Horkos via HK_IOCTL_DRAIN_EVENTS, walk the hk_event_record
+     * stream, and for each record whose header.type == HK_EVENT_TIMING_FREQ_SKEW,
+     * fold_freq_skew(payload, out). Wired under HK_TIMING_SCHEMA_READY once the
+     * on-box kernel emitter + the SDK device-handle path land (Windows kernel,
+     * UNVERIFIED off-target); until then report no kernel summary rather than
+     * guessing. */
 #if defined(HK_TIMING_SCHEMA_READY)
     /* Activated post-Schema: open device, DRAIN, decode, fold. Left unwired here
      * because the drain envelope decode shares the SDK device-handle path that lands

@@ -2,27 +2,22 @@
  * ac/src/selfcheck/self_wire.h
  * Role: Userspace-private wire mirrors for the client self-integrity events
  *       (memory-integrity-selfcheck, catalog signals 145-153) and the self-read
- *       IOCTL request. The Schema phase has NOT yet landed these in the frozen
- *       headers (sdk/include/horkos/event_schema.h, sdk/include/horkos/ioctl.h),
- *       and the large-record drain plane (hk_event_mem_record /
- *       HK_IOCTL_DRAIN_MEM_EVENTS) the plan reuses is likewise absent. Per the
- *       task constraint we do NOT add wire types to the frozen schema TUs; these
- *       mirrors compile the sensors now and are pinned by HK_STATIC_ASSERT so any
- *       future divergence from the eventual frozen types breaks THIS build, not
- *       just the server side.
+ *       IOCTL request. The event-type discriminants are now FROZEN in
+ *       hk_event_type (event_schema.h, types 29-37, schema v6) and the
+ *       large-record transport plane (hk_event_large_record /
+ *       HK_IOCTL_DRAIN_LARGE_EVENTS) is defined in ioctl.h. These mirrors are
+ *       pinned by HK_STATIC_ASSERT so any divergence from the frozen types
+ *       breaks THIS build, not just the server side.
  * Target platforms: all (plain C99-shaped structs over <stdint.h>; this is a
  *       userspace-only mirror — guardrail #4: never #included by a kernel TU).
  * Interface: consumed by the ac/src/selfcheck TUs and tests; mirrored on the server
  *       by server/telemetry/src/self_events.rs (same field order/sizes).
  *
- * HK-TODO(schema): every symbol below moves to the frozen schema when the Schema
- * phase lands. The event-type discriminants continue the numbering the plan
- * sketches (14..22); they are LOCAL consts here exactly as
- * server/telemetry/src/vm_access.rs mirrors its 5..8 block pre-Schema. Until the
- * frozen enum gains these values the records cannot cross the existing 40-byte
- * HK_IOCTL_DRAIN_EVENTS envelope as DISTINCT decodable types — the large-record
- * plane they need (HK_EVENT_MEM_PAYLOAD_MAX) is itself pre-Schema. This is the
- * intended, flagged gap; do NOT widen the frozen 40-byte ring from this domain.
+ * HK-TODO(schema): the discriminants are frozen (29-37) and the large-record
+ * plane exists; what remains is the KERNEL-side drain handler that fills
+ * hk_event_large_record for these 120/144-byte records (Windows KMDF,
+ * UNVERIFIED off-target). The records do not cross the 24-byte main ring; they
+ * ride HK_IOCTL_DRAIN_LARGE_EVENTS.
  */
 
 #pragma once
