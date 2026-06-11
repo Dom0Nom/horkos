@@ -3,11 +3,17 @@
 # Console backends are excluded from the default build (no proprietary SDK).
 
 if(WIN32)
-    set(attestation_backend backends/win/AttestationTpm2Win.cpp)
+    # Windows + Linux share the tpm2-tss ESAPI quote routine; the platform file
+    # is a thin factory over it.
+    set(attestation_backend
+        backends/win/AttestationTpm2Win.cpp
+        backends/common/Tpm2EsapiQuote.cpp)
 elseif(APPLE)
     set(attestation_backend backends/macos/AttestationSecureEnclave.cpp)
 elseif(UNIX)
-    set(attestation_backend backends/linux/AttestationTpm2Linux.cpp)
+    set(attestation_backend
+        backends/linux/AttestationTpm2Linux.cpp
+        backends/common/Tpm2EsapiQuote.cpp)
 else()
     message(FATAL_ERROR "attestation: unsupported platform (no backend)")
 endif()
