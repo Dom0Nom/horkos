@@ -96,4 +96,15 @@ hk_is_protected_tgid(__u32 tgid)
     return hk_protected_lookup(tgid) != (void *)0;
 }
 
+/* ---- Task-resolution kfuncs (kernel >= 5.17) -----------------------------
+ * BPF kfuncs are NOT declared by libbpf's headers — a program that calls them
+ * must provide the extern `__ksym` prototype, which the verifier resolves
+ * against the kernel BTF at load. The vm-access fentry/fexit programs
+ * (fentry_proc_mem / fexit_process_vm) resolve a target task by pid and must
+ * release the acquired reference; declaring them here keeps the prototypes in
+ * one place. Programs that do not call them are unaffected (unused extern).
+ */
+extern struct task_struct *bpf_task_from_pid(s32 pid) __ksym;
+extern void bpf_task_release(struct task_struct *p) __ksym;
+
 #endif /* HK_PROTECTED_BPF_H */
