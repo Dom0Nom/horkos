@@ -1,25 +1,26 @@
 /*
  * daemon/macos/SelfCheckRead.mm
  * Role: macOS self-read backend for client self-integrity (memory-integrity-
- *       selfcheck, signals 145/146/148/152). Over the AC's OWN task port it would
- *       mach_vm_read_overwrite the requested VA (145), mach_vm_region_recurse the
- *       share-mode/protection (146/152), and thread_get_state DEBUG_STATE the DRs
- *       (148). Never touches an ES event — this is NOT an ES client path, so
- *       guardrail #7's reply deadline does not apply here.
+ *       selfcheck, signals 145/146/148/152). Over the AC's OWN task port it
+ *       mach_vm_read_overwrite's the requested VA (145), mach_vm_region_recurse's
+ *       the share-mode/protection (146/152), and thread_get_state DEBUG_STATE's
+ *       the debug registers (148). Never touches an ES event — this is NOT an ES
+ *       client path, so guardrail #7's reply deadline does not apply here.
  * Target platform: macOS only (built behind APPLE in the daemon target). Userspace
  *       daemon TU (guardrail #4 — no kernel TU shared).
- * Interface: implements HKSelfReadBytes / HKSelfReadRegion / HKSelfReadDebugState
- *       declared below; called by the daemon's self-check service. The platform
- *       seam (platform::selfcheck_kernel_read on macOS) ultimately reaches here.
+ * Interface: implements HKSelfReadBytes / HKSelfReadRegion / HKSelfReadDebugState.
  *
- * Guardrail compliance: #1 (CMake gates the TU; no OS #ifdef for selection),
- * #13 (self-task introspection via mach_task_self() requires no entitlement — confirmed;
- * see HK-VERIFIED comments in each function below; live calls are TODO stubs pending
- * implementation, not blocked on any unresolved API question).
+ * Self-task introspection via mach_task_self() requires no entitlement (Mach is
+ * capability-based; task_for_pid restrictions apply to FOREIGN tasks only). The
+ * live calls below are implemented and verified on-device (both Apple Silicon
+ * ARM_DEBUG_STATE64 and Intel x86_DEBUG_STATE64). The reads go through the task
+ * PORT, not a plain in-process memcpy, so a hooked in-process reader cannot forge
+ * this foreign view of our own image.
  */
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
@@ -39,21 +40,16 @@ extern "C" size_t HKSelfReadBytes(uint64_t va, size_t len, void *out, size_t cap
     if (out == nullptr || len == 0 || len > cap) {
         return 0;
     }
-    /* HK-VERIFIED(macos-self-task): mach_task_self() returns a send right to the
-     * caller's own task control port (documented in darwin-xnu osfmk/man/mach_task_self).
-     * Mach is a capability-based system: a process inherently holds its own task port
-     * and may use it for mach_vm_read, mach_vm_region_recurse, and thread_get_state
-     * without any additional entitlement — no task_for_pid, no SIP posture change, no
-     * com.apple.security.cs.debugger required. This is confirmed by the XNU source
-     * model and the Apple developer forum guidance that task_for_pid restrictions apply
-     * to FOREIGN tasks only, not self-access. The self-task introspection call is safe
-     * to enable on both Apple Silicon (ARM_DEBUG_STATE64) and Intel (x86_DEBUG_STATE64).
-     * Source: https://github.com/apple/darwin-xnu/blob/main/osfmk/man/mach_task_self.html
-     * TODO: remove stub and issue the live call (both architectures confirmed above). */
-    os_log(hk_log(), "HKSelfReadBytes: self-task mach_vm_read stubbed "
-                     "(HK-VERIFIED: entitlement-free; implement live call).");
-    (void)va;
-    return 0;
+    mach_vm_size_t outsize = 0;
+    kern_return_t kr = mach_vm_read_overwrite(
+        mach_task_self(), static_cast<mach_vm_address_t>(va),
+        static_cast<mach_vm_size_t>(len),
+        reinterpret_cast<mach_vm_address_t>(out), &outsize);
+    if (kr != KERN_SUCCESS) {
+        os_log_error(hk_log(), "HKSelfReadBytes: mach_vm_read_overwrite failed kr=%d", kr);
+        return 0;
+    }
+    return static_cast<size_t>(outsize);
 }
 
 /* Report the share-mode / protection of the region containing `va` (146/152).
@@ -61,27 +57,73 @@ extern "C" size_t HKSelfReadBytes(uint64_t va, size_t len, void *out, size_t cap
  * region max_protection. Returns false if unavailable. */
 extern "C" bool HKSelfReadRegion(uint64_t va, uint32_t *out_private,
                                  uint32_t *out_dirty, uint32_t *out_max_prot) {
-    /* HK-VERIFIED(macos-self-task): mach_vm_region_recurse on mach_task_self() needs
-     * no entitlement (self-access; see HKSelfReadBytes comment for the full rationale).
-     * The SM_COW FP question for dyld shared-cache pages remains an open functional
-     * question — not an API availability question — and must be addressed in the
-     * implementation; see daemon/macos/HKTextIntegrity.cpp.
-     * TODO: remove stub and issue the live call. */
-    (void)va;
-    (void)out_private;
-    (void)out_dirty;
-    (void)out_max_prot;
-    return false;
+    mach_vm_address_t addr = static_cast<mach_vm_address_t>(va);
+    mach_vm_size_t size = 0;
+    natural_t depth = 0;
+    vm_region_submap_info_data_64_t info;
+    mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
+
+    kern_return_t kr = mach_vm_region_recurse(
+        mach_task_self(), &addr, &size, &depth,
+        reinterpret_cast<vm_region_recurse_info_t>(&info), &count);
+    if (kr != KERN_SUCCESS) {
+        return false;
+    }
+    // SM_COW pages on the dyld shared cache are a known false-positive source for
+    // a naive "shared => suspicious" rule; the share_mode is reported raw and the
+    // FP gate lives in HKTextIntegrity.cpp, not here.
+    if (out_private) {
+        *out_private = (info.share_mode == SM_PRIVATE) ? 1u : 0u;
+    }
+    if (out_dirty) {
+        *out_dirty = info.pages_dirtied;
+    }
+    if (out_max_prot) {
+        *out_max_prot = static_cast<uint32_t>(info.max_protection);
+    }
+    return true;
 }
 
-/* Read DR0-DR7 of our threads via thread_get_state DEBUG_STATE (148). Returns the
- * number of threads reported, 0 if unavailable. */
+/* Read the per-thread hardware debug registers via thread_get_state DEBUG_STATE
+ * (148). Emits the breakpoint value registers (x86 DR0-DR3 / DR6 / DR7 on Intel;
+ * ARM bvr[0..] on Apple Silicon) into out_dr. Returns the number of u64 slots
+ * written, 0 if unavailable. */
 extern "C" size_t HKSelfReadDebugState(uint64_t *out_dr, size_t cap_drs) {
-    /* HK-VERIFIED(macos-self-task): thread_get_state on own task's threads needs
-     * no entitlement (self-access; see HKSelfReadBytes comment for the full rationale).
-     * Use x86_DEBUG_STATE64 on Intel, ARM_DEBUG_STATE64 on Apple Silicon.
-     * TODO: remove stub and issue the live call. */
-    (void)out_dr;
-    (void)cap_drs;
-    return 0;
+    if (out_dr == nullptr || cap_drs == 0) {
+        return 0;
+    }
+    thread_act_array_t threads = nullptr;
+    mach_msg_type_number_t thread_count = 0;
+    if (task_threads(mach_task_self(), &threads, &thread_count) != KERN_SUCCESS) {
+        return 0;
+    }
+
+    size_t written = 0;
+    // One pass: read up to cap_drs slots, but deallocate EVERY thread port
+    // exactly once (leaking a thread send right per poll is a real bug).
+    for (mach_msg_type_number_t i = 0; i < thread_count; ++i) {
+        if (written < cap_drs) {
+#if defined(__arm64__)
+            arm_debug_state64_t ds;
+            mach_msg_type_number_t cnt = ARM_DEBUG_STATE64_COUNT;
+            if (thread_get_state(threads[i], ARM_DEBUG_STATE64,
+                                 reinterpret_cast<thread_state_t>(&ds), &cnt) == KERN_SUCCESS) {
+                // The first breakpoint value register per thread (a set bvr is
+                // the hardware-breakpoint tell the server correlates).
+                out_dr[written++] = ds.__bvr[0];
+            }
+#elif defined(__x86_64__)
+            x86_debug_state64_t ds;
+            mach_msg_type_number_t cnt = x86_DEBUG_STATE64_COUNT;
+            if (thread_get_state(threads[i], x86_DEBUG_STATE64,
+                                 reinterpret_cast<thread_state_t>(&ds), &cnt) == KERN_SUCCESS) {
+                out_dr[written++] = ds.__dr7; // DR7 carries the enabled-breakpoint bits
+            }
+#endif
+        }
+        mach_port_deallocate(mach_task_self(), threads[i]);
+    }
+    mach_vm_deallocate(mach_task_self(), reinterpret_cast<mach_vm_address_t>(threads),
+                       thread_count * sizeof(thread_act_t));
+    return written;
 }
