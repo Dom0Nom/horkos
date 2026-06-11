@@ -75,6 +75,9 @@ add_executable(hk_unit_tests
     # (not built here); the kinematic segmenters (166-169) are server-side Rust.
     test_aim_accumulator.cpp
     ${CMAKE_SOURCE_DIR}/sdk/src/input/AimAccumulator.cpp
+    # DRM licence verifier (Ed25519 via libsodium). Links hk_drm (which brings
+    # libsodium PUBLIC) below; the test signs claims with libsodium directly.
+    test_drm.cpp
     # behavioral-aim: the platform-free per-tick TickPayload serializer + its
     # tick-echo test. No platform header (guardrail #4); the TU is compiled
     # directly into this host target.
