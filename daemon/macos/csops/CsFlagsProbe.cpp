@@ -69,7 +69,9 @@ extern "C" uint32_t cs_flags_drifted(uint32_t baseline_mask, uint32_t observed_m
  * status read is routed through hk_csops_status_read(), which is stubbed to
  * "unavailable" until the op-constant contract is verified against the target SDK
  * on each macOS 12-15 box. The probe then emits nothing (clean abort), exactly as
- * a real read failure would. */
+ * a real read failure would.
+ * (docs: confirmed NOT in MacOSX.sdk/usr/include/sys/ through macOS 15.5 SDK —
+ * still needs on-box SPI verification of CS_OPS_STATUS constant value) */
 #include <unistd.h>
 #include <os/log.h>
 

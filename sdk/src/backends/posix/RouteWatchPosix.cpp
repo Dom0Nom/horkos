@@ -148,6 +148,11 @@ hk_net_route_integrity probe_route_integrity(void)
  * be mis-attributed as unattested. To avoid a false positive on macOS, the live
  * 188 enforcement on macOS must stay OFF until the PF_ROUTE reader is written and
  * confirmed; the snapshot/identity hash above is safe to ship (it is just a hash).
+ * (docs: PF_ROUTE socket is a BSD socket type, available on macOS; RTM_* constants
+ * are in <net/route.h> which is in the public SDK. The exact RTM message set for
+ * route-change events on macOS 12-15 is not explicitly documented for all change
+ * scenarios — still needs on-box verification of which RTM_* messages fire for the
+ * relevant path-change events)
  *
  * HK-UNCERTAIN(linux-rtnetlink): the live NETLINK_ROUTE socket bind +
  * RTMGRP_IPV4_ROUTE/RTMGRP_LINK group subscription + the recvmsg drain that calls

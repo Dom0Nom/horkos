@@ -67,18 +67,21 @@ uint64_t FoldTag(const uint8_t tag[8]) {
 int hk_sensor_bpf_enum(const HkSymbolMap* map, HkEventSink sink) {
     (void)map;
 
-    /* HK-UNCERTAIN(bpf-attach-target-resolve): bpf_prog_info exposes the prog
-     * type, tag, and (for some types) attach_btf_id / a jited ksym, but mapping a
-     * loaded program back to "it hooks /game/bin:0xNNN" or "kprobe commit_creds"
-     * robustly across types/kernels is non-trivial — link info
-     * (bpf_link_get_info_by_fd) carries the attach target for newer link-based
-     * attaches but not for legacy ones. The pure classifier above is exercised by
-     * tests; the live attach-target RESOLUTION is left unimplemented here pending
-     * on-box confirmation of which info fields are populated per prog type on the
-     * target kernel. Until then the live entry enumerates and reports a coverage
-     * gap rather than guessing target identity (which would mis-attribute and
-     * false-positive). Confirm the per-type attach-target resolution before
-     * wiring ClassifyBpfProg into the live walk. */
+    /* HK-UNCERTAIN(bpf-attach-target-resolve): bpf_prog_info exposes prog type,
+     * tag, attach_type, and attach_btf_id for some types, but mapping a loaded
+     * program back to "it hooks /game/bin:0xNNN" or "kprobe commit_creds"
+     * robustly across types/kernels is non-trivial. BPF_LINK_GET_INFO_BY_FD
+     * carries the attach target for link-based attaches (Linux 5.7+, bpf(2)) but
+     * not for legacy socket/perf-event attaches. bpf_prog_info.attach_btf_id is
+     * present in the kernel ABI since Linux 5.0 but resolving it to a symbol name
+     * requires BTF lookup (not just the ID). The specific fields populated per
+     * prog type (kprobe, uprobe, tracepoint, cgroup, …) vary by kernel version and
+     * are not fully enumerated in a single public doc. The pure classifier above is
+     * exercised by tests; live attach-target resolution is left unimplemented
+     * pending on-box confirmation of which info fields are populated per prog type.
+     * (docs: BPF_LINK_GET_INFO_BY_FD for link-based attaches confirmed Linux 5.7+
+     * bpf(2); attach_btf_id in bpf_prog_info since 5.0 — still needs on-target
+     * per-type field verification) */
 
     /* Build the client identity (own targets/tags) — populated by the loader once
      * the protected-set identity is wired; empty here means "no protected targets

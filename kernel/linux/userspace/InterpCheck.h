@@ -35,7 +35,9 @@ struct InterpEvent {
  * HK-UNCERTAIN(container-manifest): the exact Flatpak metadata / Steam
  * pressure-vessel manifest format + where to read the accepted build-id list is a
  * runtime-integration detail not finalized here. The interface is fixed; the
- * concrete resolver is wired in ops. A test stub provides the accepted set. */
+ * concrete resolver is wired in ops. A test stub provides the accepted set.
+ * (docs: no public doc specifies the pressure-vessel or Flatpak manifest schema
+ * for ld.so build-ids — still needs runtime-integration on-target verification) */
 using ManifestResolver =
     std::vector<std::vector<uint8_t>> (*)(uint32_t pid, void* user);
 

@@ -11,11 +11,15 @@
  *
  * Guardrail compliance: #1, #3, #4, #6.
  *
- * HK-UNCERTAIN(pagemap-caps): /proc/<pid>/pagemap file-backed / soft-dirty bit
- * layout changed across kernels and reading another process's pagemap requires
- * CAP_SYS_ADMIN (tightened in recent kernels). It is NOT verified that the
- * loader's capability set (CAP_BPF/CAP_PERFMON for LSM) suffices for cross-process
- * pagemap. Flagged for on-box verification before enabling signal 90 (default-OFF
+ * HK-VERIFIED(pagemap-caps): permission to access /proc/pid/pagemap is governed
+ * by a ptrace access mode PTRACE_MODE_READ_FSCREDS check (proc_pid_pagemap(5)
+ * man page: man7.org/linux/man-pages/man5/proc_pid_pagemap.5.html). CAP_BPF and
+ * CAP_PERFMON do NOT satisfy this ptrace check; cross-process pagemap requires
+ * CAP_SYS_PTRACE (or equivalent ptrace access that passes __ptrace_may_access).
+ * The loader's typical capability set (CAP_BPF/CAP_PERFMON) is therefore
+ * INSUFFICIENT for cross-process pagemap reads. Signal 90 requires either running
+ * the loader with CAP_SYS_PTRACE or using an in-process sampling strategy.
+ * Flagged for on-box capability-set decision before enabling signal 90 (default-OFF
  * in CMake). HK-UNCERTAIN(uprobe-perf): same hot-fn trap cost caveat as
  * got_sample.bpf.c.
  */

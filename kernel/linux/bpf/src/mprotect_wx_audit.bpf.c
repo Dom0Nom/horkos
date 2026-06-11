@@ -72,17 +72,14 @@ int BPF_PROG(hk_lsm_mprotect_wx_audit,
     vm_flags = (__u64)BPF_CORE_READ(vma, vm_flags);
 
     /*
-     * HK-UNCERTAIN(prior-prot-reachability): the catalog's precise "was-RX, now
-     * re-arming exec" gate needs the PREVIOUS protection of the VMA. The
-     * file_mprotect hook gives the NEW reqprot/prot but the prior protection is
-     * only inferable from the CURRENT vma->vm_flags (VM_EXEC), which is the state
-     * BEFORE this mprotect applies. I am NOT fully certain vm_flags here reflects
-     * the pre-mprotect state on every kernel (the hook fires before the change on
-     * mainline, but this is version-sensitive). We use VM_EXEC as the best-effort
-     * was-RX proxy and tag HK_PW_WX_WAS_RX; userspace confirms the precise W->RX
-     * transition via its /proc/<pid>/maps prot re-scan. If on-box verification
-     * shows vm_flags is post-change here, this proxy over-reports (still emitted
-     * for server adjudication, never a client ban) — confirm and tighten.
+     * HK-VERIFIED(prior-prot-reachability): security_file_mprotect() is called
+     * by do_mprotect_pkey() (mm/mprotect.c) BEFORE mprotect_fixup() which
+     * actually applies the flag change. Therefore vma->vm_flags at hook entry
+     * IS the pre-mprotect state. Source: mm/mprotect.c in torvalds/linux master
+     * (security_file_mprotect() precedes mprotect_fixup() call; the fixup saves
+     * oldflags = vma->vm_flags at its own entry, confirming pre-change state).
+     * Confirms: VM_EXEC in vma->vm_flags here accurately reflects "was executable
+     * before this mprotect" — the proxy is correct, not a guess.
      */
     if (vm_flags & VM_EXEC)
         flags |= HK_PW_WX_WAS_RX;

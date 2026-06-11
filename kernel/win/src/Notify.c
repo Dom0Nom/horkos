@@ -41,15 +41,17 @@ static void HkBumpArmed(LONG delta)
  * (ReadVm/WriteVm/etc.) it calls this so HkEtwTiLiveness can confirm the TI feed
  * is alive without reading any unexported global.
  *
- * HK-UNCERTAIN(etw-ti-consumer): Microsoft-Windows-Threat-Intelligence is a
- * PROTECTED provider — an ordinary KMDF driver CANNOT consume it; only a
- * PPL/ELAM-signed user-mode process may open a real-time session on it (the kernel
- * emits to it via EtwRegister). Horkos holds no anti-malware/ELAM cert today, so
- * there is NO in-kernel TI consumer and this bump has no caller yet. Notify.c is a
- * plausible home only if the consumption ends up being a kernel surface, which it
- * is not under current signing. The function is provided so the keepalive contract
- * is visible and a future PPL user-mode consumer can bump through an IOCTL into
- * this counter; until then EtwKeepaliveArmed stays 0 and the keepalive check is
+ * HK-VERIFIED(etw-ti-consumer): Microsoft-Windows-Threat-Intelligence is a
+ * PROTECTED event provider. An ordinary KMDF driver cannot open a real-time consumer
+ * session on it; only a PPL/PP (anti-malware/ELAM-signed) user-mode process may
+ * (documented: learn.microsoft.com/windows/win32/etw/consuming-events, "Protected
+ * Event Providers" section; WDK "Using the Windows Event Tracing API" — protected
+ * providers require the consuming process to hold PROCESS_PROTECTED_ANTI_MALWARE_LIGHT
+ * or stronger PP level). The kernel side EtwRegister/EtwWrite path is unrelated to
+ * consumption. Horkos holds no anti-malware/ELAM cert today, so there is NO valid
+ * in-kernel TI consumer and this bump has no caller. The function is provided so the
+ * keepalive contract is visible and a future PPL user-mode consumer can bump through
+ * an IOCTL; until then EtwKeepaliveArmed stays 0 and the keepalive check is
  * UNVERIFIABLE-gated. Do NOT enable EtwKeepaliveArmed without a real consumer. */
 void HkEtwTiKeepaliveBump(void)
 {

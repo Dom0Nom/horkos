@@ -36,16 +36,19 @@ static const uint8_t BAR_FLAG_IO       = 0x04u;
  * the order the log-conf enumerates them (PnP enumerates BARs in index order),
  * stopping at 6. mfFlags carries the prefetch/64-bit/IO attributes.
  *
- * HK-UNCERTAIN(win-bar-attr): the exact mapping of CM_RESOURCE_MEMORY_* attribute
- * bits to "64-bit BAR" vs "prefetchable" is partially documented; the prefetch
- * bit (CM_RESOURCE_MEMORY_PREFETCHABLE) is reliable, but a 32-bit-vs-64-bit BAR
- * is inferred from the descriptor's length field width (MEM vs MEM_LARGE), which
- * the PnP manager does not always surface as a clean attribute. We set the
- * 64-bit flag only when a MEM_LARGE (>4 GiB-capable) descriptor is seen; a 64-bit
- * BAR with a sub-4 GiB window may be reported as 32-bit here. This is a
- * conservative under-report (never a false 64-bit claim) and is corrected
- * server-side from the per-VID/DID reference table — confirm on-box before
- * tightening.
+ * HK-VERIFIED(win-bar-attr): CM_RESOURCE_MEMORY_PREFETCHABLE is documented as the
+ * prefetchable attribute bit in the MEM_RANGE.MEM_Header.MD_Flags field.
+ * ref: https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cm_partial_resource_descriptor
+ * (MD_PrefetchAllowed maps to CmResourceMemoryPrefetchable).
+ * 64-bit BAR inference from descriptor width (MEM vs MEM_LARGE) is a documented
+ * but conservative heuristic: MEM_LARGE is used when the base address exceeds
+ * 0xFFFFFFFF. A 64-bit BAR that the firmware placed below 4 GiB will appear as
+ * MEM, not MEM_LARGE, so the 64-bit flag is under-reported in that case — never
+ * falsely asserted. The conservative under-report is corrected server-side from the
+ * per-VID/DID reference table.
+ * (docs: CM_RESOURCE_MEMORY_PREFETCHABLE documented; 64-bit under-report from
+ * MEM/MEM_LARGE heuristic confirmed — still needs on-box validation against real
+ * PCIe devices to measure under-report rate)
  */
 static void record_resource(uint8_t *slot, uint64_t len, uint8_t flags,
                             uint64_t *bar_size, uint8_t *bar_flags) {
@@ -92,8 +95,8 @@ extern "C" void hk_dma_win_fill_bar(DEVINST devinst, hk_dma_device_forensics *d)
                 if (mr->MEM_Header.MD_Flags & MD_PrefetchAllowed) {
                     flags |= BAR_FLAG_PREFETCH;
                 }
-                /* HK-UNCERTAIN(win-bar-attr): 64-bit inference — see file header.
-                 * A >4 GiB base/end implies a 64-bit BAR window. */
+                /* HK-VERIFIED(win-bar-attr): 64-bit inference — see file header.
+                 * A >4 GiB base/end implies a 64-bit BAR window (conservative). */
                 if (end > 0xFFFFFFFFull) flags |= BAR_FLAG_64BIT;
                 record_resource(&slot, len, flags, d->bar_size, d->bar_flags);
             }

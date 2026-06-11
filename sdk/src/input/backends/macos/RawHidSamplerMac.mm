@@ -20,6 +20,11 @@
  * owns the run-loop the value callbacks post to); per guardrail #13 they are not
  * assumed here — the live open is documented but no manager is created, so an
  * ungranted box simply drains nothing.
+ * (docs: IOHIDManager is publicly documented (IOKit/hid/IOHIDManager.h). The TCC
+ * Input-Monitoring requirement is Apple privacy policy, documented at
+ * developer.apple.com/documentation/iokit/iohidmanager (see privacy entitlements).
+ * The IOHIDManager API itself is public and stable; the blocking item is the TCC
+ * grant state at runtime — still needs on-box TCC grant verification)
  */
 
 #include "input/AimSampler.h"
@@ -40,8 +45,8 @@ uint32_t sample_raw_hid(hk_hid_sample* samples, uint32_t cap)
     }
 
     /* HK-UNCERTAIN(macos-tcc-input-monitoring): no IOHIDManager is open this tick
-     * (see file header). The live shape, once the SDK creates the manager on its
-     * run loop with the Input-Monitoring grant confirmed:
+     * (see file header — docs note appended there). The live shape, once the SDK
+     * creates the manager on its run loop with the Input-Monitoring grant confirmed:
      *
      *   IOHIDManagerRef m = IOHIDManagerCreate(kCFAllocatorDefault,
      *                                           kIOHIDOptionsTypeNone);

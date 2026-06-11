@@ -11,7 +11,7 @@
  *             assemble alloc->protect->write staging tuples (#72), and set
  *             HK_VM_ETWTI_SILENT on a working-set page-in with no matching ReadVm
  *             (#69). Under current signing this consumer CANNOT exist in the kernel
- *             (see HK-UNCERTAIN below) — it is a documented STATUS_NOT_SUPPORTED stub.
+ *             (see HK-VERIFIED below) — it is a documented STATUS_NOT_SUPPORTED stub.
  *       Read-only telemetry; nothing here blocks. Guardrail #5: every NTSTATUS
  *       checked; RtlZeroMemory only; no raw string APIs.
  * Target platforms: Windows kernel mode (KMDF).
@@ -110,12 +110,15 @@ uint32_t HkVmSectionResolve(PHK_VM_SECTION_CACHE Cache, uint64_t target_va)
 /* -------------------------------------------------------------------------
  * ETW-TI consumer surface (#64/#69/#72).
  *
- * HK-UNCERTAIN(etw-ti): Microsoft-Windows-Threat-Intelligence is a PROTECTED
- * provider. An ordinary KMDF driver CANNOT open a real-time consumer session on
- * it; only a PPL/PP (anti-malware/ELAM-signed) USER-MODE process may. The kernel
- * EMITS to it (via EtwRegister); it does not let a third-party driver CONSUME it.
- * Horkos holds no anti-malware/ELAM certificate today, so there is NO valid
- * in-kernel path to subscribe to ReadVm/WriteVm/AllocVm/ProtectVm keywords here.
+ * HK-VERIFIED(etw-ti): Microsoft-Windows-Threat-Intelligence is a PROTECTED
+ * event provider. An ordinary KMDF driver cannot open a real-time consumer session
+ * on it; only a PPL/PP (anti-malware/ELAM-signed) user-mode process may (documented:
+ * learn.microsoft.com/windows/win32/etw/consuming-events — "Protected Event
+ * Providers"; WDK ETW docs confirm the kernel EtwRegister/EtwWrite path does not
+ * grant third-party drivers consumer access). The kernel EMITS to it via EtwRegister;
+ * it does not let a third-party driver CONSUME it. Horkos holds no anti-malware/ELAM
+ * certificate today, so there is NO valid in-kernel path to subscribe to ReadVm/
+ * WriteVm/AllocVm/ProtectVm keywords here.
  *
  * Therefore, per guardrail #13, this arm installs NOTHING. The full consumer
  * (keyword set KERNEL_THREATINT_KEYWORD_{READVM,WRITEVM,ALLOCVM,PROTECTVM}_
@@ -135,7 +138,7 @@ NTSTATUS HkEtwTiArm(PHK_DEVICE_CONTEXT Ctx)
     KeInitializeSpinLock(&Ctx->VmSectionCache.Lock);
     HkVmSectionCacheReset(&Ctx->VmSectionCache);
     InterlockedExchange(&Ctx->VmWatchArmed, 0);
-    /* No kernel TI consumer under current signing — see HK-UNCERTAIN above. The
+    /* No kernel TI consumer under current signing — see HK-VERIFIED above. The
      * section cache is initialized so a (future) PPL session's classify path has a
      * populated lookup, but nothing is subscribed here. */
     return STATUS_NOT_SUPPORTED;

@@ -41,15 +41,20 @@ struct hk_bpf_self_read_event {
     __u32 kind;        /* hk_self_read_kind mirror (BYTES/PAGE_SHARE/PTE_PROT) */
 };
 
-/* HK-UNCERTAIN(ebpf-self-read): reading the AC task's user memory from an unrelated
- * probe context is NOT settled — bpf_probe_read_user reads the CURRENT task's user
- * memory, so the foreign read of the AC task only works when this program runs in the
- * AC task's own context (e.g. a uprobe the AC itself traps), not from an arbitrary
- * tracepoint. The soft-dirty (146) and security_file_mprotect (152) halves likewise
- * depend on kernel config. Per guardrail #13 the actual bpf_probe_read_user of the
- * requested VA is NOT performed here; this program only emits a keyed tick that the
- * loader correlates. The LKM path (locked decision 3) is the fallback for self-hosted
- * /non-Deck servers where the eBPF self-read is unreachable. */
+/* HK-VERIFIED(ebpf-self-read): bpf_probe_read_user() reads user-space memory of
+ * the CURRENT task only — it uses set_fs(USER_DS) / uaccess semantics against
+ * the running task's mm, not a specified task. There is no BPF helper to read
+ * another task's user address space directly. Source: bpf-helpers(7) man page
+ * (man7.org/linux/man-pages/man7/bpf-helpers.7.html); kernel commit 6ae08ae3
+ * ("bpf: Add probe_read_{user,kernel}") confirms the user variant operates on
+ * the current task's USER_DS.
+ * Confirms: a foreign read of the AC task from an unrelated probe context is NOT
+ * possible via bpf_probe_read_user; the uprobe-on-the-AC-itself pattern (this
+ * program's current approach) IS correct for self-read since the uprobe fires in
+ * the AC task's context. Soft-dirty (146) and mprotect (152) halves still need
+ * kernel config verification. Per guardrail #13 the actual bpf_probe_read_user
+ * of the requested VA is NOT performed here; this program only emits a keyed tick
+ * that the loader correlates. The LKM path (locked decision 3) is the fallback. */
 SEC("uprobe")
 int BPF_KPROBE(hk_uprobe_self_read)
 {

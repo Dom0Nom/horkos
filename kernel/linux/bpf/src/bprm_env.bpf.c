@@ -15,19 +15,19 @@
  *
  * Guardrail compliance: #1, #3, #4, #6 as in the sibling LSM programs.
  *
- * HK-UNCERTAIN(lsm-hook+envp): the impl-plan lists BOTH bprm_creds_for_exec and
- * bprm_committing_creds as candidate hooks. Which hook exists, and whether
- * linux_binprm->envp points at a FULLY-POPULATED, safely-readable user env at
- * the chosen hook, is kernel-version-dependent and NOT verified here. envp at
- * exec is a user-pointer array in the NEW mm that may not yet be fully copied.
- * Reading it in BPF needs on-box confirmation (Deck 6.x). Until verified, the
- * envp WALK below is gated behind HK_BPRM_ENV_WALK_VERIFIED (undefined by
- * default): the program still emits the exec event (cadence + argc/envc counts
- * from binprm) so userspace PreloadWatch.cpp can correlate against its own
- * /proc/<pid>/environ read (which IS safe post-exec from userspace), but it does
- * NOT dereference the user env array in-kernel until the hook+validity contract
- * is confirmed. Do NOT enable the walk without on-box verification — a bad read
- * here faults in kernel context.
+ * HK-VERIFIED(lsm-hook+envp) [PARTIAL]: lsm/bprm_creds_for_exec IS a valid
+ * BPF-LSM attach point — it is defined in include/linux/lsm_hook_defs.h and
+ * is listed in BPF LSM program documentation (docs.kernel.org/bpf/prog_lsm.html).
+ * The hook signature is (struct linux_binprm *bprm, int ret) as used below;
+ * argc/envc fields of linux_binprm are kernel-side ints safely readable via CO-RE.
+ * Source: kernel.org/doc/html/v5.10/bpf/bpf_lsm.html; lsm_hook_defs.h in
+ * torvalds/linux. The bprm_committing_creds alternative also exists but
+ * bprm_creds_for_exec is the correct early-exec hook.
+ * STILL UNCERTAIN (envp-walk): whether linux_binprm->envp (a user-pointer array
+ * in the NEW mm) is safely readable at this hook via bpf_probe_read_user is NOT
+ * confirmed — the env block may not be fully copied at bprm_creds_for_exec time.
+ * The envp WALK remains gated behind HK_BPRM_ENV_WALK_VERIFIED; do NOT enable
+ * without on-box verification (Deck 6.x). A bad read here faults in kernel context.
  */
 
 #include "vmlinux.h"

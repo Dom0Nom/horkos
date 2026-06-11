@@ -7,8 +7,8 @@
  *       READ-ONLY: it reads ETW state/globals and bounds-checks, then emits
  *       HK_EVENT_INTEGRITY_FINDING; it installs no callback and writes no kernel
  *       state. Runs from the single PASSIVE_LEVEL integrity work item. The
- *       keepalive counter coordinates with the (future) ETW-TI consumer — see the
- *       HK-UNCERTAIN(etw-ti-consumer) note.
+ *       keepalive counter coordinates with the (future) PPL ETW-TI consumer — see
+ *       the HK-VERIFIED(etw-ti-consumer) note in EtwIntegrity.c HkEtwTiLiveness.
  * Target platforms: Windows kernel mode (KMDF).
  * Interface: implements HkEtwTiLiveness / HkEtwSessionCensus / HkInfinityHookProbe
  *       declared in kernel/win/include/horkos_kernel.h. Each is a no-op stub unless
@@ -48,15 +48,15 @@ void HkEtwTiLiveness(PHK_DEVICE_CONTEXT Ctx)
      * higher than the raw-handle read). Horkos's ETW-TI consumer bumps
      * EtwTiKeepalive per TI event; we check it advanced since the previous scan.
      *
-     * HK-UNCERTAIN(etw-ti-consumer): whether the ETW-TI feed is consumed in-kernel
-     * or by a user-mode PPL consumer determines WHERE the counter is bumped (plan
-     * Risk 7). ETW-TI (Microsoft-Windows-Threat-Intelligence) is a PROTECTED
-     * provider: an ordinary KMDF driver CANNOT open a real-time session on it; only
-     * a PPL/ELAM-signed user-mode process may. Horkos holds no anti-malware/ELAM
-     * cert today, so there is no in-kernel TI consumer to bump this counter. Until
-     * the consumption architecture is decided and a consumer exists,
-     * EtwKeepaliveArmed stays 0 and this half is correctly UNVERIFIABLE-gated. Do
-     * NOT fabricate a kernel ETW-TI consumer. */
+     * HK-VERIFIED(etw-ti-consumer): ETW-TI (Microsoft-Windows-Threat-Intelligence)
+     * is a PROTECTED event provider; an ordinary KMDF driver cannot open a consumer
+     * session on it. Only a PPL/PP anti-malware or ELAM-signed user-mode process may
+     * consume it (documented: "Protected Event Providers" in the ETW documentation
+     * on learn.microsoft.com/windows/win32/etw/consuming-events). Horkos holds no
+     * anti-malware/ELAM cert today, so there is no in-kernel TI consumer to bump
+     * this counter. Until the consumption architecture is decided and a PPL consumer
+     * exists, EtwKeepaliveArmed stays 0 and this half is correctly UNVERIFIABLE-
+     * gated. Do NOT fabricate a kernel ETW-TI consumer. */
     if (InterlockedCompareExchange(&Ctx->EtwKeepaliveArmed, 0, 0) == 0) {
         HkIntegrityEmit(212u, HK_INTEGRITY_UNVERIFIABLE, 0ull);
     } else {

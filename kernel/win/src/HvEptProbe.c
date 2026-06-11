@@ -28,11 +28,17 @@ void HkHvEptProbeSample(void)
 {
     NT_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
-    /* HK-UNCERTAIN: until the MmMapIoSpaceEx lifetime/IRQL/cache-type contract and
-     * the #VE arming are confirmed on the box, the exec-view-vs-data-view checksum
-     * is not performed and nothing is emitted. The wire shape
-     * (hk_event_hv_ept_split: exec_view_crc / read_view_crc / flags / section_id)
-     * is in place so the confirmed implementation drops in without a schema change.
-     * Emitting a guessed split (or leaking a physical mapping) is worse than a
-     * deferred signal (guardrail #13). */
+    /* HK-UNCERTAIN: MmMapIoSpaceEx is documented (learn.microsoft.com/windows-hardware/
+     * drivers/ddi/wdm/nf-wdm-mmmapiospaceex) as mapping a physical address range at
+     * IRQL <= DISPATCH_LEVEL with a specified cache type. MmUnmapIoSpace (documented:
+     * learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-mmunmapiospace)
+     * must be called to release the mapping. However, the correct cache type for
+     * reading the physical backing of a kernel executable page (MmCached vs MmNonCached)
+     * and whether MmMapIoSpaceEx is safe for this use case (physical page of a kernel
+     * image, not a device register) must be confirmed on-box. The #VE /
+     * EXCEPTION_VIRTUALIZATION_FAULT (0xC0000420) arming path in a non-root partition
+     * is equally uncertain. Until both are confirmed on the box, the exec-view-vs-data-
+     * view checksum is not performed and nothing is emitted.
+     * (docs: MmMapIoSpaceEx + MmUnmapIoSpace documented; still needs on-box:
+     * correct cache type for kernel-page PA read + #VE arming safety) */
 }

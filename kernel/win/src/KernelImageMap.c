@@ -94,16 +94,20 @@ NTSTATUS HkKernelImageMapBuild(const HK_MODULE_MAP* Map, PHK_KERNEL_IMAGE Img)
     Img->NtoskrnlBase = (uint64_t)(ULONG_PTR)ntBase;
     Img->NtoskrnlSize = ntSize;
 
-    /* HAL base. HK-UNCERTAIN(hal-image-resolve): on modern builds HAL is merged
-     * into ntoskrnl (hal.dll is a forwarder), so a HAL "export" address may
-     * resolve back into ntoskrnl rather than a distinct hal image. Resolving a
-     * genuinely hal-resident routine's base is build-fragile. We OPTIONALLY fill
-     * the hal range from the ModuleMap by index only if a future map carries
-     * names; until ModuleMap exposes module names, HalBase stays 0 and
-     * HkKernelImageContains treats "inside ntoskrnl" as sufficient for the perf-
-     * interrupt/IDT checks (their handlers live in ntoskrnl on merged-HAL builds).
-     * Do NOT pattern-scan for HAL or assume a fixed export; confirm the HAL image
-     * resolution on-box before relying on a separate hal range. */
+    /* HAL base. HK-UNCERTAIN(hal-image-resolve): on Windows 10+ hal.dll is a stub
+     * forwarder and HAL code lives in ntoskrnl.exe (this is public knowledge, e.g.
+     * Windows Internals 7th Ed. and MS blog posts on HAL refactoring, but there is
+     * no single normative WDK doc page). A HAL "export" address therefore resolves
+     * into ntoskrnl on merged-HAL builds. Resolving a genuinely hal-resident
+     * routine's base is build-fragile. We OPTIONALLY fill the hal range from the
+     * ModuleMap by index only if a future map carries names; until ModuleMap exposes
+     * module names, HalBase stays 0 and HkKernelImageContains treats "inside
+     * ntoskrnl" as sufficient for perf-interrupt/IDT checks (their handlers live in
+     * ntoskrnl on merged-HAL builds). Do NOT pattern-scan for HAL or assume a fixed
+     * export; confirm the HAL image resolution on-box before relying on a separate
+     * hal range.
+     * (docs: HAL merge into ntoskrnl on Win10+ is publicly known but not in a single
+     * normative WDK page; still needs on-box: confirm hal range from ModuleMap) */
     UNREFERENCED_PARAMETER(Map);
     Img->HalBase = 0;
     Img->HalSize = 0;

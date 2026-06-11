@@ -47,7 +47,12 @@ struct hk_bpf_hwbp_event {
  * target kernel BTF (Deck-class) before relying on them. Per guardrail #13 the real
  * attach + bp_addr read are left as a documented stub; this raw_tracepoint body
  * compiles verifier-clean (no unrelocated reads) so -Werror still passes. The actual
- * install observation activates once the attach point + field path are confirmed. */
+ * install observation activates once the attach point + field path are confirmed.
+ * (docs: perf_event_open(2) documents PERF_TYPE_BREAKPOINT = 5 and perf_event_attr
+ * .bp_addr as UAPI-stable fields: man7.org/linux/man-pages/man2/perf_event_open.2.html.
+ * The struct perf_event_attr layout is UAPI so it is in vmlinux BTF. The question is
+ * whether a kprobe/fexit on ksys_perf_event_open itself is stable on the target kernel
+ * — still needs on-target BTF probe and kprobe-ability check) */
 SEC("raw_tracepoint/sys_enter")
 int hk_hwbp_install_probe(struct bpf_raw_tracepoint_args *ctx)
 {

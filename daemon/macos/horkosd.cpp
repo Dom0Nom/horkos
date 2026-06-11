@@ -41,6 +41,8 @@
  * across OS X 10.10 through macOS 14, but Apple may remove or change it
  * without notice. If the symbol is unavailable the peer-validation path
  * fails closed (connection cancelled). Verify on each major macOS release.
+ * (docs: confirmed NOT declared in MacOSX.sdk public XPC or Security headers
+ * through macOS 15.5 SDK — still needs on-box symbol verification per OS release)
  * ----------------------------------------------------------------------- */
 extern "C" void xpc_connection_get_audit_token(xpc_connection_t, audit_token_t *);
 

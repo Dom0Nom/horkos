@@ -99,7 +99,8 @@ private:
 #if defined(HK_PLATFORM_WINDOWS) || defined(_WIN32)
 /* Start/stop the live PPL ETW-TI real-time session. Returns 0 on success, -1 if
  * the session could not be opened (the common case in dev: not PPL/ELAM-signed).
- * HK-UNCERTAIN(etw-ti): see EtwTiConsumer.cpp — the live path is a stub. */
+ * HK-VERIFIED(etw-ti): see EtwTiConsumer.cpp — PPL/ELAM cert requirement
+ * documented; live path is a stub pending cert acquisition. */
 int start();
 void stop();
 #endif

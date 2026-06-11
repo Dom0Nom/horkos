@@ -9,14 +9,14 @@
  * Implements: hk_dma_win_fill_tlp_latency (an opt-in pass; symmetric with the
  *       Linux hk_dma_linux_fill_tlp_latency entry point).
  *
- * *** HK-UNCERTAIN(win-config-read): the latency side-channel TIMES a config-space
- * read; it therefore depends on the SAME unconfirmed userspace config-read path as
- * MSI-X / ext-config (impl-plan Risk #1). Without a confirmed userspace GetBusData
- * route there is no register to time from userspace, so this arm is deferred. Sig
- * 132 is the lowest-value, highest-noise signal (impl-plan §sequencing #7) and
- * never fires standalone, so deferring it on Windows costs the least. The robust
- * median/IQR math is trivial and lives in the Linux arm; it is re-added here once
- * the config-read primitive is confirmed on-box. ***
+ * *** HK-VERIFIED(win-config-read): the latency side-channel times a config-space
+ * read; it depends on the same kernel-only HAL API restriction (HalGetBusDataByOffset
+ * is kernel-only; see ConfigSpaceForensics.cpp). Without a confirmed userspace config-
+ * read route (KMDF IOCTL) there is no register to time from userspace, so this arm
+ * is deferred. Sig 132 is the lowest-value, highest-noise signal and never fires
+ * standalone, so deferring it on Windows costs the least.
+ * (docs: kernel restriction confirmed — still needs KMDF IOCTL + on-box latency
+ * calibration before enabling sig 132) ***
  */
 
 #include <windows.h>
@@ -27,10 +27,8 @@
 /* -------------------------------------------------------------------------
  * hk_dma_win_fill_tlp_latency
  *
- * HK-UNCERTAIN(win-config-read): deferred — leaves the latency fields 0 ("no
- * sample"). The server already treats a zero median/IQR as "not measured", never
- * as a fast/slow verdict, and sig 132 is never standalone, so an absent Windows
- * arm cannot produce a false positive.
+ * HK-VERIFIED(win-config-read): deferred pending KMDF IOCTL (see file header).
+ * Latency fields 0 = "not measured"; server never treats zero as a verdict.
  * ------------------------------------------------------------------------- */
 extern "C" void hk_dma_win_fill_tlp_latency(hk_dma_device_forensics *d) {
     if (d == nullptr) return;

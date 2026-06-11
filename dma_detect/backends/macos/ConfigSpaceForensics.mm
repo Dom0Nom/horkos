@@ -89,7 +89,13 @@ bool read_io_u32_prop(io_service_t dev, CFStringRef key, uint32_t *out) {
  * HK-UNCERTAIN(macos-bdf): the exact IOPCIFamily property key carrying the PCI
  * domain (segment) is not a stable documented contract across macOS releases;
  * single-segment systems (the common case) read domain 0. We do NOT guess a
- * multi-segment key — domain stays 0 unless a documented property is found. */
+ * multi-segment key — domain stays 0 unless a documented property is found.
+ * (docs: IOPCIDevice.h (IOKit/pci/) documents getBusNumber(), getDeviceNumber(),
+ * getFunctionNumber() as kernel-side kext methods. The "bus-number", "device-number",
+ * "function-number" IORegistry property strings are confirmed present on Intel Macs
+ * via open-source IOPCIFamily. No public segment/domain property key is documented
+ * in MacOSX.sdk through 15.5 — single-segment assumption (domain=0) is safe for
+ * common hardware; still needs on-box verification on multi-segment systems) */
 void fill_bdf(io_service_t dev, hk_pci_bdf *bdf) {
     std::memset(bdf, 0, sizeof(*bdf));
     uint32_t bus = 0, devnum = 0, fn = 0;
@@ -164,7 +170,11 @@ void scan_one_device(io_service_t dev, hk_dma_device_forensics *d) {
      * a confirmed, entitlement-free path. We do NOT guess the selector surface;
      * the DSN/ext-config arms are left absent and the record is marked so the
      * server treats those fields as "unknown", never "clean". Implement only once
-     * the IOPCIDevice::configRead32 reachability is confirmed on a real box. */
+     * the IOPCIDevice::configRead32 reachability is confirmed on a real box.
+     * (docs: IOKit/pci/IOPCIDevice.h documents extendedConfigRead32(IOByteCount)
+     * as a kernel-side IOPCIDevice virtual method (kext API only — NOT userspace).
+     * No public userspace user-client selector for extended config reads is
+     * documented in MacOSX.sdk through 15.5 — still needs on-box verification) */
     d->scan_error = HK_DMA_MACOS_EXTCFG_UNAVAILABLE;
 }
 

@@ -134,11 +134,20 @@ inline uint8_t fold_composite_interface_flags(uint8_t iface_class_mask, bool has
  * ratio observed/ceiling. A wireless dongle re-clocks the endpoint, so the comparison
  * is suppressed (HK_CAD_WIRELESS_EXEMPT) and the server reads no ceiling violation.
  *
- * HK-UNCERTAIN(binterval-ceiling): the exact "physically impossible" ceiling per USB
- * speed class (full vs high vs super) and the hub/receiver re-clock behavior is NOT
- * verified for every speed; the plan flags this (Risks §139). This computes a ratio
- * for the SERVER to threshold; the client never decides. Treat the ratio as a feature
- * only until validated against real 1000Hz/8000Hz mice on the Phase-3 box.
+ * HK-VERIFIED(binterval-ceiling): USB bInterval ceiling per speed class is fully
+ * documented in the USB specification:
+ *   - Full-speed (12 Mbps): bInterval is frame count in ms; max 255ms, min 1ms
+ *     (USB 2.0 spec §9.6.6, Table 9-13). At bInterval=1 → 1000 Hz ceiling.
+ *   - High-speed (480 Mbps): polling period = 2^(bInterval-1) × 125 µs
+ *     microframes. bInterval range 1–16; bInterval=1 → 125µs → 8000 Hz ceiling.
+ *   - SuperSpeed (5/10/20 Gbps): same 2^(bInterval-1) × 125 µs formula, range 1–16.
+ *   ref: USB 2.0 spec §9.6.6; USB 3.2 spec §9.6.6
+ *   ref (declared_hz_from_binterval impl): InputSensorWin.h applies this mapping.
+ * The wireless-dongle re-clock behavior (receiver clocks independently of bInterval)
+ * is an empirical characteristic, not a USB spec guarantee — it still needs on-box
+ * validation with real 1000Hz/8000Hz mice and RF dongles on the Phase-3 box.
+ * (docs: bInterval math per USB spec confirmed — still needs on-box ratio validation
+ * with actual high-speed / wireless devices before server threshold is tuned)
  * ------------------------------------------------------------------------- */
 inline void compute_cadence_ceiling(float observed_rate_hz, uint32_t ceiling_hz,
                                     bool wireless_dongle,

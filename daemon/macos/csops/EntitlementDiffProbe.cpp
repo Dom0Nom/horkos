@@ -42,7 +42,9 @@ extern "C" uint32_t cs_entitlement_added(uint32_t disk_mask, uint32_t kernel_mas
 /* HK-UNCERTAIN(csops-header): <sys/codesign.h> is not in the public SDK (plan
  * Risk 1); the CS_OPS_ENTITLEMENTS_BLOB / CS_OPS_DER_ENTITLEMENTS_BLOB op numbers
  * + blob form vary across macOS 12-15 and are SPI. No raw syscall is issued
- * against a guessed op number; the blob parse stays unimplemented below. */
+ * against a guessed op number; the blob parse stays unimplemented below.
+ * (docs: confirmed NOT in MacOSX.sdk/usr/include/sys/ through macOS 15.5 SDK —
+ * still needs on-box SPI verification of blob op numbers and format) */
 #include <unistd.h>
 #include <os/log.h>
 
@@ -74,7 +76,12 @@ extern "C" bool HkEntitlementDiffProbeSample(const HkCsProbeTarget *target,
      * requires SecCodeCopySigningInformation(kSecCSRequirementInformation) ->
      * kSecCodeInfoEntitlementsDict plist parsing into the HK_ENT_* mask. Both the
      * blob parse and the dict parse are unverified, so the probe does NOT guess
-     * them (guardrail #13). When wired:
+     * them (guardrail #13).
+     * (docs: kSecCodeInfoEntitlementsDict IS in the public SDK (Security/SecCode.h:
+     * line 399,482) and SecCodeCopySigningInformation is publicly declared; the
+     * csops blob op numbers and buffer format remain SPI — still needs on-box
+     * verification of CS_OPS_ENTITLEMENTS_BLOB constant and blob form on macOS 12-15)
+     * When wired:
      *   uint32_t disk_mask   = parse_disk_entitlements(target->bundle_path);
      *   uint32_t kernel_mask = parse_kernel_blob(target->pid);   // csops
      *   uint32_t added = cs_entitlement_added(disk_mask, kernel_mask,

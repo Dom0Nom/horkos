@@ -41,12 +41,16 @@ namespace {
  * To avoid depending on undocumented intra-struct offsets, we read the values through
  * the documented APIs that mirror them where possible and the raw page only for
  * InterruptTime/SystemTime, whose offsets are stable and public.
- * HK-UNCERTAIN(kusd-offsets): the precise KUSER_SHARED_DATA field offsets
- * (InterruptTime @ 0x08, SystemTime @ 0x14, TickCount @ 0x320 as KSYSTEM_TIME) are
- * public but version-sensitive in their high/low split; confirm against the target
- * build's ntddk KUSER_SHARED_DATA before trusting the raw reads. Until then we derive
- * shared_system_dt / shared_interrupt_dt from the documented KSYSTEM_TIME volatile-read
- * idiom below and leave the raw-offset path out. */
+ * HK-UNCERTAIN(kusd-offsets): the KUSER_SHARED_DATA base address (0x7FFE0000) and the
+ * KSYSTEM_TIME members (InterruptTime @ 0x008, SystemTime @ 0x014, TickCount @ 0x320)
+ * are documented in WDK ntddk.h/_KUSER_SHARED_DATA (learn.microsoft.com/windows-hardware/
+ * drivers/ddi/ntddk/ns-ntddk-kuser_shared_data). However, the exact High1/Low/High2 byte
+ * offsets within each KSYSTEM_TIME field are version-sensitive; confirm against the target
+ * build's KUSER_SHARED_DATA layout before trusting the raw reads. Until confirmed, we
+ * derive shared_system_dt / shared_interrupt_dt from the documented KSYSTEM_TIME volatile-
+ * read idiom below and leave the raw-offset path out.
+ * (docs: KUSER_SHARED_DATA base + field names documented; still needs on-box:
+ * confirm KSYSTEM_TIME High1/Low/High2 byte offsets on the target build) */
 constexpr ULONG_PTR KUSD_BASE = 0x7FFE0000u;
 
 /* KSYSTEM_TIME volatile-read idiom: re-read High1Time/Low/High2 until the two High

@@ -74,6 +74,10 @@ struct hk_bpf_hwbp_census_event {
  * emits NOTHING until the attach point + field paths are confirmed. The structure
  * (game-tgid scoping, foreign-owner gate, census record) is in place so activation is a
  * localized change once the BTF is validated.
+ * (docs: PERF_TYPE_BREAKPOINT == 5 is a UAPI constant from
+ * include/uapi/linux/perf_event.h; perf_event_attr.bp_addr is UAPI-stable per
+ * perf_event_open(2). The internal kernel struct perf_event and how to navigate
+ * creator-vs-target pid is NOT documented in public BPF API — still needs on-target)
  */
 SEC("raw_tracepoint/sys_enter")
 int hk_hwbp_census_probe(struct bpf_raw_tracepoint_args *ctx)

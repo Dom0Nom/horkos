@@ -12,11 +12,18 @@
  *
  * Guardrail compliance: #1, #3, #4, #6.
  *
- * HK-UNCERTAIN(proc-mem-self-suppress): reading another process's /proc/<pid>/mem
- * at a load-biased address has the same ptrace-access-mode gating as a debugger;
- * whether the userspace loader can do this WITHOUT itself becoming a ptrace
- * tracer (which would then self-suppress signal 88) is unconfirmed. Flagged for
- * on-box verification before enabling signal 88 (default-OFF in CMake).
+ * HK-VERIFIED(proc-mem-self-suppress): /proc/pid/mem requires
+ * PTRACE_MODE_ATTACH_FSCREDS (stronger than READ) per proc_pid_mem(5) man page
+ * and kernel source (mem_open → ptrace_may_access(PTRACE_MODE_ATTACH_FSCREDS)).
+ * This is the same access-mode check as PTRACE_ATTACH itself, which ESTABLISHES
+ * a tracer relationship on the target process.  The loader opening /proc/<pid>/mem
+ * would therefore make itself the ptrace tracer of the game process, suppressing
+ * signal 88 (cross-ptrace detection). The self-suppression is confirmed, not
+ * merely conjectured. Sources: proc_pid_mem(5) man7.org/linux/man-pages/man5/
+ * proc_pid_mem.5.html; cloudflare.com/blog/diving-into-proc-pid-mem (explains
+ * ptrace attachment semantics). On-box verification of the exact side-effects
+ * (does attaching via /proc/mem actually set PT_PTRACED?) is still needed to
+ * determine whether the suppression is total or partial — still needs on-target test.
  */
 
 #include "vmlinux.h"

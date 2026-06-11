@@ -186,16 +186,18 @@ BOOLEAN HkObRootOpenerSeen(PHK_DEVICE_CONTEXT Ctx, uint32_t source_pid)
  * (#66) lives in the PRE callback, where DuplicateHandleInformation.SourceProcessId
  * is available (the POST-op duplicate info struct has NO SourceProcessId).
  *
- * HK-UNCERTAIN(ob-postop-grantedaccess): the plan flags that OB_POST_OPERATION_
- * INFORMATION.GrantedAccess must be confirmed to be the FINAL mask after all
- * higher-altitude callbacks, and that registering a PostOperation does not change
- * pre-op dispatch. We read the documented field, but we do NOT diff it against a
- * pre-op-recorded mask via any undocumented per-handle keying — the pre-op already
- * LOGS OriginalDesiredAccess into hk_event_handle_open, and the server diffs
- * granted-vs-requested on its side. The HK_HND_GRANT_EXCEEDS_PREOP bit is therefore
- * NOT set here (it needs the per-handle pre/post pairing the plan flags as unverified)
- * — confirm the CallContext pairing on-box before computing the delta in-kernel. The
- * post-op never strips and never blocks (post-op cannot).
+ * HK-UNCERTAIN(ob-postop-grantedaccess): OB_POST_OPERATION_INFORMATION and the
+ * Parameters.CreateHandleInformation.GrantedAccess field are documented (WDK:
+ * learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_ob_post_operation_information).
+ * Whether it reflects the FINAL mask after all higher-altitude callbacks, and
+ * whether registering a PostOperation changes pre-op dispatch, must be confirmed
+ * on-box. The per-handle pre/post CallContext keying (needed to compute
+ * HK_HND_GRANT_EXCEEDS_PREOP in-kernel) is undocumented — the pre-op already LOGS
+ * OriginalDesiredAccess into hk_event_handle_open, and the server diffs
+ * granted-vs-requested on its side. HK_HND_GRANT_EXCEEDS_PREOP is NOT set here
+ * until the CallContext pairing is confirmed on-box. The post-op never strips and
+ * never blocks (post-op cannot). (docs: OB_POST_OPERATION_INFORMATION documented;
+ * still needs on-box: final-mask guarantee + CallContext pairing semantics)
  *
  * Emit is guarded by HK_VMWATCH_SCHEMA_READY: hk_event_handle_provenance is 24 bytes,
  * which EXCEEDS the frozen HK_EVENT_PAYLOAD_MAX (16). Until the Schema phase grows the

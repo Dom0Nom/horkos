@@ -65,17 +65,17 @@ TargetBacking QueryBacking(uint64_t target)
 int sense_present_vtable(const ModuleMap& module_map,
                          std::vector<hk_render_finding>& out)
 {
-    /* HK-UNCERTAIN(live-swapchain-acquisition): obtaining a callable
-     * IDXGISwapChain* / ID3D12CommandQueue* for the object the GAME already
-     * created — from the same process but outside the game's render code — is the
-     * unresolved integration question (plan R2). DXGIGetDebugInterface1 +
-     * IDXGIDebug::ReportLiveObjects enumerates COM objects but does NOT, per a
-     * documented contract, hand back an addressable vtable for an arbitrary live
-     * swapchain. The clean path is the GAME handing the sensor its device/swapchain
-     * pointer through the SDK at device-creation time. DO NOT guess the COM
-     * enumeration semantics. This sensor therefore lays out the read+classify
-     * sequence below but leaves the swapchain-pointer acquisition as a documented
-     * stub: with no SDK-provided pointer it emits nothing this tick.
+    /* HK-VERIFIED(live-swapchain-acquisition): IDXGIDebug::ReportLiveObjects
+     * is documented to output a debug text report of live DXGI objects to the debug
+     * output channel. It does NOT return COM interface pointers, vtable addresses, or
+     * any callable object reference to the caller.
+     * ref: https://learn.microsoft.com/windows/win32/api/dxgidebug/nf-dxgidebug-idxgidebug-reportliveobjects
+     * This confirms that COM enumeration via the DXGI debug interface is NOT a viable
+     * path to acquire a swapchain vtable; the SDK-provided pointer at device-creation
+     * time is the only supported path. DO NOT guess the COM enumeration semantics.
+     * This sensor therefore lays out the read+classify sequence below but leaves the
+     * swapchain-pointer acquisition as a documented stub: with no SDK-provided pointer
+     * it emits nothing this tick.
      *
      * Verified sequence once a swapchain/queue pointer `p` is supplied:
      *   1. vtbl = *(void***)p;  guard p and vtbl against null before deref.

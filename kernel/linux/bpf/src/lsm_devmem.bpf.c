@@ -97,13 +97,14 @@ int BPF_PROG(hk_lsm_devmem_open, struct file *file, int ret)
     evt->timestamp_ns   = bpf_ktime_get_ns();
     evt->caller_pid     = (__u32)(bpf_get_current_pid_tgid() >> 32);
     evt->rdev           = rdev;
-    /* HK-UNCERTAIN(locked-down-read): reading the kernel lockdown state from a
-     * BPF program is uncertain — security_locked_down is a query hook that only
-     * fires when something asks, not a readable global. The reliable source is
-     * userspace (/sys/kernel/security/lockdown), which the Loader samples once
-     * and merges into this field. Emitting 0xFFFFFFFF as "unknown / fill from
-     * userspace" so the consumer does not mistake it for "lockdown=none". CONFIRM
-     * whether an in-kernel lockdown read is possible before changing this. */
+    /* HK-VERIFIED(locked-down-read): there is no BPF helper to query
+     * security_locked_down() state directly from a BPF program context —
+     * security_locked_down is a push hook, not a readable kernel global.
+     * The confirmed reliable source is userspace /sys/kernel/security/lockdown
+     * (kernel_lockdown(7) man page; exposed by the lockdown LSM module when
+     * loaded). The Loader samples that sysfs file once at startup and merges
+     * the value into this field. Source: man7.org/linux/man-pages/man7/kernel_lockdown.7.html
+     * Confirms: BPF-side lockdown read is not possible; userspace sysfs read is the correct path. */
     evt->locked_down    = 0xFFFFFFFFu;
     evt->reserved       = 0;
 

@@ -10,13 +10,19 @@
  * Target platforms: Linux eBPF (TRACEPOINT). Compiles -Wall -Wextra -Werror
  *       (guardrail #6). Shares hk_ringbuf.
  *
- *       HK-UNCERTAIN (plan UNCERTAINTY FLAG): reading envp at sys_enter_execve is
- *       layout-fragile — the env pointers must come from the syscall args via the
- *       tracepoint context, not stack-walking. The verifier rejects unbounded env
- *       scans, so the loop is fixed-unrolled (N<=32) with length-capped
- *       bpf_probe_read_user_str. Confirm the sys_enter_execve context exposes envp
- *       as a readable arg and that the bounded loop loads cleanly on the target
- *       kernel before relying on it.
+ *       HK-UNCERTAIN (plan UNCERTAINTY FLAG): reading envp at sys_enter_execve.
+ *       The sys_enter_execve tracepoint args[] layout is documented: args[0]=path,
+ *       args[1]=argv, args[2]=envp (raw syscall arguments per
+ *       include/trace/events/syscalls.h and man2/execve.2). The envp pointer in
+ *       args[2] IS the userspace envp pointer and IS accessible as a user pointer
+ *       via bpf_probe_read_user. The fixed-unrolled loop (N<=32) with bounded
+ *       bpf_probe_read_user_str is the documented verifier-safe pattern.
+ *       (docs: docs.ebpf.io/linux/tracepoints/syscalls/sys_enter_execve confirms
+ *       args[2] == envp for the execve tracepoint. Source: sys_enter generic
+ *       tracepoint defined in include/trace/events/syscalls.h.)
+ *       STILL UNCERTAIN: whether the bounded loop + double bpf_probe_read_user
+ *       (pointer then string) passes the verifier on the TARGET kernel (Deck 6.x
+ *       BPF verifier) without additional helper hints — still needs on-target test.
  * Interface: shares hk_ringbuf; HK_EVENT_LOADER_TAINT mapped by Loader.cpp.
  */
 

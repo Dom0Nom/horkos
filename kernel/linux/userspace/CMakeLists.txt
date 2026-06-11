@@ -172,6 +172,7 @@ if(HORKOS_LINUX_EBPF_INJECTION)
     # an Ed25519/ECDSA backend (reuse attestation's verify, else libsodium). Not
     # linked here yet — OverlayAllowlist takes a SignatureVerifier seam the loader
     # supplies; the concrete crypto backend is wired in M5/ops.
+    # (docs: no public doc resolves this — server ops decision, still needs M5 wiring)
 endif()
 
 target_include_directories(hk_bpf_loader

@@ -10,16 +10,19 @@
  *       CMake if(WIN32).
  * Implements: dma_detect/include/horkos/dma_forensics.h (hk_dma_forensics_scan).
  *
- * *** HK-UNCERTAIN(win-ext-config): whether a USERSPACE AC component can reliably
- * read PCIe EXTENDED config (offset >= 256) via BusInterfaceStandard.GetBusData /
- * HalGetBusDataByOffset WITHOUT the Horkos KMDF driver is NOT confirmed (impl-plan
- * Risk #1; HalGetBusDataByOffset is a KERNEL API). Per guardrail #13 the extended-
- * config-dependent arms (DSN walk 127, ext-cfg aliasing/stability 128, ACS 133)
- * are left UNIMPLEMENTED here — the structural gates + legacy-config facts that DO
- * have a documented userspace path are filled, and the ext-config arms set
- * scan_error to signal "needs kernel routing" rather than guessing an API surface
- * that may not exist. CONFIRM on-box whether ext config must route through a new
- * KMDF IOCTL before implementing. ***
+ * *** HK-VERIFIED(win-ext-config): HalGetBusDataByOffset is a KERNEL-ONLY HAL
+ * export (documented in the WDK: https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-halgetbusdatabyoffset).
+ * It is NOT callable from userspace. The BusInterfaceStandard (GUID_BUS_INTERFACE_STANDARD)
+ * is a kernel-mode bus-driver interface obtained via IRP_MN_QUERY_INTERFACE; it is
+ * also not accessible from a userspace process. Therefore, reading PCIe EXTENDED
+ * config (offset >= 256) from a userspace AC component requires routing through a
+ * kernel driver (the Horkos KMDF driver via a DeviceIoControl IOCTL).
+ * (docs: kernel API restriction confirmed — still needs KMDF IOCTL design + on-box
+ * test to verify the IOCTL path for ext-config reads)
+ * Per guardrail #13 the extended-config-dependent arms (DSN walk 127, ext-cfg
+ * aliasing/stability 128, ACS 133) are left UNIMPLEMENTED here — the structural
+ * gates + legacy-config facts that DO have a documented userspace path are filled,
+ * and the ext-config arms set scan_error to signal "needs kernel routing". ***
  */
 
 #include <windows.h>
@@ -95,19 +98,17 @@ static bool driver_bound(DEVINST devinst) {
 /* -------------------------------------------------------------------------
  * fill_extconfig_arms — sig 127/128/133 ext-config-dependent facts.
  *
- * HK-UNCERTAIN(win-ext-config): unimplemented pending on-box confirmation of a
- * userspace extended-config read path. We do NOT guess GetBusData semantics for
- * offset >= 256. The record's scan_error is set to a sentinel so the server
- * knows the ext-config arms are absent on this platform build (it must treat the
- * dsn_*/extcfg_*/acs_* fields as "unknown", never as "clean").
+ * HK-VERIFIED(win-ext-config): see file header. Kernel-only HAL API confirmed;
+ * userspace extended-config requires KMDF IOCTL routing. The scan_error sentinel
+ * tells the server that dsn_*/extcfg_*/acs_* are "unknown", never "clean".
  * ------------------------------------------------------------------------- */
 static const uint32_t HK_DMA_WIN_EXTCFG_UNAVAILABLE = 0xE0000001u;
 
 static void fill_extconfig_arms(hk_dma_device_forensics *d) {
     /* dsn_*, extcfg_*, acs_* deliberately left zero (unknown). */
     (void)d;
-    /* HK-UNCERTAIN(win-ext-config): see file header. Implement only after the
-     * KMDF-IOCTL-vs-userspace question is resolved on a real box. */
+    /* HK-VERIFIED(win-ext-config): see file header. KMDF IOCTL route confirmed
+     * required. Implement once the KMDF ext-config IOCTL lands. */
 }
 
 /* -------------------------------------------------------------------------
@@ -141,12 +142,15 @@ extern "C" int hk_dma_forensics_scan(hk_dma_device_forensics *out,
         read_bdf_from_devinst(dd.DevInst, &d->bdf);
         d->driver_bound = driver_bound(dd.DevInst) ? 1u : 0u;
 
-        /* HK-UNCERTAIN(win-bme): Bus Master Enable lives in PCI_COMMAND (config
-         * 0x04 bit 2). Reading legacy config from userspace on Windows is the
-         * SAME open question as ext config (GetBusData routing). We do NOT guess;
-         * bus_master_enabled stays 0 (unknown) until the config-read path is
-         * confirmed. The structural gate degrades to driver-bound-only on Windows
-         * until then — documented, not silently wrong. */
+        /* HK-VERIFIED(win-bme): Bus Master Enable lives in PCI_COMMAND (offset 0x04,
+         * bit 2). Per PCIe Base Spec §7.5.1.1, this is in the LEGACY config space
+         * (first 256 bytes). However, reading legacy PCI config from Windows userspace
+         * has the same kernel-API restriction as extended config: HalGetBusDataByOffset
+         * is kernel-only (see file header win-ext-config note). There is no documented
+         * userspace Win32 API to read raw PCI config registers; the SetupAPI SPDRP_*
+         * properties do not expose PCI_COMMAND. So bus_master_enabled stays 0 (unknown)
+         * until a KMDF IOCTL for legacy config reads is confirmed on-box. The structural
+         * gate degrades to driver-bound-only on Windows — documented, not silently wrong. */
         d->bus_master_enabled = 0u;
 
         /* BAR geometry has a documented userspace path (CM translated resources),

@@ -86,7 +86,14 @@ extern "C" kern_return_t HKGameTaskGet(pid_t pid, HKGameTaskHandle *out) {
      * Per guardrail #13 we do NOT guess the entitlement/IRQL-equivalent contract.
      * Until verified on a SIP-disabled dev box (and the production entitlement is
      * confirmed), acquisition is a no-op returning KERN_NOT_SUPPORTED so the
-     * pollers run as designed but skip the privileged read. When un-stubbing:
+     * pollers run as designed but skip the privileged read.
+     * (docs: Apple developer docs (developer.apple.com/forums/thread/734461 and
+     * developer.apple.com/documentation/bundleresources/entitlements/
+     * com.apple.security.cs.debugger) confirm task_for_pid requires BOTH
+     * com.apple.security.cs.debugger on the caller AND com.apple.security.
+     * get-task-allow on the target. An ES client does NOT automatically hold
+     * these. Still needs on-box confirmation + Apple approval for non-tool use.)
+     * When un-stubbing:
      *   1. resolve the port (task_for_pid or the granted equivalent),
      *   2. validate_task_audit_token(task, pid),
      *   3. on success set out->task / out->valid = true.

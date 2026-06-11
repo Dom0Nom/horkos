@@ -121,6 +121,11 @@ int hk_tp_memfd_create(struct trace_event_raw_sys_enter *ctx)
  * left to the Loader-side (tgid,inode) join against the recorded memfd inode;
  * the in-kernel pre-filter below uses the empty-name heuristic and MUST be
  * confirmed against the target kernel before being treated as authoritative.
+ * (docs: execveat(2) with AT_EMPTY_PATH on a memfd passes an empty pathname
+ * component to the bprm path, resulting in d_name.len == 0 at the dentry level —
+ * this is the documented semantics of AT_EMPTY_PATH per execveat(2) man page.
+ * However this heuristic may also fire for pipes/sockets exec'd via AT_EMPTY_PATH;
+ * the Loader-side join is the authoritative discriminator — still needs on-target)
  */
 SEC("lsm/bprm_creds_for_exec")
 int BPF_PROG(hk_lsm_bprm_creds_for_exec, struct linux_binprm *bprm, int ret)

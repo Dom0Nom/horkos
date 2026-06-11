@@ -8,11 +8,18 @@
  *       READ-ONLY: MSR/CPUID reads only.
  * Target platforms: Windows kernel (KMDF). Builds only with the WDK.
  *
- *       HK-UNCERTAIN (plan UNCERTAINTY FLAG): that a __try/__except around
- *       __readmsr reliably catches the #GP on bare metal at the intended IRQL
- *       (and does not itself bugcheck) must be confirmed on real hardware
+ *       HK-UNCERTAIN (plan UNCERTAINTY FLAG): __try/__except in kernel mode catches
+ *       hardware exceptions (including #GP from RDMSR) at IRQL <= APC_LEVEL when
+ *       structured exception handling is active — this is documented WDK behavior
+ *       (learn.microsoft.com/windows-hardware/drivers/kernel/structured-exception-
+ *       handling). At PASSIVE_LEVEL (as asserted below) SEH is fully available.
+ *       However, that a __try/__except around __readmsr reliably catches the #GP on
+ *       bare metal without a bugcheck (as opposed to a hypervisor guest where the
+ *       hypervisor handles the #GP) must be confirmed on real hardware
  *       (admin@192.168.178.80). The MSR numbers are public TLFS. This runs at
  *       PASSIVE_LEVEL from the sampling caller; never at raised IRQL.
+ *       (docs: kernel SEH at PASSIVE_LEVEL documented; still needs on-box: confirm
+ *       __readmsr #GP is caught by SEH on bare metal without a bugcheck)
  * Interface: implements HkHvSyntheticMsrSample (horkos_kernel.h); emits via HkRingEmit.
  */
 

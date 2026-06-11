@@ -59,10 +59,13 @@ extern "C" int hv_sample_tlfs_leaves(hv_tlfs_leaves* out)
      * members wrapping CPUID leaves 0x40000000..0x40000005 -- redundant with the
      * CPUID reads above; not useful for os_hv_present here.
      *
-     * HK-UNCERTAIN (call site): info-class numbers and struct shapes are confirmed;
-     * the actual NtQuerySystemInformation call has not been validated on-box across
-     * SKUs and virtualization configurations. Output fields and failure modes need
-     * on-box verification before relying on SecureKernelRunning for signal 40. */
+     * HK-UNCERTAIN (call site): info-class numbers and struct shapes are confirmed
+     * (see HK-VERIFIED block above); the actual NtQuerySystemInformation call has
+     * not been validated on-box across SKUs and virtualization configurations.
+     * Output fields and failure modes need on-box verification before relying on
+     * SecureKernelRunning for signal 40.
+     * (docs: info-class 0x9F/0xA5 and struct shapes documented — still needs on-box:
+     * NtQuerySystemInformation call validation across SKU + HV configurations) */
     out->os_hv_present = out->cpuid1_ecx31_hv; /* best available without the query. */
     out->os_vbs_running = 0;
 

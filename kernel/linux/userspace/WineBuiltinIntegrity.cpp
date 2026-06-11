@@ -17,6 +17,8 @@
  * dist manifest being produced (a data dependency flagged in the impl-plan Risks).
  * The classifier here is the testable decision core; the maps-walk seam feeds it
  * ObservedVma rows. Wire the live walk when the manifest tooling lands.
+ * (docs: /proc/pid/maps format and PTRACE_MODE_READ access confirmed in
+ * proc_pid_maps(5) — still needs Proton dist manifest tooling and on-target wiring)
  */
 
 #include "WineBuiltinIntegrity.h"

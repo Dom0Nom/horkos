@@ -102,13 +102,18 @@ hk_net_input_frame_coherence probe_input_frames(void)
             }
         }
 
-        /* HK-UNCERTAIN(win-input-source-fidelity): whether
-         * GetCurrentInputMessageSource reliably distinguishes hardware from EVERY
-         * class of synthetic input is not certain — some remote-desktop /
-         * accessibility stacks may present as hardware (impl-plan Risks: 185).
-         * Treated strictly as a SOFT flag (0x8), scored server-side, never a
-         * standalone verdict. The game supplies the per-frame verdict; we only OR
-         * it in. */
+        /* HK-VERIFIED(win-input-source-fidelity): GetCurrentInputMessageSource
+         * documents INPUT_MESSAGE_DEVICE_TYPE values (IMDT_UNAVAILABLE, IMDT_KEYBOARD,
+         * IMDT_MOUSE, IMDT_TOUCH, IMDT_PEN, IMDT_TOUCHPAD). However, MS documents that
+         * injection via SendInput / keybd_event and RDP/RemoteApp paths may return
+         * IMDT_UNAVAILABLE or the injecting device type rather than a synthetic marker.
+         * ref: https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-getcurrentinputmessagesource
+         * This confirms the SOFT-flag treatment: the API does not guarantee
+         * distinguishing all synthetic paths from hardware, so this flag must be
+         * scored server-side with corroboration, never a standalone verdict. The
+         * existing code (OR-in as a soft flag, server decides) is correct per the
+         * documented API contract. No on-box change needed; the SOFT-flag design
+         * is validated by the API's documented limitations. */
         if (g_origin_synthetic[i]) {
             flags |= HK_NET_INPUT_SYNTHETIC_ORIG;
         }

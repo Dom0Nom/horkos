@@ -95,6 +95,12 @@ int hk_tp_setns(struct trace_event_raw_sys_enter *ctx)
  * arg layout against the target kernel BTF, then implement this arm to populate
  * target_ns_inode in-kernel. Until then the sys_enter_setns arm above carries the
  * signal and the loader fills the inode from /proc.
+ * (docs: commit_nsset() is present in kernel/nsproxy.c (torvalds/linux master)
+ * and takes a struct nsset* argument; struct nsset contains the new nsproxy.
+ * However it is a static internal function — whether it appears in the target
+ * kernel BTF/kallsyms depends on the specific Deck kernel build. validate_nsset
+ * also in kernel/nsproxy.c. Neither is a stable exported symbol. Confirmed:
+ * commit_nsset exists on mainline but on-target kprobe-ability check required)
  *
  * Intended shape once confirmed (DO NOT enable without on-box verification):
  *   SEC("kprobe/<confirmed_symbol>")

@@ -42,10 +42,13 @@ std::string ReadFileBest(const std::string& path) {
  * HK-UNCERTAIN(ko-buildid-scan): scanning the whole .ko for the GNU note
  * signature can in principle match an unrelated embedded "GNU\0" string. The
  * correct extraction walks the ELF section headers to the .note.gnu.build-id
- * SHT_NOTE and reads the descriptor there. Confirm against real DKMS .ko files
- * on-box; until then the scan below is conservative (a wrong match yields a
- * build-id that simply won't equal the sysfs note → a benign extra report, not a
- * crash). The sysfs side (ParseBuildIdNote) IS exact. */
+ * SHT_NOTE and reads the descriptor there. The NT_GNU_BUILD_ID note type (3) and
+ * the 4-byte "GNU\0" name are documented in the GNU build-id spec and the ELF
+ * note format (ELF spec §5, Nhdr layout: namesz/descsz/type + name + desc), so
+ * the note structure itself is public. Whether a real DKMS .ko's only GNU note
+ * is the build-id (no other "GNU\0" embedded strings) is an on-box question.
+ * (docs: NT_GNU_BUILD_ID format confirmed from ELF spec — still needs on-target
+ * .ko sampling to confirm absence of false-match strings) */
 std::vector<uint8_t> ScanKoBuildId(const std::string& ko_bytes) {
     static const char kName[] = {'G', 'U', '\0'};   /* "GNU" minus leading G to
                                                         widen the search window */
@@ -176,11 +179,14 @@ int hk_sensor_module_disk(const HkSymbolMap* map, HkEventSink sink) {
             if (fn.size() > dot + 3) {
                 /* compressed .ko.gz/.xz/.zst — decompression not done here. */
                 /* HK-UNCERTAIN(compressed-ko): distros increasingly ship
-                 * .ko.zst/.ko.xz. Build-id extraction then needs the matching
-                 * decompressor. Treat a compressed-only backing as "found" so we
-                 * do NOT false-positive NO_DISK_KO, but skip the build-id compare
-                 * (no mismatch can be asserted). Confirm the decompress path
-                 * before enabling the compare on compressed modules. */
+                 * .ko.zst/.ko.xz (Fedora, Ubuntu 22.04+, Steam Deck). Build-id
+                 * extraction then needs the matching decompressor (zstd, liblzma).
+                 * No public kernel doc specifies which compression format a given
+                 * distro uses; it is a per-distro packaging decision. Treat a
+                 * compressed-only backing as "found" so we do NOT false-positive
+                 * NO_DISK_KO, but skip the build-id compare (no mismatch can be
+                 * asserted). (docs: .ko.zst common on Fedora/Ubuntu 22.04+ — still
+                 * needs on-target decompressor path confirmed per distro) */
                 disk_found = true;
                 disk_id.clear();
                 continue;

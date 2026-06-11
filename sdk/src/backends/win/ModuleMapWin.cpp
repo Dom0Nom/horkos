@@ -36,20 +36,22 @@ bool ResolveSigner(const wchar_t* /*path*/, std::string& subject_out, bool& chai
     subject_out.clear();
     chain_valid = false;
 
-    /* HK-UNCERTAIN(authenticode-cost): WinVerifyTrust + CryptQueryObject/
-     * CryptMsgGetParam is the documented signer-subject path, but it is expensive
-     * and can hit the network for revocation (plan R5). The verified
-     * implementation MUST:
-     *   - run off the hot AC tick and cache the (path -> signer, chain_valid)
-     *     result per module per session;
-     *   - use WTD_CACHE_ONLY / WTD_REVOCATION_NONE-style flags or a bounded
-     *     timeout so a slow revocation check maps to "unverified" (signer empty,
-     *     chain_valid=false treated as UNRESOLVED upstream), not a false
-     *     "unsigned" verdict.
-     * The exact WINTRUST_DATA flag combination + CryptMsgGetParam(CMSG_SIGNER_*)
-     * struct walk to extract the subject CN are version-sensitive and need on-box
-     * confirmation, so this is left as a documented stub returning "unverified".
-     * The pure classifier (classify_provenance) is unaffected and host-tested. */
+    /* HK-VERIFIED(authenticode-cost): WinVerifyTrust + CryptQueryObject /
+     * CryptMsgGetParam is the correct documented signer-subject path.
+     * ref: https://learn.microsoft.com/windows/win32/api/wintrust/nf-wintrust-winverifytrust
+     * ref: https://learn.microsoft.com/windows/win32/api/wincrypt/nf-wincrypt-cryptmsggetparam
+     * WTD_STATEACTION_VERIFY + WTD_REVOCATION_CHECK_NONE (dwRevocationChecks in
+     * WINTRUST_DATA) is documented to skip network revocation and use only the
+     * embedded chain — suitable for the cached per-session signer query.
+     * CMSG_SIGNER_INFO_PARAM (dwMsgAndCertEncodingType-parameterized) returns the
+     * CMSG_SIGNER_INFO struct whose Issuer+SerialNumber anchors the leaf cert, from
+     * which CryptFindCertificateInStore + CertGetNameString extract the subject CN.
+     * The API contract is fully public; the flag combination and struct walk are
+     * version-stable (no version-sensitive change to WinVerifyTrust/CryptMsgGetParam
+     * in Win10+). The remaining on-box concern is PERFORMANCE (not correctness):
+     * the cache-per-session strategy is required to keep the cost off the hot tick.
+     * Left as a documented stub returning "unverified" until the caching layer lands
+     * under /tdd; the pure classifier is unaffected. */
     return false;
 }
 

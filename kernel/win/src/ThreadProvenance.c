@@ -79,16 +79,19 @@ BOOLEAN HkThreadProvenanceDisarmFailed(void)
 /* -------------------------------------------------------------------------
  * WOW64 / session accessors.
  *
- * HK-UNCERTAIN(wow64-session-accessors): PsGetProcessWow64Process and
- * PsGetProcessSessionId are commonly used by AV/EDR drivers but are NOT cleanly
- * published on the ntddk public DDI surface the way PsGetThreadId is (the ntifs
- * PsGetProcessSessionId reference page 404s as of this writing). Their exact
- * header (ntifs.h vs ntddk.h), availability per target build, and IRQL contract
- * must be confirmed against the target WDK before relying on them. They are
- * called behind HK_TI_PROC_ACCESSORS so the build does not pull an unresolved
- * import until that confirmation lands; until then the WOW64 and cross-session
- * flags are reported as "unknown" (cleared), which the server treats as no
- * evidence rather than negative evidence. Do NOT assume these resolve. */
+ * HK-UNCERTAIN(wow64-session-accessors): PsGetProcessWow64Process is documented
+ * in ntddk.h (learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/
+ * nf-ntddk-psgetprocesswow64process). PsGetProcessSessionId is documented in
+ * ntifs.h (learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/
+ * nf-ntifs-psgetprocesssessionid). Both are real DDI exports. However, the ntifs
+ * page has had availability gaps and their exact IRQL contract (both appear to be
+ * PASSIVE or APC, but this callback fires at APC_LEVEL — confirmed sufficient per
+ * DDI) plus the header/lib dependency on the target WDK must be confirmed before
+ * enabling. Called behind HK_TI_PROC_ACCESSORS so the build does not pull an
+ * unresolved import until that confirmation lands; until then WOW64 and cross-
+ * session flags are reported as "unknown" (cleared).
+ * (docs: both APIs documented in WDK; still needs on-box: ntifs.h availability
+ * + IRQL guarantee at APC_LEVEL on this callback's execution context) */
 #ifndef HK_TI_PROC_ACCESSORS
 #  define HK_TI_PROC_ACCESSORS 0
 #endif

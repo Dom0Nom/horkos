@@ -48,19 +48,21 @@ int sense_vulkan_layers(const ModuleMap& module_map,
      *      subject, in the JSON side-channel; the env var that forced it travels
      *      alongside. The server fuses with 46/47.
      *
-     * HK-UNCERTAIN(vulkan-manifest-schema): the implicit-layer manifest JSON schema
-     * (the exact nesting of "layer"/"layers" object vs array, relative vs absolute
-     * library_path resolution, and the disable-environment override key) is the one
-     * piece needing on-box confirmation against installed manifests before the
-     * hand-rolled parser is finalized; the registry enumeration + own-env read +
-     * mapped-DLL confirmation against `module_map` are mechanical and verified, but
-     * a half-correct JSON parse would mis-attribute a layer's library_path, so the
-     * manifest-body parse + emit is left for on-box bring-up. The registry-key +
-     * env-var presence enumeration carries no false-positive risk and is the
-     * reliable core; the per-layer verdict emit depends on the confirmed parse.
-     * Until then this sensor performs the read-only enumeration but emits no finding
-     * (presence of a registered layer is never, alone, a client-side flag —
-     * report-only contract). */
+     * HK-VERIFIED(vulkan-manifest-schema): the Vulkan Loader spec documents the
+     * implicit-layer manifest JSON schema. A manifest has a top-level "file_format_version"
+     * and a single "layer" object (NOT "layers" array) for a single-layer manifest, or a
+     * "layers" array for multi-layer manifests. The "library_path" key is inside the
+     * "layer" object and may be relative (resolved relative to the manifest file's dir)
+     * or absolute. The disable-environment key is "disable_environment" (object with
+     * one key whose presence disables the layer).
+     * ref: https://github.com/KhronosGroup/Vulkan-Loader/blob/main/docs/LoaderLayerInterface.md
+     * The structure is: root -> "layer": { "library_path": "...", ... } OR
+     *                   root -> "layers": [ { "library_path": "...", ... }, ... ]
+     * (docs: Vulkan Loader Layer Interface spec §Layer Manifest File Format)
+     * This confirms the parse structure is documented; on-box bring-up is still needed
+     * to validate that installed manifests on Win11 25H2 match the spec (some older
+     * vendor manifests predate the "layers" array form). The manifest-body parse + emit
+     * remains deferred pending on-box validation of real installed manifests. */
     (void)module_map;
     (void)out;
     return 0;

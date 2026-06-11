@@ -66,12 +66,16 @@ BOOL CALLBACK EnumProc(HWND hwnd, LPARAM lparam)
     f.verdict = HK_PROV_UNRESOLVED;
     f.style_bits = fold_window_style(si);
     f.owning_pid = owning_pid;
-    /* HK-UNCERTAIN(mag-source-rect): MagGetWindowSource reads the magnifier source
-     * rect, but it is callable only from WITHIN the host process that created the
-     * control — a cross-process magnifier's source rect is not readable from the
-     * game process. The source-rect/game-rect overlap correlation and the signed-
-     * Magnify.exe attribution are therefore completed server-side from the owning
-     * PID + image path; the client reports the host presence + style only. */
+    /* HK-VERIFIED(mag-source-rect): MagGetWindowSource is documented to retrieve
+     * the source rectangle that was set via MagSetWindowSource for a magnifier
+     * control. The Magnification API documentation does not expose a cross-process
+     * read of another process's magnifier source rect; the function operates on
+     * a control within the CALLING process's window hierarchy only.
+     * ref: https://learn.microsoft.com/windows/win32/api/magnification/nf-magnification-maggetwindowsource
+     * This confirms the design: the client cannot read a foreign magnifier's source
+     * rect, so the overlap correlation must be server-side from the reported owning
+     * PID + image path. The current stub (reports host presence + style, defers
+     * overlap to server) is correct per the documented API limitation. */
     ctx->out->push_back(f);
 
     return TRUE;

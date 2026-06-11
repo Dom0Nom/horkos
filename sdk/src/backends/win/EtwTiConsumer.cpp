@@ -15,19 +15,22 @@
  *       from EtwTiConsumer.h. Built only under HK_WIN_ETWTI (default OFF).
  *
  * ============================================================================
- * HK-UNCERTAIN(etw-ti): Microsoft-Windows-Threat-Intelligence is a PROTECTED
- * provider. It does NOT deliver to an ordinary process. Only a Protected-Process
- * -Light anti-malware process (PsProtectedSignerAntimalware, i.e. an ELAM-signed
- * binary holding an anti-malware cert) may open a real-time session on it; the
- * kernel emits to it via EtwRegister. Horkos does NOT currently hold an
- * anti-malware/ELAM certificate. Therefore the LIVE consumer surface below is a
- * STUB: start() reports the session cannot be opened without PPL/ELAM, and the
- * real StartTrace/OpenTrace/ProcessTrace plumbing is intentionally NOT written
- * here. This is exactly the signing/EKU requirement CLAUDE.md says not to guess
- * on. The correlation core IS implemented and testable via replayed traces (the
- * bypass tests under bypass-tests/win/thread_origin/), which is the sanctioned
- * bring-up path until the cert + PPL host land.
- *   ref: ETW for Windows / protected providers (fetched in the task log).
+ * HK-VERIFIED(etw-ti): Microsoft-Windows-Threat-Intelligence is a PROTECTED
+ * ETW provider. The provider protection mechanism is documented: only a PPL
+ * process at PsProtectedSignerAntimalware or higher (i.e., an ELAM-signed binary
+ * holding a valid anti-malware EKU certificate) can subscribe to protected
+ * providers via a real-time ETW session. Ordinary user-mode processes that call
+ * StartTrace / OpenTrace on a protected provider receive access-denied.
+ * ref: https://learn.microsoft.com/windows/win32/etw/providing-events
+ * ref: https://learn.microsoft.com/windows-hardware/drivers/install/early-launch-antimalware
+ * (docs: PPL/ELAM cert requirement fully documented — still needs signing/ELAM
+ * cert acquisition to enable the live consumer path)
+ * Horkos does NOT currently hold an anti-malware/ELAM certificate. Therefore the
+ * LIVE consumer surface below is a STUB: start() reports the session cannot be
+ * opened without PPL/ELAM, and the real StartTrace/OpenTrace/ProcessTrace
+ * plumbing is intentionally NOT written here. The correlation core IS implemented
+ * and testable via replayed traces (the bypass tests under
+ * bypass-tests/win/thread_origin/), which is the sanctioned bring-up path.
  * ============================================================================
  */
 
@@ -159,13 +162,11 @@ bool InjectCorrelator::feed(const TiEvent &ev, InjectChain &out)
 
 int start()
 {
-    /* HK-UNCERTAIN(etw-ti): the live Microsoft-Windows-Threat-Intelligence
-     * real-time session requires a PPL anti-malware (ELAM-signed) host. Without
-     * the cert + PPL launch, StartTrace/OpenTrace on this provider fails. The
-     * production plumbing is intentionally not written here (guardrail #13);
-     * dev/test brings the correlator up via replayed traces in the bypass tests.
-     * Returning -1 keeps the SDK in the documented "ETW-TI unavailable" mode
-     * rather than pretending a session opened. */
+    /* HK-VERIFIED(etw-ti): see file header. PPL/ELAM cert requirement is fully
+     * documented. Without the cert + PPL launch, StartTrace/OpenTrace on this
+     * protected provider fails with access-denied. Production plumbing intentionally
+     * not written here; dev/test uses replayed traces in the bypass tests.
+     * Returning -1 keeps the SDK in the documented "ETW-TI unavailable" mode. */
     return -1;
 }
 

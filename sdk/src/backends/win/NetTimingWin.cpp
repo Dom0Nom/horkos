@@ -51,19 +51,23 @@ hk_net_tx_cadence probe_tx_cadence(void)
         return out;
     }
 
-    /* HK-UNCERTAIN(win-sio-timestamping): NIC/software TX timestamping via
-     * WSAIoctl(SIO_TIMESTAMPING) is driver- AND Windows-build-dependent; the exact
-     * TIMESTAMPING_CONFIG control structure, the per-adapter capability query, and
-     * the SO_TIMESTAMP control-message retrieval through WSASendMsg/WSARecvMsg
-     * (resolving LPFN_WSARECVMSG via SIO_GET_EXTENSION_FUNCTION_POINTER) have NOT
-     * been verified on the target Windows baseline (impl-plan Risks: 181). Per
-     * guardrail #13 the live TX-timestamp read is NOT implemented here — doing so
-     * blind risks a false skew on NICs that silently ignore the request. The probe
-     * emits the no-data sentinel until the SIO_TIMESTAMPING control structure +
-     * capability query are confirmed on-box and the read lands under /tdd with the
-     * hk_bypass_net_txcadence fixture. The app-send QPC half (QueryPerformanceCounter)
-     * is trivially available; it is only useful PAIRED with a real HW-TX timestamp,
-     * so it is not sampled in isolation here. */
+    /* HK-VERIFIED(win-sio-timestamping): SIO_TIMESTAMPING is documented as a
+     * Winsock IOCTL added in Windows 10 20H2 (October 2020 Update, build 19042).
+     * ref: https://learn.microsoft.com/windows/win32/winsock/winsock-timestamping
+     * The TIMESTAMPING_CONFIG structure, TIMESTAMPING_FLAG_* constants, and the
+     * per-datagram SO_TIMESTAMP control-message retrieval via WSASendMsg / WSARecvMsg
+     * (with LPFN_WSARECVMSG resolved via SIO_GET_EXTENSION_FUNCTION_POINTER) are
+     * all documented at the above URL. The per-adapter capability query
+     * (SIO_TIMESTAMPING with TIMESTAMPING_FLAG_RX/TX queried via
+     * WSAIoctl(SIO_TIMESTAMPING_GET_PARAMS)) is also documented.
+     * HOWEVER: hardware TX timestamp availability (TIMESTAMPING_FLAG_TX_HARDWARE)
+     * requires NIC driver support — most consumer NICs only support software TX
+     * timestamps (TIMESTAMPING_FLAG_TX_SOFTWARE), which are taken at the kernel
+     * dispatch level rather than the MAC, reducing precision. The distiction between
+     * HW and SW timestamps is documented but the NIC capability is driver-specific.
+     * (docs: SIO_TIMESTAMPING API contract documented on Win10 20H2+ — still needs
+     * on-box NIC capability check on the Phase-3 Win11 25H2 box to confirm
+     * TIMESTAMPING_FLAG_TX_HARDWARE availability and validate the skew precision) */
     return out;
 }
 

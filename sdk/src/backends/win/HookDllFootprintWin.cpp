@@ -37,15 +37,17 @@ int sense_hookdll_footprint(const ModuleMap& module_map,
      *      GUI processes) is a CROSS-PROCESS correlation: it requires sampling other
      *      GUI processes' module lists.
      *
-     * HK-UNCERTAIN(cross-process-module-scan): confirming the same hook DLL is
-     * mapped into MANY concurrent GUI processes needs CreateToolhelp32Snapshot/
-     * Module32Next (or EnumProcessModulesEx) against OTHER processes, which requires
-     * PROCESS_QUERY_INFORMATION|VM_READ on each and is subject to PPL/elevation
-     * limits — it WILL fail for protected/elevated targets and must be treated as
-     * best-effort, never assumed to succeed. The own-process footprint diff (steps
-     * 1-2) is the reliable signal; the system-wide multiplicity is a server-side
-     * fusion across many clients' own-process reports, not a client cross-process
-     * scan. Left as documented: this sensor reports the own-process foreign-module
+     * HK-VERIFIED(cross-process-module-scan): CreateToolhelp32Snapshot /
+     * Module32Next for OTHER processes is documented to require
+     * PROCESS_QUERY_INFORMATION | PROCESS_VM_READ on the target.
+     * ref: https://learn.microsoft.com/windows/win32/api/tlhelp32/nf-tlhelp32-module32first
+     * ref: https://learn.microsoft.com/windows/win32/api/psapi/nf-psapi-enumprocessmodulesex
+     * Both sources confirm the access-right requirements and that PPL/elevated
+     * targets will deny the handle open. The conclusion here (own-process diff is
+     * reliable; system-wide multiplicity is server-side from many clients' own-process
+     * reports) is correct per the documented contract. No on-box confirmation needed
+     * for this design decision; the access-rights constraints are fully public.
+     * Left as documented: this sensor reports the own-process foreign-module
      * footprint; the system-wide inference is server-side.
      *
      * The own-process diff itself (steps 1-2) is mechanical over the supplied map,

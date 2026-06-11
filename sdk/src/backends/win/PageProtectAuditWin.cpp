@@ -91,15 +91,19 @@ void AppendModuleSections(HMODULE mod, std::vector<SectionRange> &out)
 } // namespace
 
 /* -------------------------------------------------------------------------
- * HK-UNCERTAIN(self-vs-foreign-process-walk): the page-protection comparison itself
- * is fully documented (VirtualQueryEx + in-memory PE headers, both public). What is
- * NOT settled here is enumerating the FOREIGN game process's loaded module list to
- * seed the section cache when the AC samples a process other than itself: the robust
- * route (EnumProcessModulesEx / a remote PE-header read) needs an on-box pass for
- * WOW64 + module-churn races. For the in-process case (the AC sampling the module
- * it is loaded into) AppendModuleSections above is exact and used directly. The
- * cross-process module enumeration is the documented stub below; the protection
+ * HK-UNCERTAIN(self-vs-foreign-process-walk): VirtualQueryEx and in-memory PE
+ * header access for the own process are fully documented. EnumProcessModulesEx
+ * is also documented (requires PROCESS_QUERY_INFORMATION | PROCESS_VM_READ on the
+ * target; ref: https://learn.microsoft.com/windows/win32/api/psapi/nf-psapi-enumprocessmodulesex).
+ * The LIST_MODULES_32BIT / LIST_MODULES_64BIT flags for WOW64 targets are documented
+ * in the same MSDN page. What is NOT settled is the on-box behavior in the presence
+ * of concurrent module loads (churn between EnumProcessModulesEx and the PE-header
+ * read) on the target Win11 25H2 build, and the correct WOW64 thunk-page handling
+ * for 32-bit modules. For the in-process case AppendModuleSections above is exact.
+ * The cross-process module enumeration is the documented stub below; the protection
  * compare + the pure cores are real.
+ * (docs: EnumProcessModulesEx access rights and WOW64 flags documented — still needs
+ * on-box validation of module-churn + WOW64 section-seeding behavior)
  * ------------------------------------------------------------------------- */
 int sample_page_protect(uint32_t game_pid)
 {

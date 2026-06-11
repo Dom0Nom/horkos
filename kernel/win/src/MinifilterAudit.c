@@ -30,14 +30,21 @@ void HkMinifilterAudit(PHK_DEVICE_CONTEXT Ctx)
     UNREFERENCED_PARAMETER(Ctx);
     NT_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
-    /* HK-UNCERTAIN(flt-object-lifetime): the plan flags (Risk 2) that the exact
-     * refcount / dereference semantics of FltEnumerateFilters /
-     * FltEnumerateInstances returned objects are unverified, and whether
-     * enumeration needs our OWN FltRegisterFilter handle. A missed
-     * FltObjectDereference LEAKS each enumerated PFLT_FILTER/PFLT_INSTANCE; a
-     * double-deref is a UAF/bugcheck. Per guardrail #13 the live enumeration is
-     * left UNIMPLEMENTED. The intended body, ready once the lifetime is confirmed
-     * against the WDK docs on-box:
+    /* HK-UNCERTAIN(flt-object-lifetime): FltEnumerateFilters and FltObjectDereference
+     * are documented in the WDK FltKernel reference (learn.microsoft.com/windows-
+     * hardware/drivers/ddi/fltkernel/nf-fltkernel-fltenumeratefilters and
+     * nf-fltkernel-fltobjectdereference). The docs confirm each returned PFLT_FILTER
+     * must be released via FltObjectDereference exactly once. However, whether
+     * FltEnumerateFilters requires our OWN FltRegisterFilter handle (i.e. the driver
+     * must itself be a registered minifilter to call it) is not clearly stated and
+     * must be confirmed on-box. A missed FltObjectDereference leaks; a double-deref
+     * is a UAF/bugcheck. Per guardrail #13 the live enumeration is left UNIMPLEMENTED.
+     * The intended body, ready once the lifetime + registration requirement are
+     * confirmed against the WDK docs on-box:
+     * (docs: FltEnumerateFilters + FltObjectDereference documented; still needs on-box:
+     * whether our own FltRegisterFilter is required to call FltEnumerateFilters)
+     *
+     * The intended body once the lifetime + registration requirement are confirmed:
      *
      *   ULONG n = 0;
      *   FltEnumerateFilters(NULL, 0, &n);                 // size probe
@@ -50,10 +57,10 @@ void HkMinifilterAudit(PHK_DEVICE_CONTEXT Ctx)
      *           // FLT_OPERATION_REGISTRATION pre/post pointer, range-check it:
      *           //   if not in [filterBase, filterBase+size) and not in any module:
      *           //       HkIntegrityEmit(28, HK_INTEGRITY_FLT_OUT_OF_IMAGE, masked_offset);
-     *           FltObjectDereference(filters[i]);          // EXACTLY once — verify!
+     *           FltObjectDereference(filters[i]);          // EXACTLY once -- verify!
      *   }
      *
-     * Do NOT enable the enumeration until the deref contract is verified — getting
+     * Do NOT enable the enumeration until the deref contract is verified -- getting
      * it wrong leaks pool or bugchecks. This sensor ships DEFAULT OFF. */
     (void)0;
 }

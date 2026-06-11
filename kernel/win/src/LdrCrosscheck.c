@@ -17,9 +17,13 @@
 #include "mem_logic_image.h"
 
 /* PsGetProcessPeb returns the target PEB pointer; it is a long-standing ntoskrnl
- * export. HK-UNCERTAIN: it is only semi-documented — confirm availability/proto
- * for the target build on the box. Declared here (guardrail #2: no proprietary
- * header) matching the public-doc shape. */
+ * export. HK-UNCERTAIN: the WDK DDI listing for PsGetProcessPeb exists in ntddk.h
+ * but the docs page has had gaps (the ntifs variant notes refer to the function as
+ * "semi-documented" by some sources). Confirm its exact availability and proto on
+ * the target WDK version before relying on it without the ntddk prototype.
+ * Declared here (guardrail #2: no proprietary header) matching the public-doc shape.
+ * (docs: PsGetProcessPeb present in ntddk.h export list — still needs on-box:
+ * confirm header availability + proto match on the target WDK build) */
 NTKERNELAPI PPEB NTAPI PsGetProcessPeb(_In_ PEPROCESS Process);
 
 static BOOLEAN HkReadField(const void* p, ULONG off, void* out, SIZE_T width)

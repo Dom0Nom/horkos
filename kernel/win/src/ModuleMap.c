@@ -112,16 +112,19 @@ NTSTATUS HkModuleMapBuild(PHK_MODULE_MAP Map)
         Map->Ranges[i].base = (uint64_t)(ULONG_PTR)m->ImageBase;
         Map->Ranges[i].size = (uint64_t)m->ImageSize;
         Map->Ranges[i].index = i;
-        /* HK-UNCERTAIN(modmap-signed): RTL_PROCESS_MODULE_INFORMATION carries no
-         * documented "image is signed" bit. The signed-module FP gate that
-         * signals 34/35 want (accept a thunk that lands in ANY signed module)
-         * needs a per-image Authenticode/CI verdict that is NOT available from
-         * SystemModuleInformation alone. Leaving the SIGNED flag CLEAR here is
-         * conservative: a sensor that requires "in a signed module" will instead
-         * fall back to "in the owning image", which is stricter and may raise FPs
+        /* HK-UNCERTAIN(modmap-signed): RTL_PROCESS_MODULE_INFORMATION (returned
+         * by SystemModuleInformation, class 11) carries no "image is signed" bit
+         * (documented struct: learn.microsoft.com/windows-hardware/drivers/ddi/
+         * aux_klib/ns-aux_klib-_aux_module_extended_info). A per-image signing
+         * verdict requires either SystemCodeIntegrityVerificationInformation (class
+         * 0x86, available Win10+, undocumented struct shape) or a userspace
+         * Authenticode cross-check via WinVerifyTrust. Leaving the SIGNED flag
+         * CLEAR here is conservative: sensors fall back to "in the owning image"
+         * rather than "in any signed module", which is stricter and may raise FPs
          * on legitimate cross-module thunks. Do NOT fabricate a signed verdict;
-         * wire a real CI query (SystemCodeIntegrityVerificationInformation or a
-         * userspace Authenticode cross-check) before setting this bit. */
+         * wire a real CI query or userspace Authenticode check before setting this.
+         * (docs: RTL_PROCESS_MODULE_INFORMATION documented — no signed bit present;
+         * still needs on-box: signing verdict path selection across WDK versions) */
         Map->Ranges[i].flags = 0u;
     }
     Map->Count = n;

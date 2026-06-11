@@ -34,9 +34,13 @@ struct ProcEntry {
  * ancestor lookups walk the in-memory map rather than reopening the snapshot
  * per level. PID reuse is bounded by the single snapshot; the server keys the
  * chain by PID+create-time for cross-snapshot identity.
- * szExeFile is the base image name; the full path needs QueryFullProcessImageName
- * (HK-UNCERTAIN per access rights) — the base name is the verifiable subset the
- * server matches. */
+ * szExeFile is the base image name; the full path needs QueryFullProcessImageName.
+ * HK-VERIFIED(ancestry-walker-access): QueryFullProcessImageName is documented to
+ * require only PROCESS_QUERY_LIMITED_INFORMATION (not PROCESS_ALL_ACCESS).
+ * ref: https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-queryfullprocessimagenamew
+ * For ancestor PIDs visible in the snapshot, the AC can use OpenProcess with
+ * PROCESS_QUERY_LIMITED_INFORMATION. Elevated/protected ancestors may still deny
+ * (PPL), but the base name from szExeFile is the safe subset and is used here. */
 std::vector<std::string> collect_ancestry(DWORD game_pid)
 {
     std::vector<std::string> chain;

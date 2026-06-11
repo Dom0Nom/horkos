@@ -49,11 +49,13 @@ static void HkDrvObjCheckPtr(const HK_MODULE_MAP* Map, uint64_t ownerBase,
     }
     /* Not in the owner. The catalog FP gate accepts a thunk that lands in any
      * signed module (e.g. fltmgr.sys). HK-UNCERTAIN(modmap-signed): the ModuleMap
-     * cannot currently mark modules signed (see ModuleMap.c), so this falls back
-     * to "in ANY loaded image" — stricter than the ideal "signed module" gate but
-     * never laxer. A pointer inside another loaded image is treated as a probable
-     * legitimate cross-module thunk and NOT flagged; only a pointer in NO image
-     * (pool / manually-mapped) is reported. */
+     * cannot currently mark modules signed — RTL_PROCESS_MODULE_INFORMATION carries
+     * no signed bit (see ModuleMap.c note; docs: struct is documented, no signed
+     * field present). This falls back to "in ANY loaded image" — stricter than the
+     * ideal "signed module" gate but never laxer. A pointer inside another loaded
+     * image is treated as a probable legitimate cross-module thunk and NOT flagged;
+     * only a pointer in NO image (pool / manually-mapped) is reported.
+     * (still needs on-box: signing verdict path to populate the signed flag) */
     if (HkModuleRangeContains(Map->Ranges, (size_t)Map->Count, ptr)) {
         return;
     }

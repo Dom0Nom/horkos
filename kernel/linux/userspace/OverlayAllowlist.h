@@ -39,7 +39,8 @@ struct AllowEntry {
  * (verify-before-use); the concrete Ed25519/ECDSA backend is wired in M5/ops. Do
  * NOT ship a no-op verifier in production — an unverified allowlist that an
  * attacker can edit disables every FP gate AND can be abused to suppress real
- * detections. */
+ * detections. (docs: no public doc can resolve this — server ops decision,
+ * still needs M5 key-distribution and algorithm choice) */
 using SignatureVerifier =
     std::function<bool(const std::vector<uint8_t>& body,
                        const std::vector<uint8_t>& signature)>;

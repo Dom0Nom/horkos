@@ -7,13 +7,15 @@
  *
  * Guardrail compliance: #1, #3, #4. Read-only/audit-only.
  *
- * HK-UNCERTAIN(lazy-binding): with lazy binding a GOT slot legitimately holds the
- * PLT-resolver stub until first call (points into the process's own .plt). The
- * comparator below treats a target inside [own_plt_start, own_plt_end) as benign;
- * the own-PLT range MUST be supplied correctly per-build (from the same ELF
- * section parse) or unresolved lazy slots would false-positive. IFUNC slots
- * (R_*_IRELATIVE) resolve to arbitrary in-DSO addresses and are skipped via the
- * caller-supplied is_ifunc marker.
+ * HK-VERIFIED(lazy-binding): with lazy binding a GOT slot legitimately holds a
+ * pointer back into the corresponding PLT entry (the PLT stub) until first call,
+ * per the x86-64 psABI (System V ABI for AMD64, §11 "Program Linkage Table"):
+ * "The first time a PLT entry is called, it pushes the relocation index and jumps
+ * to PLT[0]; the dynamic linker then resolves and overwrites the GOT entry."
+ * The ABI-documented PLT→GOT round-trip is the authoritative source; treating a
+ * GOT slot pointing into [own_plt_start, own_plt_end) as benign is correct for
+ * unresolved lazy slots. IFUNC (R_*_IRELATIVE) slots are a separate case: they
+ * resolve to arbitrary in-DSO addresses per the ABI — also ABI-documented.
  */
 
 #include "GotPltMap.h"

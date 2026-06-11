@@ -21,16 +21,20 @@
 namespace hk { namespace sdk { namespace vmaccess {
 
 /* -------------------------------------------------------------------------
- * HK-UNCERTAIN(workingset-enumeration): turning a per-page QueryWorkingSetEx sweep
- * over a foreign process's full committed range into a stable "newly-resident this
- * sample" delta needs an on-box-validated page-set diff (the working set churns under
- * normal execution; the burst threshold + sample cadence are tuned with real
- * captures, not guessed). The owning-thread CPU pairing (GetProcessTimes kernel+user
- * delta across the same interval) is straightforward, but the page-residency delta is
- * the unproven half. This sampler is therefore SCAFFOLD ONLY: it lays out the read +
- * correlate sequence and emits through the pure residency_burst_is_foreign core, but
- * the actual QueryWorkingSetEx sweep is left as a documented stub rather than coded
- * against an unvalidated diff/cadence. The pure core (the tested part) is unaffected.
+ * HK-UNCERTAIN(workingset-enumeration): QueryWorkingSetEx and GetProcessTimes are
+ * both fully documented Win32 APIs (QueryWorkingSetEx:
+ * https://learn.microsoft.com/windows/win32/api/psapi/nf-psapi-queryworkingsetex;
+ * PSAPI_WORKING_SET_EX_INFORMATION.VirtualAttributes.Valid is the residency bit).
+ * The API contract is not uncertain. What IS uncertain is the ALGORITHM tuning:
+ * turning a per-page sweep into a stable "newly-resident this sample" delta requires
+ * an on-box-validated burst threshold + sample cadence against real ReadProcessMemory
+ * captures (the working set churns under normal execution; a too-low threshold
+ * fires on paging activity, too-high misses real scans). The owning-thread CPU
+ * pairing (GetProcessTimes) is straightforward. This sampler is SCAFFOLD ONLY:
+ * the read + correlate sequence is laid out through the pure residency_burst_is_foreign
+ * core, but the QueryWorkingSetEx sweep is left as a documented stub pending
+ * on-box burst-threshold calibration. (docs: API documented — still needs on-box
+ * burst-threshold + cadence calibration before enabling)
  * ------------------------------------------------------------------------- */
 int sample_working_set(uint32_t game_pid)
 {

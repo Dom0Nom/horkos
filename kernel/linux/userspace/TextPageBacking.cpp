@@ -7,14 +7,20 @@
  *
  * Guardrail compliance: #1, #3, #4. Read-only/audit-only.
  *
- * HK-UNCERTAIN(pagemap-caps): the per-page file-backed bit comes from
- * /proc/<pid>/pagemap, whose layout changed across kernels and whose cross-process
- * read requires CAP_SYS_ADMIN (tightened in recent kernels). It is NOT verified
- * that the loader's CAP_BPF/CAP_PERFMON set suffices. This correlator therefore
- * scores on smaps Private_Dirty (which IS readable without CAP_SYS_ADMIN) as the
- * primary evidence; the pagemap file-backed cross-check is an OPTIONAL refinement
- * the loader supplies only if its capability set is confirmed sufficient on-box.
- * Default-OFF (CMake) until verified.
+ * HK-VERIFIED(pagemap-caps): the per-page file-backed bit (bit 61 "page is
+ * file-page or shared-anon") and soft-dirty bit (bit 55 "pte is soft-dirty") are
+ * stable since Linux 3.5 and 3.11 respectively — documented in
+ * Documentation/vm/pagemap.txt and proc_pid_pagemap(5). Cross-process reads of
+ * /proc/<pid>/pagemap require PTRACE_MODE_READ_FSCREDS (proc_pid_pagemap(5));
+ * CAP_SYS_ADMIN is NOT required for the file-backed/soft-dirty bits — it is only
+ * required for the PFN field (bits 0-54, tightened in Linux 4.2 per
+ * proc_pid_pagemap(5)). CAP_BPF and CAP_PERFMON do NOT grant access to the PFN
+ * field; only CAP_SYS_ADMIN does (capabilities(7)). The smaps Private_Dirty path
+ * (primary evidence here) requires only PTRACE_MODE_READ_FSCREDS — confirmed
+ * readable without CAP_SYS_ADMIN per kernel filesystems/proc.html. The pagemap
+ * file-backed cross-check still requires on-box confirmation that the loader
+ * process satisfies the ptrace READ check on the game pid. Default-OFF (CMake)
+ * until that ptrace-access path is verified on-target.
  */
 
 #include "TextPageBacking.h"

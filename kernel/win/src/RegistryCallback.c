@@ -93,14 +93,16 @@ static BOOLEAN HkIsProtectedKey(_In_opt_ PCUNICODE_STRING Path)
  * window — low weight). FP gate input for signal 5.
  * HK-UNCERTAIN(cm-writer-token): a robust SYSTEM/TrustedInstaller determination
  * needs SeQueryInformationToken on the effective token and a SID compare against
- * the well-known SYSTEM/TrustedInstaller SIDs. That token inspection has IRQL and
- * reference-lifetime subtleties (PsReferencePrimaryToken / ObDereferenceObject)
- * that must be verified on-box. Per guardrail #13 the precise token check is NOT
- * implemented here; we approximate with PID == 4 (System) only, which is a strict
- * subset (no false "is system"). The writer_is_system field therefore UNDER-counts
- * system writers (fail toward HIGH weight), which is the safe direction for an
- * observe-only sensor. Replace with a verified token SID check before relying on
- * it to suppress alerts. */
+ * the well-known SYSTEM/TrustedInstaller SIDs. SeQueryInformationToken is documented
+ * (learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sequeryinformationtoken);
+ * PsReferencePrimaryToken and ObDereferenceObject are also documented. However, their
+ * IRQL requirements and token reference lifetime in a Cm callback context must be
+ * confirmed on-box. Per guardrail #13 the precise token check is NOT implemented here;
+ * we approximate with PID == 4 (System) only, which is a strict subset (no false "is
+ * system"). The writer_is_system field therefore UNDER-counts system writers (fails
+ * toward HIGH weight), which is the safe direction for an observe-only sensor.
+ * (docs: SeQueryInformationToken + PsReferencePrimaryToken documented; still needs
+ * on-box: IRQL constraint + token ref lifetime inside a Cm callback) */
 static uint32_t HkWriterIsSystem(void)
 {
     return (PsGetCurrentProcessId() == PsGetProcessId(PsInitialSystemProcess))
@@ -135,15 +137,17 @@ static NTSTATUS HkCmCallback(_In_ PVOID CallbackContext,
         valueName = info->ValueName;
         op = HK_REG_OP_SET;
         /* CmCallbackGetKeyObjectIDEx gives the full registry path for the key.
-         * HK-UNCERTAIN(cm-key-path): the documented path-retrieval API is
-         * CmCallbackGetKeyObjectIDEx(Cookie, Object, ..., &name, 0); it requires
-         * our live cookie and the key Object, and the returned name must be freed
-         * with CmCallbackReleaseKeyObjectIDEx. The exact Object field on
-         * REG_SET_VALUE_KEY_INFORMATION across WDK versions (Object vs RootObject)
-         * must be confirmed on-box before calling. We therefore scope-match on
-         * the value name only below and leave full-path extraction to the on-box
-         * pass. This means HkIsProtectedKey cannot yet run on a real path here —
-         * see the scope note. */
+         * HK-UNCERTAIN(cm-key-path): CmCallbackGetKeyObjectIDEx is documented
+         * (learn.microsoft.com/windows-hardware/drivers/ddi/wdm/
+         * nf-wdm-cmcallbackgetkeyobjectidex); it requires our live cookie and the
+         * key Object, and the returned name must be freed with
+         * CmCallbackReleaseKeyObjectIDEx (also documented). The exact Object field
+         * on REG_SET_VALUE_KEY_INFORMATION across WDK versions (Object vs RootObject)
+         * must be confirmed on-box before calling. We therefore scope-match on the
+         * value name only below and leave full-path extraction to the on-box pass.
+         * This means HkIsProtectedKey cannot yet run on a real path here.
+         * (docs: CmCallbackGetKeyObjectIDEx + Release documented; still needs on-box:
+         * Object field name on REG_SET_VALUE_KEY_INFORMATION for target WDK version) */
         break;
     }
     case RegNtPreDeleteKey:
@@ -162,11 +166,11 @@ static NTSTATUS HkCmCallback(_In_ PVOID CallbackContext,
     }
 
     /* Scope gate. HK-UNCERTAIN(cm-key-path): until full-path extraction is wired
-     * (see above), we cannot confirm keyPath is one of ours, so we conservatively
-     * only emit when a value-name classification is meaningful (Start/ImagePath/
-     * Altitude on a Services-class write). This keeps Phase 3 FP volume bounded
-     * without a verified path API; broaden to HkIsProtectedKey(keyPath) once the
-     * path call is confirmed on-box. */
+     * via CmCallbackGetKeyObjectIDEx (see above; API is documented but on-box
+     * Object-field confirmation is pending), we cannot confirm keyPath is one of
+     * ours. We conservatively emit only when a value-name classification is
+     * meaningful (Start/ImagePath/Altitude on a Services-class write). Broaden to
+     * HkIsProtectedKey(keyPath) once the path call is confirmed on-box. */
     {
         uint32_t valueClass = HkClassifyRegValue(valueName);
         BOOLEAN  pathProtected =

@@ -69,7 +69,10 @@ extern "C" bool cs_cdhash_equal(const uint8_t *a, size_t a_len,
 /* HK-UNCERTAIN(csops-header): <sys/codesign.h> is not in the public SDK (plan
  * Risk 1); the CS_OPS_PIDCDHASH op number + buffer-size contract are SPI and
  * unverified across macOS 12-15. The live cdhash read is routed through a stub
- * (returns unavailable) rather than guessing the op number / size. */
+ * (returns unavailable) rather than guessing the op number / size.
+ * (docs: confirmed NOT in MacOSX.sdk/usr/include/sys/ through macOS 15.5 SDK —
+ * still needs on-box SPI verification of CS_OPS_PIDCDHASH constant and buffer
+ * contract) */
 #include <unistd.h>
 #include <os/log.h>
 
@@ -105,7 +108,11 @@ extern "C" bool HkCdHashProbeSample(const HkCsProbeTarget *target, HkCsFinding *
      * verified; and the DISK-side comparand requires SecCodeCopySigningInformation
      * + translocation/fat-slice resolution (plan Risk 6) which is ALSO unverified.
      * Per guardrail #13 neither is guessed; the probe emits nothing until both are
-     * verified on real macOS 12/13/14/15 boxes. */
+     * verified on real macOS 12/13/14/15 boxes.
+     * (docs: SecCodeCopySigningInformation + kSecCodeInfoUnique/kSecCodeInfoCdHashes
+     * ARE in the public SDK (Security/SecCode.h lines 332,455,461-463,501-502) —
+     * the Security.framework API side is documentable; CS_OPS_PIDCDHASH constant
+     * and SecTranslocateCreateOriginalPathForURL still need on-box/SPI verification) */
     if (hk_csops_pidcdhash_read(static_cast<pid_t>(target->pid),
                                 live, sizeof(live), &live_len) != 0) {
         return false;  /* read failed / unavailable — abort cleanly */
@@ -115,7 +122,13 @@ extern "C" bool HkCdHashProbeSample(const HkCsProbeTarget *target, HkCsFinding *
     /* HK-UNCERTAIN(cs-disk-cdhash): the on-disk comparand path is unimplemented
      * (SecStaticCodeCreateWithPath -> SecCodeCopySigningInformation ->
      * kSecCodeInfoUnique, with SecTranslocateCreateOriginalPathForURL and the
-     * executing fat-slice selection — plan Risk 6). When wired:
+     * executing fat-slice selection — plan Risk 6).
+     * (docs: SecStaticCodeCreateWithPath and SecCodeCopySigningInformation are in the
+     * public SDK (Security/SecStaticCode.h, Security/SecCode.h). kSecCodeInfoUnique
+     * and kSecCodeInfoCdHashes are publicly declared (SecCode.h:501-502). The
+     * SecTranslocate path is NOT in the public SDK and remains SPI. Fat-slice
+     * selection is undocumented. Still needs on-box/SPI verification of translocation
+     * and fat-slice paths.) When wired:
      *   uint32_t live_fold = cs_cdhash_fold(live, live_len);
      *   if (!cs_cdhash_equal(live, live_len, disk, disk_len)) { emit with
      *       detail = live_fold; evidence = {live_hex, disk_hex}; }

@@ -3,8 +3,9 @@
  * Role: Signal 104 — post-boot / unsigned module-load audit (Deck BYOVD). Stable
  *       arms: module:module_load tracepoint (hashes the module name) and lsm/
  *       kernel_module_request. Uncertain arm: lsm/kernel_read_file with the
- *       READING_MODULE enum — left as an HK-UNCERTAIN stub (the hook signature +
- *       enum value differ across kernels). The boot-baseline / signed-module /
+ *       READING_MODULE enum — stub pending on-target enum-value BTF verification
+ *       (hook signature + READING_MODULE==2 are partially confirmed, see below).
+ *       The boot-baseline / signed-module /
  *       update-window gates are userspace (DeckModuleBaseline.cpp).
  * Target platform: Linux eBPF (LSM + tracepoint).
  * Interface: shares hk_ringbuf; emits HK_BPF_PW_MODULE_LOAD -> HK_EVENT_MODULE_LOAD.
@@ -95,10 +96,18 @@ int BPF_PROG(hk_lsm_kmod_request, char *kmod_name, int ret)
  * lsm/kernel_read_file (READING_MODULE) arm to catch finit_module/init_module
  * payload reads. I am NOT certain of (a) the exact lsm/kernel_read_file hook
  * signature on the target Deck kernel (it changed across versions — earlier:
- * (struct file *file, enum kernel_read_file_id id); later added bool contents),
- * nor (b) the numeric value of the READING_MODULE enumerator (enum
- * kernel_read_file_id is not ABI-stable). A wrong enum compare would silently
- * mis-filter every kernel_read_file. Per guardrail #13 this arm is NOT written —
+ * (struct file *file, enum kernel_read_file_id id); later added bool contents
+ * [added in v5.13 per lkml.kernel.org/lkml/20200729175845.1745471-13-keescook]),
+ * nor (b) the numeric value of the READING_MODULE enumerator.
+ * (docs: include/linux/kernel_read_file.h defines the enum via the
+ * __kernel_read_file_id macro; expansion order is UNKNOWN=0, FIRMWARE=1,
+ * MODULE=2, KEXEC_IMAGE=3, ... so READING_MODULE == 2 on kernels that have not
+ * reordered the macro list — confirm on the target via BTF enum dump; the 3-arg
+ * signature with bool contents is confirmed present on mainline v5.13+.
+ * lsm/kernel_read_file is BPF-attachable via the standard lsm/* mechanism.
+ * Still needs on-target BTF enum-value verification before wiring.)
+ * A wrong enum compare would silently mis-filter every kernel_read_file.
+ * Per guardrail #13 this arm is NOT written —
  * confirm the signature + enum against the target kernel BTF, then add:
  *   SEC("lsm/kernel_read_file")
  *   int BPF_PROG(hk_lsm_kread_module, struct file *file,

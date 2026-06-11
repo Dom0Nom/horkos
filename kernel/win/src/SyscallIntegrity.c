@@ -112,8 +112,8 @@ void HkSyscallEtwArm(PHK_DEVICE_CONTEXT Ctx)
     Ctx->EtwBaseline.Valid = FALSE;
 
     /* Keepalive counter starts at zero; no consumer bumps it yet (see the
-     * HK-UNCERTAIN(etw-ti-consumer) note). EtwKeepaliveArmed stays 0 until a real
-     * ETW-TI consumer exists, keeping the keepalive check UNVERIFIABLE-gated. */
+     * HK-VERIFIED(etw-ti-consumer) note in Notify.c). EtwKeepaliveArmed stays 0
+     * until a real PPL consumer exists, keeping the keepalive check UNVERIFIABLE-gated. */
     Ctx->EtwTiKeepalive = 0;
     Ctx->EtwTiKeepalivePrev = 0;
     InterlockedExchange(&Ctx->EtwKeepaliveArmed, 0);
@@ -379,13 +379,19 @@ static ULONG_PTR HkIdtIpi(_In_ ULONG_PTR Argument)
      * provided buffer. */
     __sidt(&idtr);
 
-    /* HK-UNCERTAIN(idt-ipi-read): walking IDT entries from idtr.Base at IPI level
-     * dereferences the IDT pages. The IDT is non-paged and resident so the read
-     * does not fault in practice, and __try/__except is NOT used here because
-     * structured exception handling at IPI level is itself unsafe — the discipline
-     * is "touch only resident memory, never guard". The plan flags confirming this
-     * __sidt-based path on-box before enabling 214 (Risk 11); a zero handler is
-     * skipped by the PASSIVE consumer rather than treated as a bound violation. */
+    /* HK-UNCERTAIN(idt-ipi-read): the IDT is non-paged and locked in physical memory
+     * by the OS (documented: the IDT is allocated from non-paged pool and never
+     * swapped — WDK "Interrupt Request Levels" and x64 ABI require it resident at
+     * all times). Dereferencing idtr.Base at IPI level should therefore not fault.
+     * __try/__except is NOT used here because structured exception handling requires
+     * IRQL <= APC_LEVEL (documented: learn.microsoft.com/windows-hardware/drivers/
+     * kernel/structured-exception-handling — SEH is unavailable at IPI level); the
+     * discipline is "touch only resident memory, never guard". The plan flags
+     * confirming this __sidt-based path on-box before enabling 214 (Risk 11); a zero
+     * handler is skipped by the PASSIVE consumer rather than treated as a bound
+     * violation.
+     * (docs: IDT non-paged + SEH IRQL restriction documented; still needs on-box:
+     * confirm idtr.Base dereference at IPI level is reliably fault-free) */
     for (gate = 0; gate < HK_IDT_GATES_CHECKED; ++gate) {
         const HK_KIDTENTRY64* e =
             (const HK_KIDTENTRY64*)(ULONG_PTR)(idtr.Base + (ULONG64)gate * sizeof(HK_KIDTENTRY64));

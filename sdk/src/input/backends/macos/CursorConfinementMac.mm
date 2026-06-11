@@ -19,6 +19,12 @@
  * the 170 features at default and never crash. The grant-state check + the tap
  * create/run-loop attach are SDK bring-up integration; per guardrail #13 they are
  * not assumed here.
+ * (docs: CGEvent.h (CoreGraphics.framework) states that taps at kCGSessionEventTap
+ * may only receive key up/down events if Accessibility is enabled; mouse events are
+ * less explicit but Apple's privacy framework (TCC) requires Input Monitoring for
+ * any event tap since macOS 10.15 — documented at developer.apple.com/documentation/
+ * coregraphics/quartz_event_services. kCGEventTapOptionListenOnly is in public SDK.
+ * Still needs on-box TCC grant state and AXIsProcessTrusted() check.)
  */
 
 #include "input/AimSampler.h"
@@ -39,8 +45,9 @@ bool sample_cursor_confinement(hk_aim_features* out)
     }
 
     /* HK-UNCERTAIN(macos-tcc-input-monitoring): no CGEventTap is installed this
-     * tick (see file header). macOS has no GetClipCursor/CURSORINFO analog, so the
-     * 170 fields are sourced from the tap's per-event synthetic-source proxy:
+     * tick (see file header — docs note appended there). macOS has no
+     * GetClipCursor/CURSORINFO analog, so the 170 fields are sourced from the
+     * tap's per-event synthetic-source proxy:
      *
      *   CGEventMask mask = CGEventMaskBit(kCGEventMouseMoved)
      *                    | CGEventMaskBit(kCGEventLeftMouseDragged)

@@ -62,7 +62,9 @@ extern "C" bool HkAmfiPostureProbeSample(const HkCsProbeTarget * /*target*/,
         /* HK-UNCERTAIN(csr-bit-layout): csr_config interpretation depends on the
          * confirmed CSR bit layout (Risk 2) — fold the raw config into detail's
          * high bits once the layout is verified. Until csr_active_config returns
-         * a real value this branch is unreachable. */
+         * a real value this branch is unreachable.
+         * (docs: csr_get_active_config is NOT in the public SDK through macOS 15.5;
+         * it is a private SPI — still needs on-box/SIP verification of bit layout) */
         if (!hk::platform::sip_enabled()) {
             detail |= HK_AMFI_DETAIL_SIP_OFF;
         }
@@ -80,7 +82,11 @@ extern "C" bool HkAmfiPostureProbeSample(const HkCsProbeTarget * /*target*/,
 
     /* Developer-Mode state: HK-UNCERTAIN(developer-mode) — the AMFI Developer-Mode
      * query API is not clearly public across macOS 12-15 (plan Risk 2). Not read
-     * here; do not guess the API. When confirmed, fold a DEV_MODE bit into detail.
+     * here; do not guess the API.
+     * (docs: no public API for AMFI Developer Mode state found in MacOSX.sdk
+     * through 15.5; Security/SecTask.h has no such API; IOKit/MobileDevice paths
+     * are not present in the desktop SDK — still needs on-box/SPI verification)
+     * When confirmed, fold a DEV_MODE bit into detail.
      *
      * Report-only contract (plan): a weakened posture is emitted VERBATIM as a
      * trust-tier input. Only emit when SOMETHING notable is present (an actual

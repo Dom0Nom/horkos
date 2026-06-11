@@ -59,12 +59,15 @@ void HkDebugStateProbe(PHK_DEVICE_CONTEXT Ctx)
     /* Corroborate "currently attached" with the system-information query, which
      * is more authoritative than the cached KdDebuggerNotPresent global (which can
      * lag until KdRefreshDebuggerNotPresent runs).
-     * HK-UNCERTAIN(kd-refresh): KdRefreshDebuggerNotPresent refreshes the cached
-     * present flag, but it is not exported on every WDK/target build and forcing a
-     * refresh can poll the debug transport. We do NOT call it here; instead we
-     * trust SystemKernelDebuggerInformation as the live read and fall back to the
-     * cached global only if the query fails. Validate on-box whether a refresh is
-     * needed for your target build before relying solely on the cached global. */
+     * HK-UNCERTAIN(kd-refresh): KdRefreshDebuggerNotPresent is documented in the
+     * WDK (learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/
+     * nf-ntddk-kdrefreshdebuggernotpresent) as refreshing the KdDebuggerNotPresent
+     * cached flag. However, forcing a refresh can poll the debug transport and its
+     * availability across all WDK/build targets must be confirmed on-box. We do NOT
+     * call it here; we trust SystemKernelDebuggerInformation (class 35) as the live
+     * read and fall back to the cached global only if the query fails.
+     * (docs: KdRefreshDebuggerNotPresent documented; still needs on-box: confirm
+     * export availability + transport-poll risk on this target build) */
     RtlZeroMemory(&dbg, sizeof(dbg));
     status = ZwQuerySystemInformation(SystemKernelDebuggerInformation,
                                       &dbg, sizeof(dbg), NULL);

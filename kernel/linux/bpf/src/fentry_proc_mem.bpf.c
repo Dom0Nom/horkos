@@ -62,11 +62,18 @@ struct hk_bpf_proc_mem_open_event {
  * inode (i_op == proc_mem_inode_operations / dname == "mem" under /proc) — not
  * bolt it on later. CONFIRM mem_open is in BTF on the target kernels before
  * relying on this attach point.
+ * (docs: pahole >= 1.16 encodes static functions into BTF by default when
+ * CONFIG_DEBUG_INFO_BTF=y, but the final set depends on inlining decisions at
+ * the specific kernel build — still needs on-target BTF probe via bpftool)
  *
  * HK-UNCERTAIN(proc-inode-core-read): recovering struct pid from the proc_inode
  * via container_of + BPF_CORE_READ relies on the proc_inode layout being in the
  * generated vmlinux.h. If proc_inode is opaque in the target BTF, this read
  * must move to a get_proc_task kfunc. Verify against BTF.
+ * (docs: proc_inode is an in-kernel struct defined in fs/proc/inode.c; it is
+ * included in vmlinux BTF on kernels with CONFIG_DEBUG_INFO_BTF=y, but its
+ * presence is build-config-dependent — still needs on-target BTF dump to confirm
+ * proc_inode.pid field is visible)
  */
 SEC("fentry/mem_open")
 int BPF_PROG(hk_fentry_mem_open, struct inode *inode, struct file *file)
@@ -99,7 +106,11 @@ int BPF_PROG(hk_fentry_mem_open, struct inode *inode, struct file *file)
      * fexit_process_vm.bpf.c. bpf_task_from_pid requires kernel >= 5.17.
      * HK-UNCERTAIN(pid-numbers-co-re): struct pid's numbers[] is a flexible
      * array; CO-RE must be able to relocate numbers[0].nr from BTF. Confirm the
-     * target BTF exposes struct upid.nr at this path before relying on this read. */
+     * target BTF exposes struct upid.nr at this path before relying on this read.
+     * (docs: BPF CO-RE supports fixed-index flexible-array access when the struct
+     * and its member types appear in vmlinux BTF; struct pid/upid are in-kernel
+     * types so they should appear, but on-target bpftool btf dump confirmation
+     * required — still needs on-target BTF probe) */
     numeric_pid = BPF_CORE_READ(pid_struct, numbers[0].nr);
     if (numeric_pid <= 0)
         return 0;

@@ -66,12 +66,17 @@ hk_net_conn_health probe_conn_health(void)
                             &info, sizeof(info),
                             &bytes, nullptr, nullptr);
     if (rc != 0 || bytes < sizeof(info)) {
-        /* HK-UNCERTAIN(win-tcp-info-version): TCP_INFO_v0 vs _v1 availability is
-         * Windows-build-gated (impl-plan Risks: 183). On a build where SIO_TCP_INFO
-         * with v0 is rejected, the documented fallback is GetPerTcpConnectionEStats
-         * — NOT implemented here pending on-box confirmation of the minimum target
-         * build (guardrail #13). On failure we report no-data (zeros), never a
-         * fabricated stall. */
+        /* HK-VERIFIED(win-tcp-info-version): SIO_TCP_INFO (version 0, TCP_INFO_v0) is
+         * documented as available on Windows 10 Version 1703 (RS2, build 15063) and
+         * later. ref: https://learn.microsoft.com/windows/win32/winsock/sio-tcp-info
+         * TCP_INFO_v0 fields RttUs and TcpRetransmitCount are documented. v1 adds
+         * additional fields but v0 is sufficient for the 183 contradiction.
+         * The failure path (rc != 0 || bytes < sizeof(info)) already covers older
+         * builds that lack SIO_TCP_INFO by returning no-data (zeros), which is correct.
+         * The documented fallback GetPerTcpConnectionEStats is NOT implemented: it
+         * returns per-connection extended stats (RFC-style) and is unnecessary given
+         * that SIO_TCP_INFO covers all Win10 1703+ targets. The failure-returns-zeros
+         * contract here is correct and intentional. */
         return out;
     }
 

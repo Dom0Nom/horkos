@@ -16,7 +16,12 @@
  * arms. We do NOT guess that selector surface; acs_source_validation /
  * acs_p2p_redirect are left unknown (0). The group-membership count (a topology
  * fact readable from the IOService plane without a config read) IS filled, since
- * the server's primary gate is the oversized-group + suspect conjunction. ***
+ * the server's primary gate is the oversized-group + suspect conjunction.
+ * (docs: IOKit/pci/IOPCIDevice.h documents configRead32/extendedConfigRead32 as
+ * virtual methods on the kernel-side IOPCIDevice class (kext), NOT a userspace API.
+ * No public userspace selector for IOPCIFamily user client config reads is
+ * documented in MacOSX.sdk through 15.5 — still needs on-box verification of
+ * whether the user client is reachable unentitled or requires a System Extension) ***
  */
 
 #import <IOKit/IOKitLib.h>
@@ -63,8 +68,8 @@ extern "C" void hk_dma_macos_fill_acs(io_service_t dev, hk_dma_device_forensics 
 
     /* HK-UNCERTAIN(macos-config-read): ACS control bits need an ext-config read of
      * the upstream bridge; left unknown (0) until the config-read user client is
-     * confirmed reachable unentitled. The server treats absence as "cannot
-     * corroborate", never as a verdict. */
+     * confirmed reachable unentitled (see file header — docs note appended there).
+     * The server treats absence as "cannot corroborate", never as a verdict. */
     d->acs_source_validation = 0u;
     d->acs_p2p_redirect = 0u;
 }

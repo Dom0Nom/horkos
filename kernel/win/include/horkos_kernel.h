@@ -697,10 +697,11 @@ typedef struct _HK_DEVICE_CONTEXT {
     HK_ETW_BASELINE  EtwBaseline;           /* 212/215 arm-time snapshot. */
     /* ETW-TI consumer keepalive (signal 212, version-independent half). Bumped by
      * Horkos's ETW-TI consumer on each TI event; HkEtwTiLiveness checks it
-     * advanced since the previous scan. HK-UNCERTAIN(etw-ti-consumer): where this
-     * is bumped depends on the (unresolved) ETW-TI consumption architecture — see
-     * the bump-site note in Notify.c. Until a consumer exists this stays 0 and the
-     * keepalive check is correctly UNVERIFIABLE-gated by EtwKeepaliveArmed. */
+     * advanced since the previous scan. HK-VERIFIED(etw-ti-consumer): ETW-TI is a
+     * PROTECTED provider; no in-kernel consumer is possible (see Notify.c note).
+     * Where the bump occurs depends on the (unresolved) PPL consumer architecture.
+     * Until a PPL consumer exists this stays 0 and the keepalive check is correctly
+     * UNVERIFIABLE-gated by EtwKeepaliveArmed. */
     volatile LONG64  EtwTiKeepalive;        /* monotonic; bumped per TI event. */
     LONG64           EtwTiKeepalivePrev;    /* counter at the previous scan (PASSIVE only). */
     volatile LONG    EtwKeepaliveArmed;     /* 0/1: a consumer exists and bumps the counter. */
@@ -792,10 +793,10 @@ _IRQL_requires_max_(PASSIVE_LEVEL) void     HkNotifyDisarm(void);
 /* TRUE if any Ps* routine could not be removed during disarm (unload must not
  * complete — the caller bugchecks). */
 BOOLEAN HkNotifyDisarmFailed(void);
-/* ETW-TI consumer keepalive bump (signal 212). Bumped by the (future) ETW-TI
- * consumer on each TI event; read by HkEtwTiLiveness. HK-UNCERTAIN(etw-ti-consumer):
- * no kernel TI consumer exists under current signing — see the bump-site note in
- * Notify.c. */
+/* ETW-TI consumer keepalive bump (signal 212). Bumped by the (future) PPL ETW-TI
+ * consumer on each TI event; read by HkEtwTiLiveness. HK-VERIFIED(etw-ti-consumer):
+ * no kernel TI consumer exists under current signing (ETW-TI is a PROTECTED provider
+ * requiring PPL/ELAM) — see the bump-site note in Notify.c. */
 void HkEtwTiKeepaliveBump(void);
 
 /* ---- ThreadProvenance.c (win-kernel-thread-injection) ---- */
@@ -819,13 +820,15 @@ _IRQL_requires_max_(PASSIVE_LEVEL) void     HkObDisarm(_In_ PHK_DEVICE_CONTEXT C
  * unlikely to be requested by a real opener; the poll target is the System
  * process so even if a real opener set it, the self-open is additionally keyed
  * on opener==target==System (see CallbackSelfCheck.c). */
-/* HK-UNCERTAIN(selfpoll-access-bit): 0x08000000 is ACCESS_SYSTEM_SECURITY, which
- * a legitimate System-context opener of the System process CAN request (SACL
- * access). When that rare coincidence happens, the pre-callback stamps the nonce
- * for a foreign open and suppresses that one hk_event_handle_open. The nonce
- * comparison keeps the liveness verdict correct, but the access bit should be a
- * truly-unused reserved bit validated on-box before relying on it; do not assume
- * 0x08000000 is collision-free. */
+/* HK-UNCERTAIN(selfpoll-access-bit): 0x08000000 is ACCESS_SYSTEM_SECURITY (documented
+ * in WinNT.h / learn.microsoft.com/windows/win32/secauthz/access-mask), which a
+ * legitimate System-context opener of the System process CAN request (SACL access).
+ * When that rare coincidence happens, the pre-callback stamps the nonce for a foreign
+ * open and suppresses that one hk_event_handle_open. The nonce comparison keeps the
+ * liveness verdict correct, but the access bit should be a truly-unused reserved bit
+ * validated on-box before relying on it; do not assume 0x08000000 is collision-free.
+ * (docs: ACCESS_SYSTEM_SECURITY value 0x08000000 documented; still needs on-box:
+ * confirm no legitimate System-self-open uses this bit in practice) */
 #define HK_OB_SELFPOLL_MAGIC ((ACCESS_MASK)0x08000000u)
 /* Address of the Ob pre-callback, exported so the self-check can baseline its
  * .text range and compare the registered PreOperation pointer (signals 7, 8). */
@@ -845,11 +848,13 @@ BOOLEAN HkObRootOpenerSeen(_In_ PHK_DEVICE_CONTEXT Ctx, _In_ uint32_t source_pid
 /* ---- EtwTiVmWatch.c (win-handle-memory-access #64/#69/#72/#71-input) ----
  * The ETW-TI consumer surface for ReadVm/WriteVm/AllocVm/ProtectVm against the
  * protected pid, plus the per-module section-flag cache the classifier resolves a
- * target VA against. HK-UNCERTAIN(etw-ti): under current signing there is NO
- * in-kernel TI consumer (Microsoft-Windows-Threat-Intelligence is PROTECTED — only
- * a PPL/ELAM usermode session can open it). HkEtwTiArm/Disarm therefore install
- * NOTHING today and return STATUS_NOT_SUPPORTED; the section cache + classifier are
- * the real, compilable substrate. Do NOT write a kernel ETW-TI consumer. */
+ * target VA against. HK-VERIFIED(etw-ti): under current signing there is NO
+ * in-kernel TI consumer (Microsoft-Windows-Threat-Intelligence is a PROTECTED
+ * event provider; only a PPL/ELAM user-mode process can open a consumer session
+ * — documented: learn.microsoft.com/windows/win32/etw/consuming-events
+ * "Protected Event Providers"). HkEtwTiArm/Disarm therefore install NOTHING today
+ * and return STATUS_NOT_SUPPORTED; the section cache + classifier are the real,
+ * compilable substrate. Do NOT write a kernel ETW-TI consumer. */
 _IRQL_requires_max_(PASSIVE_LEVEL) NTSTATUS HkEtwTiArm(_In_ PHK_DEVICE_CONTEXT Ctx);
 _IRQL_requires_max_(PASSIVE_LEVEL) void     HkEtwTiDisarm(_In_ PHK_DEVICE_CONTEXT Ctx);
 /* Section-flag cache maintenance. Fill is called from the load-image notify for the

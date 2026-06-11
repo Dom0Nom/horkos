@@ -22,6 +22,12 @@
  * the macOS injected fraction is treated as best-effort, leaving the cross-platform
  * Windows/Linux 171 signals to carry the weight. Also gated by the same TCC grant
  * as the 170/163 macOS sensors (plan R5) — ungranted leaves the fraction at default.
+ * (docs: kCGEventSourceStateID (field 45) and kCGEventSourceStateHIDSystemState (1)
+ * ARE in the public SDK (CoreGraphics/CGEventTypes.h). kCGMouseEventSubtype (field 7)
+ * is also public. CGEventSource.h documents that kCGEventSourceStateHIDSystemState
+ * reflects hardware event sources. The RELIABILITY of these fields for distinguishing
+ * synthesized events across all CGEventPost paths on macOS 12-15 remains unconfirmed —
+ * still needs on-box testing; also blocked by TCC Input Monitoring grant (R5))
  */
 
 #include "input/AimSampler.h"
@@ -42,7 +48,8 @@ bool sample_injection_flag(hk_aim_features* out)
     }
 
     /* HK-UNCERTAIN(macos-cg-injection-source): no CGEventTap is wired and the
-     * source-state bit's cross-version reliability is unconfirmed (see header).
+     * source-state bit's cross-version reliability is unconfirmed (see header —
+     * docs note appended there).
      * The live fold, once the tap is installed and the field semantics are
      * confirmed on the target macOS:
      *

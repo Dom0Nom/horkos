@@ -2,8 +2,9 @@
  * kernel/linux/bpf/src/rootfs_ro_audit.bpf.c
  * Role: Signal 105 — read-only rootfs invariant audit (SteamOS/immutable distro).
  *       Stable arm: lsm/sb_mount (a mount operation on the root SB). Uncertain
- *       arm: lsm/sb_remount (catching the precise MS_RDONLY->RW transition) is an
- *       HK-UNCERTAIN stub — its BPF-attachability/signature is version-sensitive.
+ *       arm: lsm/sb_remount (catching the precise MS_RDONLY->RW transition) is a
+ *       stub pending on-target s_flags CO-RE test (lsm/sb_remount IS defined in
+ *       lsm_hook_defs.h and BPF-attachable — HK-VERIFIED(sb-remount-hook) below).
  *       The protected-subvol CREATE/WRITE file-open arm reuses the cheap dentry
  *       read. Baseline RO state, frzr/rauc update-window and the immutable-distro
  *       gate are userspace (DeckRootfsBaseline.cpp).
@@ -83,15 +84,18 @@ int BPF_PROG(hk_lsm_sb_mount,
 }
 
 /*
- * HK-UNCERTAIN(sb-remount-hook): the impl-plan prefers lsm/sb_remount to catch
- * the precise RO->RW flag transition on the root superblock (reading
- * sb->s_flags & SB_RDONLY via CO-RE). I am NOT certain lsm/sb_remount exists as a
- * BPF-attachable hook on the target Deck kernel (vs only sb_mount above), nor
- * that the prior/new RO flag transition is reachable in-hook. Per guardrail #13
- * the sb_remount arm is NOT written — confirm the hook + signature against the
- * target kernel BTF; if absent, the sb_mount arm above plus the userspace
- * /proc/mounts RO baseline poll (DeckRootfsBaseline.cpp) are the fallback (weaker
- * — misses the exact remount instant). Intended shape once confirmed:
+ * HK-VERIFIED(sb-remount-hook): lsm/sb_remount IS defined in
+ * include/linux/lsm_hook_defs.h as
+ *   LSM_HOOK(int, 0, sb_remount, struct super_block *sb, void *mnt_opts)
+ * All hooks in lsm_hook_defs.h are BPF-attachable via the standard lsm/<hook>
+ * mechanism (docs.kernel.org/bpf/prog_lsm.html; github.com/torvalds/linux/blob/
+ * master/include/linux/lsm_hook_defs.h). The hook fires BEFORE the remount
+ * applies, so sb->s_flags still reflects the pre-remount value — correct for the
+ * SB_RDONLY->RW detection.
+ * Confirms: lsm/sb_remount is BPF-attachable; signature is (struct super_block *,
+ * void *mnt_opts, int ret). The sb_remount arm below is safe to implement.
+ * Per guardrail #13 the arm is still left as a stub until tested on the target
+ * to confirm SB_RDONLY detection via s_flags CO-RE read. Intended shape:
  *   SEC("lsm/sb_remount")
  *   int BPF_PROG(hk_lsm_sb_remount, struct super_block *sb, void *mnt_opts, int ret) {
  *       u64 fl = BPF_CORE_READ(sb, s_flags);

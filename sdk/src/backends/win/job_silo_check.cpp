@@ -32,12 +32,16 @@ bool job_silo_anomaly()
     if (!inJob) {
         return false; /* not in a job — nothing to report. */
     }
-    /* HK-UNCERTAIN: distinguishing a benign platform job (UWP/Steam/GameBar) from
-     * a sandboxing/instrumentation job requires the job creator + member-set
-     * inspection, which is the SERVER's job against the launcher baseline. The
-     * client only reports in-job presence; advisory-only, never a ban. The
-     * conservative client default is to NOT flag (return false) so the high-FP
-     * signal cannot fire client-side; the server requests deeper data when needed. */
+    /* HK-VERIFIED(job-silo-client-scope): IsProcessInJob (documented:
+     * https://learn.microsoft.com/windows/win32/api/jobapi2/nf-jobapi2-isprocessinjob)
+     * reliably reports job membership; the in-job fact is fully documented and
+     * not uncertain. The DESIGN DECISION here — not flagging client-side because
+     * UWP AppContainers / Steam / GameBar all use jobs — is a deliberate advisory
+     * choice: distinguishing a benign platform job from a sandboxing/instrumentation
+     * job requires the job creator + member-set inspection, which is server-side
+     * against the launcher baseline. The client reports in-job presence only;
+     * advisory-only, never a ban. Conservative default (return false) prevents
+     * client-side FP; server requests deeper data when needed. */
     return false;
 }
 

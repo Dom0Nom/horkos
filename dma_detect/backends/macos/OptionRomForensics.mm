@@ -21,7 +21,12 @@
  * across macOS releases (Apple-silicon Macs largely lack legacy option ROMs). We
  * probe a small set of plausible published keys read-only and do NOT guess a
  * private user-client selector to force a ROM read. Confirm the real key on a box
- * that actually carries an option ROM before relying on this arm. ***
+ * that actually carries an option ROM before relying on this arm.
+ * (docs: no public IOPCIDevice ROM property key documented in IOKit/pci/ headers or
+ * IOKit developer documentation through macOS 15.5 SDK. The "rom-image"/"ROM"/
+ * "VideoBIOS" key names come from open-source IOPCIFamily and third-party usage;
+ * not formally documented as stable — still needs on-box verification on an Intel
+ * Mac with a discrete GPU that has an option ROM) ***
  */
 
 #import <IOKit/IOKitLib.h>

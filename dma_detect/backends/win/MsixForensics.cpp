@@ -10,16 +10,17 @@
  *       hk_dma_detect alongside ConfigSpaceForensics.
  * Implements: hk_dma_win_fill_msix (consumed by win/ConfigSpaceForensics.cpp).
  *
- * *** HK-UNCERTAIN(win-config-read): reading PCI config space (legacy cap list AND
- * the MSI-X cap at its offset) from a USERSPACE AC component on Windows is the SAME
- * unconfirmed question as extended config (impl-plan Risk #1): whether
- * BusInterfaceStandard.GetBusData / HalGetBusDataByOffset is reachable without the
- * Horkos KMDF driver is NOT established (HalGetBusDataByOffset is a KERNEL API).
- * Per guardrail #13 this TU does NOT guess that API surface: it leaves the MSI-X
- * fields unknown (0) and records the same "needs kernel routing" sentinel the
- * config backend uses. The 64-bit-correct containment math is fully implemented in
- * forensics_report.cpp and unit-tested; only the Windows config SOURCE is deferred.
- * CONFIRM on-box whether config reads must route through a new KMDF IOCTL. ***
+ * *** HK-VERIFIED(win-config-read): HalGetBusDataByOffset is a kernel-only HAL
+ * export (see dma_detect/backends/win/ConfigSpaceForensics.cpp for the primary
+ * citation). Reading PCI config space (legacy cap list AND the MSI-X cap offset)
+ * from a userspace AC component on Windows requires routing through a kernel driver
+ * (the Horkos KMDF driver via DeviceIoControl IOCTL). BusInterfaceStandard is also
+ * a kernel-mode bus-driver interface; not accessible from userspace.
+ * (docs: kernel API restriction confirmed — still needs KMDF IOCTL design + on-box
+ * test for the legacy+extended config read path)
+ * Per guardrail #13 this TU does NOT guess that API surface: MSI-X fields are left
+ * unknown (0) with the "needs kernel routing" sentinel. The 64-bit-correct
+ * containment math is fully implemented in forensics_report.cpp and unit-tested. ***
  */
 
 #include <windows.h>
@@ -30,7 +31,7 @@
 
 /* Shared 64-bit-correct containment check (forensics_report.cpp). Declared here
  * so this TU is ready to call it the moment a Windows config-read path is
- * confirmed; the call site is staged below behind the HK-UNCERTAIN gate. */
+ * confirmed; the call site is staged below behind the HK-VERIFIED(win-config-read) gate. */
 extern "C" int hk_dma_msix_containment_violation(
     uint64_t table_bar_len, uint64_t table_offset,
     uint64_t pba_bar_len,   uint64_t pba_offset,
@@ -44,11 +45,10 @@ static const uint32_t HK_DMA_WIN_CONFIG_UNAVAILABLE = 0xE0000001u;
 /* -------------------------------------------------------------------------
  * hk_dma_win_fill_msix
  *
- * HK-UNCERTAIN(win-config-read): the MSI-X cap walk needs a confirmed userspace
- * config-read path. Until then we leave msix_table_size / containment unknown (0)
- * and mark the record so the server does NOT read the absence as "clean". The
- * containment helper above is the real logic; wiring it here is a one-function
- * change once GetBusData routing is settled on a real box.
+ * HK-VERIFIED(win-config-read): see file header. KMDF IOCTL route confirmed
+ * required; msix_table_size / containment stay unknown (0) with the sentinel.
+ * The containment helper above is the real logic; wiring it here is a one-function
+ * change once the KMDF config-read IOCTL lands on-box.
  * ------------------------------------------------------------------------- */
 extern "C" void hk_dma_win_fill_msix(DEVINST devinst,
                                      hk_dma_device_forensics *d) {

@@ -107,9 +107,14 @@ extern "C" bool HkDynamicValidityProbeSample(const HkCsProbeTarget *target,
      *   2. the exact transient-failure taxonomy (errSecCSGuestInvalid /
      *      errSecCSVmwMapping vs a real tamper) so a JIT region is not miscounted,
      *   3. SecCodeCopyGuestWithAttributes pid-attribute semantics on macOS 12-15.
-     * Per guardrail #13 these Security.framework calls are NOT guessed. When
-     * wired, run SecCodeCheckValidity(code, kSecCSEnforceRevocation, dr), push the
-     * pass/fail into the ring, and confirm with hk_nofm_confirm before emitting:
+     * Per guardrail #13 these Security.framework calls are NOT guessed.
+     * (docs: SecCodeCopyGuestWithAttributes, SecCodeCheckValidity, and
+     * kSecCSEnforceRevocation ARE all in the public SDK (Security/SecCode.h:135,
+     * 217, 237). SecRequirementCreateWithString is in SecRequirement.h. The DR
+     * string is a build artifact; errSecCSGuestInvalid is in Security/CSCommon.h.
+     * Still needs on-box verification of transient-failure taxonomy and DR string.)
+     * When wired, run SecCodeCheckValidity(code, kSecCSEnforceRevocation, dr), push
+     * the pass/fail into the ring, and confirm with hk_nofm_confirm before emitting:
      *   uint8_t failed = (status != errSecSuccess) ? 1 : 0;
      *   dv_push(target->pid, failed);
      *   if (hk_nofm_confirm(g_dv.ring, g_dv.filled, HK_DV_THRESHOLD_N)) {

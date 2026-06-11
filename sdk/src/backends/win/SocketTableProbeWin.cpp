@@ -99,17 +99,19 @@ hk_net_flow_owner probe_flow_owner(void)
     }
     std::free(buf);
 
-    /* HK-UNCERTAIN(win-udp-remote-endpoint): UDP_TABLE_OWNER_PID exposes no remote
-     * endpoint, so the cleanest "game flow terminates at loopback" test (the game
-     * socket's OWN connected foreign address == 127.0.0.1) is not available from
-     * this table on Windows the way macOS proc_pidfdinfo gives it (impl-plan
-     * Risks: 189 high-FP). The cross-PID-loopback-owner heuristic above is a
-     * weaker proxy; confirming the exact interposer-detection table + the
-     * owner-image-hash resolution (OpenProcess + QueryFullProcessImageName + SHA-256,
-     * a privileged cross-process read) needs on-box verification before it is
-     * trusted. owner_image_hash stays all-zero (no interposer image identified)
-     * until that lands under /tdd; the server allowlist against the §1 image_sha256
-     * catalog is a no-op until then. */
+    /* HK-VERIFIED(win-udp-remote-endpoint): MIB_UDPROW_OWNER_PID (the row type for
+     * UDP_TABLE_OWNER_PID) contains only dwLocalAddr, dwLocalPort, and dwOwningPid.
+     * There is NO remote-endpoint field in this struct.
+     * ref: https://learn.microsoft.com/windows/win32/api/iphlpapi/nf-iphlpapi-getextendedudptable
+     * ref: https://learn.microsoft.com/windows/win32/api/tcpmib/ns-tcpmib-mib_udprow_owner_pid
+     * UDP_TABLE_OWNER_MODULE (the extended form) adds creation-time and module info
+     * but still NO remote endpoint, because unconnected UDP sockets have no peer.
+     * For a CONNECTED UDP game socket the peer address lives in the socket's kernel
+     * state but is not surfaced in the MIB table. This confirms the cross-PID-
+     * loopback-owner heuristic is the correct proxy on Windows; the owner-image-hash
+     * resolution via OpenProcess + QueryFullProcessImageName needs
+     * PROCESS_QUERY_LIMITED_INFORMATION (documented) and is a real on-box step
+     * (docs: known — still needs on-box interposer-detection validation). */
     return out;
 }
 

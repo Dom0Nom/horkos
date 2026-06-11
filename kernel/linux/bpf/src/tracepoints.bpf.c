@@ -198,6 +198,12 @@ int hk_tp_exec(struct trace_event_raw_sched_process_exec *ctx)
  * Until confirmed, this program covers sys_enter_pwrite64 only and tags every
  * record for userspace fd-resolution; sys_enter_write (no offset arg) and the
  * PROT_WRITE-mmap correlation are left as // HK-TODO below.
+ * (docs: there is no BPF helper to resolve fd→file→path in O(1) at a syscall
+ * tracepoint without a multi-hop pointer walk through task->files->fdt->fd[n]->
+ * f_path. The pointer chain is verifier-hostile (unbounded ptr-to-ptr). Reading
+ * fd→f_inode→i_rdev at sys_enter IS a finite chain but requires the fd to have
+ * already been resolved to a file pointer, which requires dereferencing the files
+ * table — must be validated against target verifier — still needs on-target test)
  * ===========================================================================*/
 
 /* 0xA1: module-trust msr-write tag (0x31 is taken by ptrace-traceme; the

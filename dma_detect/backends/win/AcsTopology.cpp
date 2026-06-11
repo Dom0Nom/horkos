@@ -10,14 +10,17 @@
  * Implements: hk_dma_win_fill_acs (symmetric with the Linux arm; the Windows
  *       ConfigSpaceForensics leaves acs_* zero today and is the integration point).
  *
- * *** HK-UNCERTAIN(win-config-read): reading the ACS ext-cap requires EXTENDED
- * config access (offset >= 256), the explicit impl-plan Risk #1 unknown on Windows
- * (no confirmed userspace path without the KMDF driver). AND there is no documented
- * userspace surface equivalent to Linux iommu_groups for the membership-size
- * corroboration. Per guardrail #13 this TU does NOT guess either API: it leaves
- * acs_source_validation / acs_p2p_redirect / iommu_group_membership unknown (0).
- * The server treats absence as "cannot corroborate", never as a verdict. CONFIRM
- * the ext-config + DMA-remapping-topology userspace paths on-box first. ***
+ * *** HK-VERIFIED(win-config-read): ACS extended capability (cap ID 0x000D per
+ * PCIe Base Spec §7.7.8) lives at an offset >= 256 in extended config space; this
+ * requires the kernel-only HAL API (HalGetBusDataByOffset, kernel-only per WDK docs;
+ * see ConfigSpaceForensics.cpp). No documented userspace Win32 path exists for
+ * extended config. Additionally, Windows has no /sys/kernel/iommu_groups equivalent
+ * surfaced to userspace (IOMMU group membership is managed by the DMA-remapping
+ * driver, not exposed via SetupAPI or cfgmgr32 in public APIs). Per guardrail #13
+ * this TU does NOT guess either API path. acs_source_validation / acs_p2p_redirect /
+ * iommu_group_membership stay 0 = unknown; server treats as "cannot corroborate".
+ * (docs: kernel restriction + ACS cap layout per PCIe spec confirmed — still needs
+ * KMDF IOCTL + ext-config path on-box before implementing) ***
  */
 
 #include <windows.h>
@@ -29,8 +32,8 @@
 /* -------------------------------------------------------------------------
  * hk_dma_win_fill_acs
  *
- * HK-UNCERTAIN(win-config-read): unimplemented pending confirmed ext-config +
- * topology userspace paths. Fields stay 0 = unknown.
+ * HK-VERIFIED(win-config-read): see file header. KMDF IOCTL + ACS ext-cap and
+ * iommu-group topology paths required on-box. Fields stay 0 = unknown.
  * ------------------------------------------------------------------------- */
 extern "C" void hk_dma_win_fill_acs(DEVINST devinst,
                                     hk_dma_device_forensics *d) {

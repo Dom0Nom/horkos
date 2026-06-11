@@ -15,7 +15,10 @@
  * surface: it leaves the MSI-X fields unknown (0). The 64-bit-correct containment
  * math is fully implemented + unit-tested in forensics_report.cpp; only the macOS
  * config SOURCE is deferred. CONFIRM on a real box whether the config-read user
- * client is reachable unentitled, or whether a System Extension is required. ***
+ * client is reachable unentitled, or whether a System Extension is required.
+ * (docs: same as ConfigSpaceForensics.mm HK-UNCERTAIN(macos-ext-config) —
+ * IOPCIDevice config read methods are kext-side only; no public userspace user-client
+ * selector documented in MacOSX.sdk through 15.5) ***
  */
 
 #import <IOKit/IOKitLib.h>
@@ -36,10 +39,11 @@ extern "C" int hk_dma_msix_containment_violation(
  * hk_dma_macos_fill_msix
  *
  * HK-UNCERTAIN(macos-config-read): the MSI-X cap walk needs a confirmed config
- * read. Until then we leave msix_table_size / containment unknown (0); the parent
- * ConfigSpaceForensics.mm already marks the record's scan_error so the server
- * does NOT read the absence as "clean". Wiring the containment helper here is a
- * one-function change once the config-read selector is settled on a real box.
+ * read (see file header — docs note appended there). Until then we leave
+ * msix_table_size / containment unknown (0); the parent ConfigSpaceForensics.mm
+ * already marks the record's scan_error so the server does NOT read the absence
+ * as "clean". Wiring the containment helper here is a one-function change once
+ * the config-read selector is settled on a real box.
  * ------------------------------------------------------------------------- */
 extern "C" void hk_dma_macos_fill_msix(io_service_t dev, hk_dma_device_forensics *d) {
     (void)dev;

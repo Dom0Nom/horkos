@@ -60,7 +60,10 @@ extern "C" bool HkGatekeeperProbeSample(const HkCsProbeTarget *target, HkCsFindi
      * probe does NOT emit on the xattr alone; the corroborating-only gate
      * (suppress unless a 119/126 finding co-occurs for the same PID) lives in the
      * orchestrator, which is the sole emitter for this signal. Here we only record
-     * the raw observation for that join. */
+     * the raw observation for that join.
+     * (docs: SecAssessment* NOT found in MacOSX.sdk Security.framework public
+     * headers through macOS 15.5 SDK — confirmed SPI surface; still needs
+     * on-box/entitlement verification of the linkable/entitled subset) */
     if (quarantine_present) {
         /* Quarantine present and intact-looking — definitely not a bypass signal. */
         return false;

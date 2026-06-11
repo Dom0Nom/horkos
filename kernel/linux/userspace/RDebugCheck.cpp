@@ -7,15 +7,17 @@
  *
  * Guardrail compliance: #1, #3, #4. Read-only/audit-only.
  *
- * HK-UNCERTAIN(proc-mem-self-suppress): reading another process's /proc/<pid>/mem
- * at the load-biased _r_debug address has the same ptrace-access-mode gating as a
- * debugger; whether the loader can do this WITHOUT itself becoming a ptrace
- * tracer (which would self-suppress this very signal via tracer_attached) is
- * unconfirmed on the target. The r_brk VALUE is therefore supplied to this
- * correlator (RdebugTickEvent.r_brk) by whatever read path the loader ultimately
- * uses; this module only performs the VMA range-check + tracer suppression. The
- * actual /proc/<pid>/mem read mechanism is flagged for on-box verification before
- * signal 88 is enabled (default-OFF in CMake).
+ * HK-VERIFIED(proc-mem-self-suppress): reading another process's /proc/<pid>/mem
+ * requires PTRACE_MODE_ATTACH_FSCREDS (proc_pid_mem(5), kernel filesystems/proc.html),
+ * which is a PERMISSION CHECK only — it does NOT establish a ptrace tracer
+ * relationship or set TracerPid (ptrace(2), kernel filesystems/proc.html). The
+ * loader therefore does NOT become a tracer by virtue of opening /proc/<pid>/mem,
+ * so tracer_attached suppression does not self-trigger. The remaining uncertainty
+ * is operational: does the loader process hold sufficient privilege to satisfy
+ * PTRACE_MODE_ATTACH_FSCREDS on the game pid? This is a capability/Yama-policy
+ * question that requires on-box verification before signal 88 is enabled
+ * (docs: PTRACE_MODE_ATTACH_FSCREDS confirmed non-attaching — still needs
+ * on-target privilege check for Yama ptrace_scope and loader caps).
  */
 
 #include "RDebugCheck.h"

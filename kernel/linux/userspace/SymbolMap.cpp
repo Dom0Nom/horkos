@@ -245,8 +245,12 @@ HkSymbolMap BuildFromProc(const std::string& proc_root,
      * address to the lower neighbour) but never produces a FALSE drift, because
      * the auditors only flag addresses that fall OUTSIDE every known range. A
      * tighter extent needs coresize from /sys/module/<m>/coresize or the LKM
-     * module-list walk (§1.3); verify the coresize semantics on-box before
-     * relying on it. */
+     * module-list walk (§1.3); the sysfs /sys/module/<m> layout is not formally
+     * documented in a stable kernel ABI doc — it is present in practice but the
+     * semantics of `coresize` (text only vs. text+data, init vs. core?) require
+     * on-box verification before relying on it.
+     * (docs: sections/.text exposes VMA start — confirmed from /sys layout; coresize
+     * semantics not in public kernel docs — still needs on-target verification) */
     {
         std::vector<TextRange> starts;
         /* Read the module directory listing without <dirent.h> portability

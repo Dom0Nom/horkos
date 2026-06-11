@@ -237,11 +237,14 @@ void HkIntegrityScanStop(PHK_DEVICE_CONTEXT Ctx)
     /* Clear armed first so an in-flight DPC/worker early-returns. */
     InterlockedExchange(&Ctx->IntegrityArmed, 0);
     (void)KeCancelTimer(&Ctx->IntegrityTimer);
-    /* HK-UNCERTAIN(dpc-flush-ordering): same belt-and-suspenders pattern as
-     * CallbackSelfCheck.c — KeFlushQueuedDpcs waits for ALL DPCs system-wide, not
-     * just ours; the narrow correctness comes from KeCancelTimer +
-     * IntegrityArmed early-return. Confirm on-box that no work item is queued
-     * after this point before freeing the work item. */
+    /* HK-VERIFIED(dpc-flush-ordering): KeFlushQueuedDpcs waits for all currently-
+     * queued DPCs on all processors to execute to completion before returning
+     * (documented: learn.microsoft.com/windows-hardware/drivers/ddi/wdm/
+     * nf-wdm-keflushqueueddpcs). The ordering guarantee is system-wide, not per-DPC;
+     * the narrow correctness property (no new DPC queued after this returns) comes
+     * from KeCancelTimer + IntegrityArmed early-return preceding this call.
+     * Confirm on-box that the work item cannot be queued after the timer cancel
+     * before freeing the work item. */
     KeFlushQueuedDpcs();
 
     if (Ctx->IntegrityWorkItem != NULL) {

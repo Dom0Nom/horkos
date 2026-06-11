@@ -134,12 +134,16 @@ int hk_tp_io_page_fault(void *ctx)
      * verifier-hostile). We forward 0 here and let the loader resolve the BDF from
      * the recorded dev_name via the companion __data_loc copy below when present.
      *
-     * HK-UNCERTAIN(iommu-tp-devname): whether the generated struct exposes
-     * `__data_loc_dev_name` (vs an inline char dev_name[]) is kernel-dependent and
-     * not confirmable off-box. Until the target-BTF probe in the loader confirms the
-     * field shape, source_bdf is shipped as 0 ("unknown") and the loader attributes
-     * the fault by other means (e.g. the device that most recently arrived) or drops
-     * it. A 0 BDF is never scored as a real device — "unknown", not "clean". */
+     * HK-UNCERTAIN(iommu-tp-devname): the iommu_error event class uses
+     * __string(device, dev_name(dev)) in its TP_STRUCT__entry (confirmed:
+     * include/trace/events/iommu.h, torvalds/linux master). __string generates a
+     * __data_loc-encoded field, so the generated vmlinux.h field name should be
+     * __data_loc_device (not inline char[]). However the EXACT field name in the
+     * generated trace_event_raw_io_page_fault struct depends on the target kernel's
+     * BTF export and can vary (e.g. some kernels emit __data_loc_dev_name, others
+     * __data_loc_device). Not confirmable off-box without the target vmlinux BTF.
+     * Until the target-BTF probe in the loader confirms the field shape, source_bdf
+     * is shipped as 0 ("unknown"). A 0 BDF is never scored — "unknown", not "clean". */
     evt->source_bdf = 0;
 
     bpf_ringbuf_submit(evt, 0);
