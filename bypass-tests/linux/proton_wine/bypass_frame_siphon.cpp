@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_frame_siphon.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 106 (gamescope/DRM-lease frame siphon). Demonstrates: a non-
  *       gamescope Wayland client connects to the gamescope socket and a non-

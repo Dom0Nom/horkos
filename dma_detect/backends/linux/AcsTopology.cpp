@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/AcsTopology.cpp
  * Role: Linux ACS / IOMMU-group topology forensics (sig 133). Reads the device's
  *       ACS extended capability (cap ID 0x000D) control bits — Source Validation
  *       and P2P Request Redirect — and corroborates with the device's IOMMU-group

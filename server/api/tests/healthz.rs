@@ -1,4 +1,3 @@
-//! tests/healthz.rs
 //! Role: Integration test for `GET /healthz`. Uses tower::ServiceExt::oneshot
 //!       so the test runs without binding a socket.
 //! Target platforms: server (any tokio-supported OS).

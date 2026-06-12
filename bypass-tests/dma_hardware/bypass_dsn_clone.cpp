@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_dsn_clone.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 127 (DSN forgery). Demonstrates: a device record that clones a NIC's
  *       VID/DID but presents a DSN whose EUI-64 OUI does NOT match the VID's

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/network/hk_bypass_net_flowowner.cpp
  * Role: network-anomaly macOS bypass-test merge gate (signal 189) [disabled].
  *       A loopback MITM proxy makes the game socket's OWN foreign address (proc_pidfdinfo/PROC_PIDFDSOCKETINFO) read as 127.0.0.0/8 -> flow_owner_local set; a direct connection to the server IP is not.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

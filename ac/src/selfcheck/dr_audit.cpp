@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/dr_audit.cpp
  * Role: Signal 148 — DR0-DR7 hardware-breakpoint audit across our threads. Requests
  *       the kernel-side per-thread DR0-DR7 / DR7 read for our process and flags any
  *       DR linear address landing inside our .text. The trustworthy read is

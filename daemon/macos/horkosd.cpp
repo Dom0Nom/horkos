@@ -1,5 +1,4 @@
 /*
- * daemon/macos/horkosd.cpp
  * Role: launchd-managed XPC service daemon bring-up skeleton.
  *       Registers a Mach service under the label "com.horkos.daemon",
  *       accepts client connections, and handles a "ping" command with a

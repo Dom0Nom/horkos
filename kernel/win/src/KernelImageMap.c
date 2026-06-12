@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/KernelImageMap.c
  * Role: Per-scan cache of the ntoskrnl/hal kernel-image ranges, consumed by the
  *       syscall/ETW surface-integrity sensors (208/209/211/213/214) to bounds-
  *       check decoded targets against the core kernel images. Built once per scan

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_hv_logic.cpp
  * Role: Host-buildable unit tests for the hypervisor structural-consistency
  *       cores (ac/include/horkos/hv_logic.h, signals 37/40/42/44/45). Exercises
  *       the TLFS leaf-vector consistency flags, the synthetic-MSR incoherence

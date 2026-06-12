@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/dlopen_uprobe.bpf.c
  * Role: uprobe on the PUBLIC glibc exports dlopen/dlmopen. On entry it reads the
  *       path argument (a user pointer) via bpf_probe_read_user_str and emits a
  *       compact record so the userspace correlator DlopenBacking.cpp (signal 86)

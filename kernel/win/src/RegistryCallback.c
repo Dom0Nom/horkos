@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/RegistryCallback.c
  * Role: CmRegisterCallbackEx registry filter scoped STRICTLY to Horkos's own
  *       service / config / driver-image keys. Observe-only (Phase 3): the
  *       callback NEVER blocks a write — it always returns STATUS_SUCCESS — it

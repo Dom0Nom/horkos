@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DlopenBacking.cpp
  * Role: Implementation of the signal-86 fileless-dlopen correlator declared in
  *       DlopenBacking.h.
  * Target platform: Linux userspace.

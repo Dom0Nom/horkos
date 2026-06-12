@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/veh_unwind_audit.cpp
  * Role: Signal 150 (Windows) — exception/VEH & unwind-table hijack audit. Validates
  *       VEH-list ordering (hook-free: register our own VEH FIRST and validate
  *       ordering, rather than traversing the undocumented LdrpVectorHandlerList) and

@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/DriverObjectAudit.c
  * Role: Signal 34 — DRIVER_OBJECT FastIo/StartIo/Unload/AddDevice divergence
  *       audit. Walks the loaded drivers and verifies each non-NULL dispatch
  *       pointer (DriverStartIo, DriverUnload, the FastIoDispatch table entries,

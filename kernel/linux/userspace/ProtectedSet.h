@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ProtectedSet.h
  * Role: Public interface for populating the shared `hk_protected` BPF map that
  *       gates every Linux memory-access sensor (signals 73-81). Userspace adds
  *       a protected game process by tgid together with its main-executable

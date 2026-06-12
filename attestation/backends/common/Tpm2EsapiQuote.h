@@ -1,5 +1,4 @@
 /*
- * attestation/backends/common/Tpm2EsapiQuote.h
  * Role: Platform-neutral tpm2-tss ESAPI quote routine shared by the Linux and
  *       Windows TPM backends. The Esys_* API is identical on both; only the
  *       default TCTI differs (device /dev/tpmrm0 on Linux, tcti-tbs on Windows)

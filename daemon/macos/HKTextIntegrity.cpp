@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKTextIntegrity.cpp
  * Role: __TEXT W^X scanner + code-signature status check (signal 117). Resolves
  *       the game's __TEXT range from on-disk mach-o load commands, walks the slid
  *       range via mach_vm_region_recurse, and flags any writable / COW-broken

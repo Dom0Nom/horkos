@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/DeviceArrivalCorrelationWin.cpp
  * Role: Signal 144 — device-arrival/activity-correlation sensor. Timestamps
  *       DBT_DEVICEARRIVAL / DBT_DEVICEREMOVECOMPLETE for GUID_DEVINTERFACE_HID (via
  *       RegisterDeviceNotification) and joins them against per-hDevice activity windows

@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/iat_target_audit.cpp
  * Role: Signal 149 (Windows) — IAT / delay-IAT resolution-target signature audit.
  *       Walks our IMAGE_IMPORT_DESCRIPTOR + IMAGE_DELAYLOAD_DESCRIPTOR, resolves each
  *       scoped slot's target, attributes the owning module, recomputes the expected

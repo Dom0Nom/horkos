@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/drvobj_fastio_detour.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 34 (DRIVER_OBJECT
  *       divergence audit, win-kernel-driver-integrity). A Phase-5 fixture detours
  *       a FastIoDispatch pointer OUT of its owning image: the AC must emit

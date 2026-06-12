@@ -1,5 +1,4 @@
 /*
- * dma_detect/include/horkos/dma_forensics.h
  * Role: Pure-C struct/report interface for the nine PCIe device-forensic
  *       signals (catalog 127-135): DSN forgery, ext-config stability, MSI-X
  *       containment, option-ROM identity, BAR geometry, TLP latency, ACS/IOMMU

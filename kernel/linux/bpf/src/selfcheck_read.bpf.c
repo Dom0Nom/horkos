@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/selfcheck_read.bpf.c
  * Role: Linux eBPF self-read cooperator for the AC's OWN image (memory-integrity-
  *       selfcheck, signals 145/146/152). On a self-read tick for the AC task it
  *       would bpf_probe_read_user the requested VA (145), sample soft-dirty/private

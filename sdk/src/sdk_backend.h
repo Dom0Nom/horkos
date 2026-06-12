@@ -1,5 +1,4 @@
 /*
- * sdk/src/sdk_backend.h
  * Role: Internal SDK backend interface. The one platform-specific operation the
  *       SDK needs — probing whether the Horkos kernel driver is present and
  *       reachable — is declared here and implemented per-platform under

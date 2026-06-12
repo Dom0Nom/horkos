@@ -1,5 +1,3 @@
-//! src/analyzers/mod.rs
-//!
 //! Role: analyzer trait + pipeline registry for the behavioral-gamestate-knowledge
 //! domain (catalog signals 172-180). Each analyzer replays the authoritative snapshot
 //! stream against the client-reported `TickPayload` and proves the player acted on

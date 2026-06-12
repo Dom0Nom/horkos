@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/VmAccessLogicWin.h
  * Role: PLATFORM-FREE decision cores shared by the win-handle-memory-access
  *       sensors (catalog signals 64-72). Two pure pieces the host unit tests drive
  *       with no driver / no Win32:

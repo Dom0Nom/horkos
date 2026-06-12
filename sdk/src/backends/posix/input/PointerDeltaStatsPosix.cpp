@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/input/PointerDeltaStatsPosix.cpp
  * Role: Signal 142 (Linux half) — pointer-delta statistical-feature extractor.
  *       Accumulates EV_REL REL_X/REL_Y deltas (read from the game's own evdev grab /
  *       libinput stream) into a bounded window and folds them into the

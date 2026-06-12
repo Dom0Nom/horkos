@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/timing_signals.h
  * Role: The stable usermode timing/execution-trace sensor surface the detection
  *       catalog names for timing-side-channels (catalog signals 154/156/157/159/
  *       161/162, plus 155 folded from the kernel ring). Declares the plain-POD

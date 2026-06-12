@@ -1,5 +1,3 @@
-//! src/loader_inject.rs
-//!
 //! Role: Ban-engine scoring weights for the Linux eBPF loader-injection signals
 //! (linux-ebpf-injection, catalog 82-90). Encodes the impl-plan's two
 //! load-bearing scoring rules: (1) signal 87 (load-order inversion) is

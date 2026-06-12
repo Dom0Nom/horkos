@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/timing/foreign_veh.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 154, Windows). Installs a foreign first-chain VEH (unsigned module) ahead of the AC; must demonstrate signal 154 flags a non-attested resolver image.
  * Target platforms: Windows only (built behind if(WIN32)).
  * Interface: drives the AC timing flag surface

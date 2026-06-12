@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/shared_data_clock_win.cpp
  * Role: Signal 157 — KUSER_SHARED_DATA monotonicity-break sensor. Reads the documented
  *       read-only user-mode page at 0x7FFE0000 (InterruptTime / SystemTime / TickCount /
  *       QpcBias) and compares its advance ratios against GetTickCount64() /

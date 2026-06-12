@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/GamescopeConsumerBaseline.cpp
  * Role: Implementation of the signal-106 compositor-consumer baseliner declared
  *       in GamescopeConsumerBaseline.h. The allowlist (gamescope/pipewire/portal/
  *       Steam-stream) is the FP gate; OBS-via-portal and Steam Remote Play must

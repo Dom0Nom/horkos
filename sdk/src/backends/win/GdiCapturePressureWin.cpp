@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/GdiCapturePressureWin.cpp
  * Role: Signal 53 (win-usermode-overlay). GDI screen-DC capture-handle pressure
  *       sensor — an explicitly LOW-WEIGHT corroborator (plan R6). Samples
  *       GetGuiResources(GR_GDIOBJECTS) on suspect PIDs to detect DC/bitmap churn,

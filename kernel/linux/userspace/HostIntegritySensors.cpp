@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/HostIntegritySensors.cpp
  * Role: Audit aggregator + shared emit helpers for the Linux kernel/module-trust
  *       sensors (signals 91-99). Owns a timer thread that drives each periodic
  *       sensor on its cadence (§5) and forwards events through the shared

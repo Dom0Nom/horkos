@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/thread_origin/thread_origin.cpp
  * Role: Merge-gate bypass test (guardrail #12) for the win-kernel-thread-injection
  *       security folder. One sub-case per catalog evasion the plan names
  *       (signals 19-27): manual-map thread, setcontext/resume chain, remote APC,

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_vm_access_sizes.cpp
  * Role: Host-buildable schema-pin test for the win-handle-memory-access wire
  *       payloads (signals 64-72). The plan lists four payloads whose NAMED fields
  *       sum to 28/24/12/20, but the u64 members force 8-byte struct alignment, so the

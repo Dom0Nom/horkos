@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/PcieEnumWin.cpp
  * Role: Windows backend for DMA-attack detection.
  *       Enumerates PCIe devices via SetupAPI, flags DMA-capable suspects,
  *       and cross-checks IOMMU/VT-d state from DMAR ACPI table presence

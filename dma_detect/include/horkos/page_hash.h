@@ -1,5 +1,4 @@
 /*
- * dma_detect/include/horkos/page_hash.h
  * Role: Pure, platform-free page-hash helper shared across host sensors. The
  *       thread-provenance enrichment plane (sdk/src/backends/win/
  *       ThreadProvenanceWin.cpp) reuses this to compare a mapped entry page

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/network/hk_bypass_net_backlog.cpp
  * Role: network-anomaly Linux bypass-test merge gate (signal 184) [disabled].
  *       A held-uplink (paused send thread) shows the app ring rising while ioctl(SIOCOUTQ) stays ~0 with no congestion; a congested link grows the kernel side too.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

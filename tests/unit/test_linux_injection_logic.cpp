@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_linux_injection_logic.cpp
  * Role: Host-runnable pure-logic tests for the linux-ebpf-injection correlators
  *       (signals 82-90). The correlator decision cores + ElfModel /proc parsing +
  *       OverlayAllowlist signature/lookup are plain C++17 (no libbpf, no

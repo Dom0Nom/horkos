@@ -1,5 +1,3 @@
-//! src/input_cadence.rs
-//!
 //! Role: Input-cadence feature ingest plane (hardware-input-devices domain, catalog
 //! signals 139 poll-interval-ceiling + 144 device arrival/lifetime). Serde mirror of
 //! the C99 `hk_pointer_cadence_features` record in

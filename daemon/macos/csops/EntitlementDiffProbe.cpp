@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/EntitlementDiffProbe.cpp
  * Role: Signal 126 — kernel-granted vs signed entitlement-blob diff. Reads the
  *       kernel-held entitlement blob for a game PID via csops(pid,
  *       CS_OPS_ENTITLEMENTS_BLOB / CS_OPS_DER_ENTITLEMENTS_BLOB) and compares the

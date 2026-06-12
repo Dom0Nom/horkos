@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/cpuid_fan.h
  * Role: Signal-162 CPUID per-leaf latency-fan sampler. Declares the cross-arch
  *       sampler that times __cpuidex across a fixed leaf sweep with RDTSCP+LFENCE
  *       fences and emits a per-leaf latency vector. Bare-metal baselines are near-flat;

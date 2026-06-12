@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/lsm_file_open.bpf.c
  * Role: BPF LSM program for the lsm/file_open hook.  On every file-open
  *       decision it pushes a compact event record to the shared ring buffer
  *       so the userspace loader (kernel/linux/userspace/Loader.cpp) can

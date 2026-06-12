@@ -1,5 +1,3 @@
-//! tests/sink_ingest.rs
-//!
 //! Role: HTTP integration for `router_with_sink` — validated ticks are
 //! stamped server-side and forwarded into the pipeline channel; the
 //! server-authored `server_received_ts` field can never be client-supplied

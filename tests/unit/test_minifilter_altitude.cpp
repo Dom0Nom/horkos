@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_minifilter_altitude.cpp
  * Role: Host-buildable unit tests for the minifilter altitude census classifier
  *       (sdk/src/backends/win/minifilter_altitude.h, signal 6). Proves the FP
  *       discipline: altitude-occupancy alone is never a verdict; only an

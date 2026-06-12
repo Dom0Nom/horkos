@@ -1,5 +1,3 @@
-//! src/analyzers/positional_prior.rs
-//!
 //! Role: positional-prior beelining (entropy-collapsed pathing) analyzer (catalog
 //! signal 176). Logs the local player's authoritative position/velocity and measures
 //! how directly they path toward a SERVER-RANDOM objective/spawn (gated on the

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CdHashProbe.cpp
  * Role: Signal 119 — live-vs-disk cdhash / notarization parity probe. Reads the
  *       kernel's live cdhash for a game PID via csops(pid, CS_OPS_PIDCDHASH) and
  *       cross-checks it against the on-disk bundle's cdhash from

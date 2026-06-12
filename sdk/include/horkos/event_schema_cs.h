@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/event_schema_cs.h
  * Role: macOS-only wire-format payload for the code-signing / platform-trust
  *       findings (catalog signals 118-126). A single fixed 16-byte
  *       `hk_event_cs_finding` carrying {signal_id, finding, target_pid, detail}

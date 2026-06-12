@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/win/CursorConfinementWin.cpp
  * Role: Windows cursor-confinement provenance sensor (catalog signal 170).
  *       Samples GetClipCursor (clip rect still == the game's confinement rect ->
  *       clip_rect_ok), GetCursorInfo/CURSORINFO.flags (CURSOR_SHOWING absent ->

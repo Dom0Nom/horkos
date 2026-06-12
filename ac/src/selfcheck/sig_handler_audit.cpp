@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/sig_handler_audit.cpp
  * Role: Signal 150 (Linux/macOS) — validate our SIGTRAP/SIGSEGV sigaction handlers
  *       resolve into our own text and are not chained ahead of by an injected
  *       handler. The POSIX analog of the Windows VEH/unwind audit.

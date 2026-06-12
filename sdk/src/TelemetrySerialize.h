@@ -1,5 +1,4 @@
 /*
- * sdk/src/TelemetrySerialize.h
  * Role: Platform-free per-tick telemetry serializer — assembles the JSON
  *       `TickPayload` the server ingests (server/telemetry/src/schema.rs) from
  *       the client's assembled aim-feature POD. THE TICK ECHO LIVES HERE: the

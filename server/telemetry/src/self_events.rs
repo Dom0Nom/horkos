@@ -1,5 +1,3 @@
-//! src/self_events.rs
-//!
 //! Role: Server-side decode + correlation for the client self-integrity events
 //! (memory-integrity-selfcheck, catalog signals 145-153). Mirrors the `hk_event_self_*`
 //! wire structs (`#[repr(C)]` over the C99 layout in `ac/src/selfcheck/self_wire.h`),

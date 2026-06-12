@@ -1,5 +1,4 @@
 /*
- * tests/integration/win/ioctl_smoke.cpp
  * Role: Userspace smoke test for the kernel IOCTL bridge. Opens the Horkos
  *       control device and exercises GET_STATUS, DRAIN_EVENTS, and PUSH_POLICY,
  *       asserting each returns successfully. Lives under tests/integration/ —

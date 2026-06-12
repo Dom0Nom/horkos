@@ -1,5 +1,3 @@
-//! src/store.rs
-//!
 //! Role: append-only decision/audit store for fusion outcomes. Two backends
 //! behind one type (an enum, not a trait — native async-fn-in-trait is not
 //! dyn-safe and two variants do not justify generics through the pipeline):

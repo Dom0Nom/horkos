@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/Annotations.h
  * Role: Collects the set of functions opted into obfuscation via
  *       __attribute__((annotate("hk_obfuscate"))). Clang lowers function-level
  *       annotate attributes into the module-global @llvm.global.annotations

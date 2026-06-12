@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/proc_genealogy.c
  * Role: Signal 199 sensor — in the process-create notify, captures the TRUE
  *       creator (PsGetCurrentProcessId, the creating thread's owning process) and
  *       compares it against the inherited ParentProcessId; emits the v5

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKTextIntegrity.h
  * Role: Interface for the __TEXT W^X integrity scanner (signal 117). Declares
  *       HKTextScan() and the pure __TEXT-range resolver that parses a mach-o's
  *       on-disk load commands to find the signed __TEXT segment.

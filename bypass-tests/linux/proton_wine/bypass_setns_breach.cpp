@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_setns_breach.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 103 (namespace-entry breach). Demonstrates: nsenter into the game's
  *       mnt/pid namespace from a process OUTSIDE the pv-bwrap lineage ->

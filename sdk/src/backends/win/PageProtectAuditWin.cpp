@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/PageProtectAuditWin.cpp
  * Role: Windows userspace page-protection audit (win-handle-memory-access, catalog
  *       signal 71). One tick: VirtualQueryEx-sweep the game's MEM_IMAGE code regions
  *       and compare each region's live MEMORY_BASIC_INFORMATION.Protect against the

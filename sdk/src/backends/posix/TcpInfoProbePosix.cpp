@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/TcpInfoProbePosix.cpp
  * Role: Signal 183 POSIX half — kernel-TCP_INFO vs perceived-stall sensor. Reads
  *       the kernel's view of the TCP CONTROL/matchmaking channel (smoothed RTT +
  *       retransmits) so the server can spot the lag-switch contradiction "TCP

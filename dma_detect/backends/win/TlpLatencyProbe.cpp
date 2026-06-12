@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/TlpLatencyProbe.cpp
  * Role: Windows config-read TLP latency probe (sig 132 — LOW WEIGHT side-channel).
  *       Intended to tight-loop identical config reads of one register timed with
  *       QueryPerformanceCounter, build robust stats (median + IQR), and tag the

@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/OptionRomForensics.cpp
  * Role: Windows option-ROM identity forensics (sig 130). Intended to read the
  *       Expansion ROM BAR (config 0x30), parse the 0xAA55 + PCIR header, and
  *       compare the PCIR VID/DID to the device's config VID/DID — a clone board

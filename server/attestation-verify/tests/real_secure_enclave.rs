@@ -1,5 +1,3 @@
-//! tests/real_secure_enclave.rs
-//!
 //! Role: end-to-end cross-component proof for the macOS path. These bytes are a
 //! REAL Secure Enclave signature produced by the macOS backend
 //! (`attestation/backends/macos/AttestationSecureEnclave.cpp`) running on an

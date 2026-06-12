@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_vmexit_latency.cpp
  * Role: Signal 38 sampler — builds a histogram of CPUID (an unconditionally
  *       vm-exiting, serialising instruction) round-trip latencies, with
  *       independent-clock spans (QPC + KUSER_SHARED_DATA.InterruptTime) so the

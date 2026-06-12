@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/hwbp_audit.bpf.c
  * Role: Linux eBPF hardware-breakpoint-install audit (memory-integrity-selfcheck,
  *       signal 148). Tracepoints on the hw-breakpoint install path / perf_event_open
  *       with HW_BREAKPOINT_X targeting the AC's address space, emitting an install

@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/horkos_kernel.h
  * Role: Internal kernel-mode header for the Horkos KMDF driver. Declares the
  *       device context, the SPSC event ring buffer, and every internal
  *       routine across DriverEntry / IrpDispatch / Notify / RingBuffer /

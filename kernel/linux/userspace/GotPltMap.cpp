@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/GotPltMap.cpp
  * Role: Implementation of the signal-83 GOT/PLT redirection correlator declared
  *       in GotPltMap.h.
  * Target platform: Linux userspace.

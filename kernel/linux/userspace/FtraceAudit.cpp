@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/FtraceAudit.cpp
  * Role: Implementation of signal 93 (ftrace ownership audit) declared in
  *       FtraceAudit.h. Pure parsing + attribution over the shared HkSymbolMap.
  * Target platform: Linux userspace.

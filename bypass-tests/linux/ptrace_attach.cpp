@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/ptrace_attach.cpp
  * Role: Linux bypass-test fixture (Phase 5: [disabled]). Intended to
  *       ptrace(PTRACE_ATTACH) the protected process and assert the AC stack
  *       raises the ptrace flag via the eBPF ptrace tracepoint hook (Phase 4).

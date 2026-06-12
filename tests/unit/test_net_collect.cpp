@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_net_collect.cpp
  * Role: Host unit test for the network-anomaly cross-platform cores + aggregator
  *       (sdk/src/ClockDomainProbe.cpp signal 182, SendBacklogProbe.cpp 184,
  *       ProbeChannel.cpp 187, NetCollect.cpp aggregator). The cores dispatch their

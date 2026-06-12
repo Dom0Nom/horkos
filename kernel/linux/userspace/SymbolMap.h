@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/SymbolMap.h
  * Role: Shared, refreshed-per-cycle view of the running kernel's text layout —
  *       the _stext.._etext core range and per-module .text bounds — built ONCE
  *       per audit cycle from /proc/kallsyms + /proc/iomem + /sys/module/<m>/

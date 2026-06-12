@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/ssdt_base_swap.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 216 (SSDT descriptor
  *       base-swap, win-kernel-syscall-etw-integrity). A Phase-5 test-signed fixture
  *       redirects KeServiceDescriptorTable.Base to a CLONED, pre-hooked SSDT while

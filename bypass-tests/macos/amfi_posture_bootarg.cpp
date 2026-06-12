@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/amfi_posture_bootarg.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 124. Intended to boot a VM with amfi_get_out_of_my_way / Developer Mode; assert HK_CS_AMFI_POSTURE_WEAK is emitted as a trust-tier input, NOT a ban (report-only contract) and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

@@ -1,5 +1,3 @@
-//! src/mem_events.rs
-//!
 //! Role: Server-side decode + bounds-validation for the Windows kernel
 //! memory/image-anomaly event records (win-kernel-memory-injection, signals
 //! 10-18): unbacked executable region (`hk_mem_region`), W^X divergence

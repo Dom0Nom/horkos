@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/HidPollRateWin.cpp
  * Role: Signal 62 (win-input-automation). HID report-rate-vs-declared-poll-interval
  *       contradiction sensor. Reads the device's USB interrupt-IN endpoint bInterval
  *       (declared poll rate) and compares it against the measured WM_INPUT arrival

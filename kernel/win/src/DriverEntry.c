@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/DriverEntry.c
  * Role: KMDF driver entry point and teardown. Creates the control device used
  *       for the userspace IOCTL bridge, initializes the event ring, and arms
  *       the Ps* notify routines and the Ob handle-filter callback.

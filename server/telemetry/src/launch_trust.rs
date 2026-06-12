@@ -1,5 +1,3 @@
-//! src/launch_trust.rs
-//!
 //! Role: Server-side ingest + correlation for the process-genealogy launch-trust
 //! report (signals 199-207): true-creator-vs-parent reparenting, suspended-launch
 //! window, LOLBin ancestry, manual-mapped module, token/integrity divergence,

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/job_silo_check.cpp
  * Role: Signal 204 sensor (advisory-only, high FP) — reports whether the game is
  *       in a job object and a coarse descriptor of that job, for the server to
  *       compare against the expected launcher job. Windows itself, UWP

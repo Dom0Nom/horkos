@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/rdebug_hook.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 88
  *       (_r_debug r_brk / RELRO). Demonstrates: repoint _r_debug.r_brk outside
  *       the ld.so VMA (no tracer) -> signal 88 fires; with a ptrace tracer

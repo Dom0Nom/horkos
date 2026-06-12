@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_mem_vad_logic.cpp
  * Role: Host-buildable unit tests for the VAD-walk pure decision cores
  *       (kernel/win/include/mem_logic_vad.h, signals 10/14/15). Exercises the
  *       structural classifiers with synthetic HK_VAD_NODE fixtures — no WDK, no

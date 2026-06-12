@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/text_sample.bpf.c
  * Role: uprobe-triggered CADENCE program for signal 90. On fire it emits a
  *       lightweight "this watched PID needs an executable-page COW/back-store
  *       scan" tick. The actual scan — reading /proc/<pid>/smaps_rollup, per-VMA

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ModuleDiskDrift.h
  * Role: Signal 95 (userspace half) — in-memory-vs-on-disk module integrity by
  *       build-id. Reads each loaded module's GNU build-id from
  *       /sys/module/<m>/notes/.note.gnu.build-id and compares it against the

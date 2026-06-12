@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/win/RawHidSamplerWin.cpp
  * Role: Windows raw-HID aim sampler (catalog signals 163/164/165). Drains the
  *       GAME'S OWN raw-input sink (RegisterRawInputDevices RIDEV_INPUTSINK +
  *       GetRawInputData reading RAWMOUSE.lLastX/lLastY) into platform-free

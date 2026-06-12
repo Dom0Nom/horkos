@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ContainerNsBaseline.h
  * Role: Signal 103 baseliner — resolve the pressure-vessel (pv-bwrap/bwrap)
  *       launcher PID lineage and the game-container ns inodes, then classify a
  *       setns record (caller_tgid joining a target ns inode) as anomalous. A

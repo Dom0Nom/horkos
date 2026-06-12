@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_extcfg_alias.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 128 (ext-config stability / aliasing). Demonstrates: an FPGA-style
  *       "shadow config" that backs extended config (0x100+) with the same memory as

@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/hv_signals.h
  * Role: Usermode hypervisor/virtualization-state sensor surface. One fixed POD
  *       result struct + sampler per signal (37 TLFS leaves, 38 vmexit latency,
  *       40 VBS attestation, 43 VM identity, 45 TSC coherence), a kernel-record

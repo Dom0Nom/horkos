@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/iter_task_vma.bpf.c
  * Role: BPF iterator (iter/task_vma) for executable-VMA inventory drift
  *       (signal 80). Driven on a userspace timer trigger from Loader.cpp, it
  *       walks the protected task's VMAs and emits one hk_event_vma_row per

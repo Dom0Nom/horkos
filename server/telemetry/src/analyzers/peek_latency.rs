@@ -1,5 +1,3 @@
-//! src/analyzers/peek_latency.rs
-//!
 //! Role: peeker-advantage vs RTT+jitter budget analyzer (catalog signal 174). When the
 //! local player and an enemy gain MUTUAL line-of-sight (both visible to each other
 //! this tick), the defender's information about the peeker is delayed by the network

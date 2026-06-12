@@ -1,5 +1,4 @@
 /*
- * kernel/linux/lkm/horkos_main.c
  * Role: Linux LKM entry/exit and process-exec monitoring for the non-Deck path.
  *       (Renamed from horkos.c so the module can be a multi-object build —
  *       horkos.ko = horkos_main.o + module_crc.o; Kbuild forbids a same-named

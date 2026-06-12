@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_sentinel.cpp
  * Role: Build-system smoke test. Verifies the CMake + GTest wiring compiles
  *       and links correctly. This is not a real test of product behaviour.
  * Target platforms: all.

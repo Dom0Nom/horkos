@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/Notify.c
  * Role: Registers the process/thread/image-load notify routines for early-bird
  *       visibility and funnels each event into the ring buffer. Phase 3 is
  *       capture-only; evidence collection and real BYOVD blocking land later.

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/loadorder_interpose.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 87
  *       (load-order inversion, CORROBORATING-ONLY). Demonstrates: preload a
  *       malloc-interposer ahead of libc with no provenance -> signal 87 flagged

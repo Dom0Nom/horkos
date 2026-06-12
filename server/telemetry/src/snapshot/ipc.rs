@@ -1,5 +1,3 @@
-//! src/snapshot/ipc.rs
-//!
 //! Role: shm/mmap consumer bridging the game-server authoritative snapshot ring into
 //! the async telemetry pipeline. Declares the `#[repr(C)]` Rust mirror of the C99
 //! `HkSnapshotRecord` / `HkEntityState` / `HkVec3` / `HkOccluderVolume` frames in

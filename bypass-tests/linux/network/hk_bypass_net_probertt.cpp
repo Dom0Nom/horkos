@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/network/hk_bypass_net_probertt.cpp
  * Role: network-anomaly Linux bypass-test merge gate (signal 187) [disabled].
  *       A game-port-only throttle diverges probe_rtt from game_rtt; symmetric congestion hits both. Requires the server echo responder (dependency).
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

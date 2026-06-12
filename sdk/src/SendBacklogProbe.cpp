@@ -1,5 +1,4 @@
 /*
- * sdk/src/SendBacklogProbe.cpp
  * Role: Signal 184 cross-platform core — held-uplink / send-backlog sensor. Pairs
  *       the app-side send-ring depth (owned by the SDK uplink, set via
  *       hk_net_set_uplink_state) with the kernel's unsent-byte count read through

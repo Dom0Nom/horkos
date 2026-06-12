@@ -1,5 +1,3 @@
-//! src/snapshot/mod.rs
-//!
 //! Role: authoritative game-state snapshot model + tick-replay cursor for the
 //! behavioral-gamestate-knowledge analyzers (catalog signals 172-180). This is the
 //! server-KNOWN truth the client lacks — per-tick entity transforms, the local view

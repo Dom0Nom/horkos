@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/include/hk_bpf_shared.h
  * Role: BPF-side wire-record structs + internal event tags shared across the
  *       linux-proton-wine eBPF translation units (proton_env / mmap_exec_audit /
  *       cross_mem_audit / namespace_entry / module_load_audit / rootfs_ro_audit /

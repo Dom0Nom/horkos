@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HollowDetect.c
  * Role: Hollow/doppelgang backing scanner (signal 16). For each image-backed
  *       executable VAD that contains the entry point, compares the backing
  *       FILE_OBJECT name against the Ldr-recorded path and probes delete-pending

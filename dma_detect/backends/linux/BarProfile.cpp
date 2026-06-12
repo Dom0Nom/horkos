@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/BarProfile.cpp
  * Role: Linux BAR geometry profiler (sig 131). Reconstructs each BAR's
  *       {size, 64-bit, prefetchable, io} from the kernel-recorded
  *       /sys/bus/pci/devices/<BDF>/resource file — never by issuing the

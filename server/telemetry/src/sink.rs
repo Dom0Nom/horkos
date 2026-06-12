@@ -1,5 +1,3 @@
-//! src/sink.rs
-//!
 //! Role: ingest-side tick sink. Routes validated, server-stamped `TickPayload`s
 //! from the HTTP ingest handler into the ban-engine pipeline's sharded mpsc
 //! channels (shard = `player_id % shards`, so one player's session state is

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_mem_image_logic.cpp
  * Role: Host-buildable unit tests for the loader/image pure decision cores
  *       (kernel/win/include/mem_logic_image.h, signals 13/16/17). Exercises the
  *       ghost-image cross-check, the hollow-backing combination gate, and the

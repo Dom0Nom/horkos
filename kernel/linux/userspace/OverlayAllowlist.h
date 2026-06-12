@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/OverlayAllowlist.h
  * Role: Load and query the server-signed soname+build-id allowlist (the
  *       legitimate overlay / layer / allocator ecosystem: MangoHud, jemalloc,
  *       tcmalloc, ASan, libfaketime, Steam runtime libs, ...), scoped per

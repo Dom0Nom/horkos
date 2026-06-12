@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/vm_write_attach.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 74
  *       (process_vm_writev foreign-writer detection). Forks a victim that maps a
  *       known page, then from a separate tgid issues process_vm_writev(2) into

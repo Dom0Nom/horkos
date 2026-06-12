@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/retaddr_provenance.cpp
  * Role: Signal 147 — return-address provenance / shadow-stack mismatch at our
  *       annotated critical-function prologues (HK_GUARD_ENTRY). Captures the call
  *       stack, attributes each frame to a signed module, and cross-checks the CET

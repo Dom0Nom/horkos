@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/network/hk_bypass_net_flowowner.cpp
  * Role: network-anomaly Linux bypass-test merge gate (signal 189) [disabled].
  *       A loopback MITM proxy on the game 5-tuple is observed as a local owner (sock_diag/proc walk); a direct connection to the server IP is not.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

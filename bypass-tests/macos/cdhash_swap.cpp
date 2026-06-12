@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/cdhash_swap.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 119. Intended to ad-hoc re-sign a patched executable at the same path; assert HK_CS_CDHASH_MISMATCH fires while an app-translocated clean bundle does NOT (FP-gate proof) and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

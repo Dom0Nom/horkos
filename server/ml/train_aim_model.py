@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""train_aim_model.py — train the aim-kinematics anomaly model and export ONNX.
+"""Train the aim-kinematics anomaly model and export ONNX.
 
-Role: produces the real (trained) replacement for the hand-built fixture model
+Role: produces the trained model the hand-built fixture stands in for
 that `ban_engine::scoring::AimScorer` loads. Trains a logistic-regression
 classifier on SYNTHETIC honest-vs-bot aim-kinematics feature distributions
 (166/167/169 share the [overshoot, settle_ms, jerk_abs, pad] input shape the

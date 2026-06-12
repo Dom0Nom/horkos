@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/tracepoints.bpf.c
  * Role: BPF tracepoint programs for syscalls/sys_enter_ptrace and
  *       sched/sched_process_exec.  Both programs push event records to the
  *       shared hk_ringbuf so the userspace loader can convert them to

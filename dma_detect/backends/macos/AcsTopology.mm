@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/macos/AcsTopology.mm
  * Role: macOS ACS / IOMMU-group topology forensics (sig 133). On macOS the IOMMU
  *       is the DART (Device Address Resolution Table) on Apple silicon / VT-d on
  *       Intel; there is no /sys/kernel/iommu_groups equivalent, so the "group

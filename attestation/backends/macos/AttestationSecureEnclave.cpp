@@ -1,5 +1,4 @@
 /*
- * attestation/backends/macos/AttestationSecureEnclave.cpp
  * Role: macOS Secure Enclave attestation backend (Security framework). Creates
  *       an ECDSA-P256 key in the Secure Enclave, signs the server nonce with it
  *       (ECDSASignatureMessageX962SHA256), and marshals the signed payload +

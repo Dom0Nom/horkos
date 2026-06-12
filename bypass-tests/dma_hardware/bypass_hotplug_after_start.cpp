@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_hotplug_after_start.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 134 (hot-plug arrival). Demonstrates: a post-AC-start arrival of an
  *       unbound bus-master device with an ID anomaly is flagged; AND that a

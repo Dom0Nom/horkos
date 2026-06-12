@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/handle_dup_launder.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 66 (DuplicateHandle source
  *       laundering, win-handle-memory-access). A Phase-5 fixture opens a process
  *       handle to the protected target in broker A, then DuplicateHandle's it into B

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/hv_detection_bypass.cpp
  * Role: Merge-gate bypass fixture for the win-hypervisor-detection sensors
  *       (signals 37-45), [disabled]. Consolidates the eight per-sensor adversarial
  *       assertions the plan specifies; each activates once the sensor + server

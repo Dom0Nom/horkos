@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/network/hk_bypass_net_backlog.cpp
  * Role: network-anomaly macOS bypass-test merge gate (signal 184) [disabled].
  *       A held-uplink (paused send thread) shows the app ring rising while getsockopt(SO_NWRITE) stays ~0 with no congestion; a congested link grows the kernel side too.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

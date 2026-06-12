@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/HotplugMonitor.cpp
  * Role: Linux PCIe hot-plug arrival monitor (sig 134). Subscribes to udev
  *       netlink KOBJECT_UEVENT messages on the `pci` subsystem (ADD) and emits a
  *       timestamped arrival per device — subscribe, do NOT poll. A post-AC-start

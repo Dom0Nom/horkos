@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/event_schema_macos.h
  * Role: macOS-only wire-format payloads for the process-inspection / injection
  *       sensors (catalog signals 109-117). These ride the macOS daemon sink ->
  *       server transport path (EsClient.mm HKEsEventSink / horkosd), NOT the

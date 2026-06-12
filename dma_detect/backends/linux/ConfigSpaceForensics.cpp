@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/ConfigSpaceForensics.cpp
  * Role: Linux config-space forensics backend and the Linux hk_dma_forensics_scan
  *       entry point. Walks /sys/bus/pci/devices/<BDF>/, pread()s the 4 KB
  *       extended config space, and fills hk_dma_device_forensics for sig 127

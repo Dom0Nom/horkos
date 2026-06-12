@@ -1,5 +1,4 @@
 /*
- * platform/platform_win.cpp
  * Role: Windows backend for the hk::platform abstraction layer.
  * Target platforms: Windows only. Selected by CMake if(WIN32).
  * Implements: platform/platform.h

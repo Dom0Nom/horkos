@@ -1,5 +1,3 @@
-//! src/analyzers/recoil_rng_corr.rs
-//!
 //! Role: recoil/spread-RNG compensation under zero-feedback analyzer (catalog signal
 //! 180). During ticks where the player is FIRING but has NO line-of-sight to any enemy
 //! and NO tracer feedback, it correlates the player's integrated counter-motion

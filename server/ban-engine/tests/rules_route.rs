@@ -1,4 +1,3 @@
-//! tests/rules_route.rs
 //! Role: Asserts `GET /api/rules/current` returns the placeholder metadata
 //!       and that the bundle parser rejects unsigned bundles.
 //! Target platforms: server.

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/fexit_process_vm.bpf.c
  * Role: BPF TRACING (fexit) sensors for cross-mm memory transfer via
  *       process_vm_writev(2) / process_vm_readv(2) (signal 74). On syscall
  *       return, resolve the target task from the pid argument, compare its mm

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/KprobeAudit.cpp
  * Role: Implementation of signal 94 (sensitive-symbol kprobe audit) declared in
  *       KprobeAudit.h.
  * Target platform: Linux userspace.

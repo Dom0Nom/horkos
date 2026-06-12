@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/callback_unhook.cpp
  * Role: Merge-gate bypass test (guardrail #12) for the object/notify/registry
  *       self-integrity surface (win-kernel-object-callbacks). Exercises the four
  *       unhook scenarios against the self-check sensor and asserts the

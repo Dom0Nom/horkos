@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/DriverProbeWin.cpp
  * Role: Windows implementation of the SDK driver probe. Opens the Horkos
  *       control device; success means the kernel driver is loaded (active
  *       mode). This is the only place the SDK touches the Win32 API

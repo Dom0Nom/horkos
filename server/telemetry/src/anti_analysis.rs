@@ -1,5 +1,3 @@
-//! src/anti_analysis.rs
-//!
 //! Role: Server-side ingest contract for the anti-analysis-environment report
 //! sub-payload (catalog signals 194 — dynamic-instrumentation/DBI residency, and
 //! 197 — memory-editor/debugger host fingerprint ONLY). Serde mirror of the

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/timing/hw_bp_stepper.cpp
  * Role: Merge-gate bypass test (timing-side-channels signals 154 + 161, Windows).
  *       Intended to arm a real DR0-DR3 hardware breakpoint / set EFLAGS.TF on a guarded
  *       decoy and demonstrate that signal 154 (foreign-resolver attribution with a live

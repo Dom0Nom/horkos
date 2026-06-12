@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_msix_overflow.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 129 (MSI-X containment). Demonstrates: an MSI-X Table offset+size that
  *       exceeds the referenced BAR's decoded length fires the hard-containment

@@ -1,5 +1,4 @@
 /*
- * dma_detect/include/horkos/dma_detect.h
  * Role: Pure C interface for DMA-attack detection.
  *       Reports IOMMU state and suspicious DMA-capable PCIe devices to the
  *       caller; never makes a ban decision.  Cross-check logic (firmware claim

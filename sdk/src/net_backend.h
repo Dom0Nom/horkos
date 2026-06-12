@@ -1,5 +1,4 @@
 /*
- * sdk/src/net_backend.h
  * Role: Internal per-platform dispatch seam for the CROSS-PLATFORM network probes
  *       (signals 182 clock-drift, 184 send-backlog, 187 probe-RTT). Declares the
  *       raw platform reads each `sdk/src/backends/<plat>/NetBackend*.cpp`

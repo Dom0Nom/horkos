@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/ldpreload_inject.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for the
  *       linux-ebpf-injection sensors. Demonstrates: LD_PRELOAD a no-provenance
  *       DSO into a protected process -> signals 82 (DT_NEEDED divergence) AND 85

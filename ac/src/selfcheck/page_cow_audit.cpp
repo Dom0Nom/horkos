@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/page_cow_audit.cpp
  * Role: Signal 146 — per-page Dirty/CoW audit on our read-only code pages (no byte
  *       hashing). Queries the share / private-dirty / CoW state of our .text pages
  *       and emits the private/dirty page counts as raw evidence. Catches a frame the

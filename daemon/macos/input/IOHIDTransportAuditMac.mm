@@ -1,5 +1,4 @@
 /*
- * daemon/macos/input/IOHIDTransportAuditMac.mm
  * Role: Signal 141 — macOS IOHIDDevice transport/conformance-audit sensor. Enumerates
  *       HID devices via IOHIDManager, reads kIOHIDTransportKey / kIOHIDLocationIDKey /
  *       kIOHIDVendorIDKey / kIOHIDProductIDKey / kIOHIDPhysicalDeviceUniqueIDKey, and

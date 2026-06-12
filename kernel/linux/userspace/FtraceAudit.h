@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/FtraceAudit.h
  * Role: Signal 93 — ftrace handler-ownership audit on the sensitive kernel
  *       function set. Parses /sys/kernel/tracing/enabled_functions (and, on
  *       >=5.18, touched_functions), attributes each function's ftrace_ops

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/input/PointerDeltaStatsMac.mm
  * Role: Signal 142 (macOS half) — pointer-delta statistical-feature extractor.
  *       Accumulates IOHIDValueGetIntegerValue relative deltas (GD_X/GD_Y from the
  *       IOHIDManager input-value callback) into a bounded window and folds them into

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CsScanOrchestrator.cpp
  * Role: macOS code-signing scan orchestrator (signals 118-126). Owns the
  *       CsIntegrityProbe registry (only flag-enabled probes are live), enumerates
  *       the game-PID set, runs the poll-based probes (118/119/120/122/124/125/126)

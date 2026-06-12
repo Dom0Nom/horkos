@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/network/hk_bypass_net_clockdrift.cpp
  * Role: network-anomaly Linux bypass-test merge gate (signal 182) [disabled].
  *       A scaled clock (CLOCK_MONOTONIC_RAW at 0.8x CLOCK_REALTIME) yields the expected clock_ratio_ppm; an NTP-style step trips step_detected but not the smooth-scale path.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

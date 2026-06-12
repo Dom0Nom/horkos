@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/passes/OpaquePredicates.cpp
  * Role: Guards each conditional branch in an opted-in function with an
  *       always-true opaque predicate (x*(x+1) is always even), ANDed into the
  *       original condition so semantics are preserved but the bogus-looking

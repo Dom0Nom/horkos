@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_macos_codesign_logic.cpp
  * Role: Host-buildable pure-logic tests for the macOS code-signing probe FP-gate
  *       cores (macos-codesign-integrity, signals 118-126). The probe TUs split a
  *       PURE decision core (host-runnable integer logic) from the impure

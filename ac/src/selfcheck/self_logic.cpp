@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/self_logic.cpp
  * Role: Pure, platform-free decision cores for the client self-integrity sensors
  *       (memory-integrity-selfcheck, catalog signals 145-153). These take already-
  *       sampled inputs (the three cross-view hashes, resolved IAT/GOT slots, DR

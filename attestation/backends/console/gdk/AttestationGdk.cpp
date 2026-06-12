@@ -1,5 +1,4 @@
 /*
- * attestation/backends/console/gdk/AttestationGdk.cpp
  * Role: Xbox / GDK attestation backend stub.
  *       Maps to: XGameRuntime attestation surface, specifically
  *       XUserGetTokenAndSignatureAsync (Xbox User Token and Signature API,

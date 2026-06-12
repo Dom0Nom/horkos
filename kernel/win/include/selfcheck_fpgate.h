@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/selfcheck_fpgate.h
  * Role: Pure, platform-free false-positive-gate decision logic for the Windows
  *       object/notify self-integrity sensors (CallbackSelfCheck.c / Registry-
  *       Callback.c). Factored out of the kernel TUs so the gate decisions can be

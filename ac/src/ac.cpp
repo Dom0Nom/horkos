@@ -1,5 +1,4 @@
 /*
- * ac/src/ac.cpp
  * Role: Anti-cheat client lifecycle (ac.h). Owns the start/stop state machine
  *       and the latched detection-flag store that sensors report into and the
  *       bypass tests read back (ac_get_last_flag). Thread-safe (atomic state);

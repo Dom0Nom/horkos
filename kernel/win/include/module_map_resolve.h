@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/module_map_resolve.h
  * Role: Pure, platform-free address-range resolver for the loaded-module map
  *       (ModuleMap.c, shared by integrity signals 29/31/32/34/35). The kernel TU
  *       builds the map from ZwQuerySystemInformation(SystemModuleInformation);

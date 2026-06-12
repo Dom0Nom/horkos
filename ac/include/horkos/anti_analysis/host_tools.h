@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/anti_analysis/host_tools.h
  * Role: Signal 197 (memory-editor / debugger host fingerprint) interface.
  *       Declares the per-signal sampler (the C entry point lives in
  *       anti_analysis_signals.h) and the PURE, platform-free decision core that

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/MsrPathResolver.h
  * Role: Userspace half of signals 98/99 fd→device + MSR-index sensitivity
  *       resolution (§1.2 / §7-A). The BPF side emits raw (pid, fd, file_offset);
  *       this resolver decides whether the written fd is /dev/cpu/N/msr and

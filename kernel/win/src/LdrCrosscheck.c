@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/LdrCrosscheck.c
  * Role: Ghost-image scanner (signal 13) + the shared PEB.Ldr base collector used
  *       by signals 13/16/17. Cross-references each image-backed executable VAD
  *       against the three PEB loader lists; an image region whose base is in none

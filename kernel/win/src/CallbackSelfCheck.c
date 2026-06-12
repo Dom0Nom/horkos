@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/CallbackSelfCheck.c
  * Role: Periodic self-integrity sensor for Horkos's own kernel callback
  *       registrations. A periodic KTIMER fires a KDPC at DISPATCH_LEVEL that does
  *       nothing but bump a heartbeat and queue a PASSIVE_LEVEL work item; ALL

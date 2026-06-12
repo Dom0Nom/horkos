@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/PrefixMapAudit.cpp
  * Role: Implementation of the signal-101 foreign-SO map classifier declared in
  *       PrefixMapAudit.h. The off-tree / overlay-allowlist decision lives here
  *       (userspace), per the impl-plan split — the kernel stays allowlist-free.

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/vm_write_codecave.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 64 (external VM write into
  *       a code section, win-handle-memory-access). A Phase-5 test-signed fixture
  *       issues WriteProcessMemory into a +X (IMAGE_SCN_MEM_EXECUTE) section of the

@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/linux/InjectionFlagLinux.cpp
  * Role: Linux input-provenance sensor (catalog signal 171 analog). Distinguishes a
  *       real /dev/input HID node from a uinput-created VIRTUAL device via libudev
  *       (ID_INPUT properties), and sets virtual_device_present when the active aim

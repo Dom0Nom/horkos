@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKGameTaskHandle.cpp
  * Role: Obtain + validate the game's task_t once and share it to all daemon
  *       pollers (signals 113/114/117). Centralises the single privileged
  *       task_for_pid-equivalent path so the audit-token validation is written

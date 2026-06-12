@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/MsixForensics.cpp
  * Role: Linux MSI-X BIR/PBA containment forensics (sig 129). Reads the MSI-X
  *       capability (cap ID 0x11) from legacy config: Message Control (table
  *       size), Table Offset/BIR, and PBA Offset/BIR; resolves each referenced

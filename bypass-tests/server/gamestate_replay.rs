@@ -1,5 +1,3 @@
-//! bypass-tests/server/gamestate_replay.rs
-//!
 //! Role: bypass / FP-resistance merge-gate (guardrail #12) for the behavioral-
 //! gamestate-knowledge analyzers (catalog signals 172-180). Each documented cheat
 //! behavior is encoded as a synthetic authoritative-snapshot + client-tick stream and

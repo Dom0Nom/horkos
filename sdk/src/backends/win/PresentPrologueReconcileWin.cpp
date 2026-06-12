@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/PresentPrologueReconcileWin.cpp
  * Role: Signal 47 (win-usermode-overlay). Present/ExecuteCommandLists export-
  *       prologue reconciliation: maps the implicated DLL read-only from disk,
  *       resolves the export RVA, applies the live load base's relocation delta via

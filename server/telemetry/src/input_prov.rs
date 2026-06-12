@@ -1,5 +1,3 @@
-//! src/input_prov.rs
-//!
 //! Role: Input-provenance & automation finding ingest plane (Windows usermode
 //! sensors, catalog signals 55-63, `win-input-automation`). Serde mirror of the C99
 //! `hk_input_finding` and `hk_input_timing_features` numeric cores in

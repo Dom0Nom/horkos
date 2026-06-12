@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/token_check.cpp
  * Role: Signal 203 sensor — opens the game's token and the recorded parent's
  *       token, reads the mandatory integrity level / elevation / session, and
  *       emits the raw token_integrity_delta via the host-tested pure helper

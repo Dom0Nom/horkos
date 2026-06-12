@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_inputframe.cpp
  * Role: network-anomaly input-frame-coherence merge-gate bypass test (signal 185)
  *       [disabled]. When enabled: a replayed/duplicated input frame breaks the
  *       OS-capture (GetMessageTime) monotonic-timestamp invariant and sets the

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/PresentFrameStatsCorrelateWin.cpp
  * Role: Signal 48 (win-usermode-overlay). DXGI frame-statistics drift sensor:
  *       samples IDXGISwapChain::GetFrameStatistics (PresentCount,
  *       PresentRefreshCount, SyncQPCTime, SyncRefreshCount) and GetLastPresentCount

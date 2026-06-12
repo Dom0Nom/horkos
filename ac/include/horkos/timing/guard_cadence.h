@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/guard_cadence.h
  * Role: Signal-161 guard-fault inter-arrival cadence sampler. Declares the sampler
  *       that re-arms PAGE_GUARD inside the guard VEH, timestamps each
  *       STATUS_GUARD_PAGE_VIOLATION, and builds the inter-arrival distribution +

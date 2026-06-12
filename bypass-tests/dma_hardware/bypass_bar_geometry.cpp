@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_bar_geometry.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 131 (BAR geometry). Demonstrates: a generic FPGA BAR0 profile (one
  *       huge prefetchable 64-bit window) is shipped as raw geometry the SERVER

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/InjectionEvents.h
  * Role: Provisional userspace-side event constants + fixed payload structs for
  *       the Linux injection correlators (signals 82-90), plus the BPF-side event
  *       struct mirrors the correlators consume. These mirror the schema the

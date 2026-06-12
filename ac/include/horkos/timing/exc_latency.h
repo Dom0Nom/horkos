@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/exc_latency.h
  * Role: Signal-159 INT3-decoy dispatch-latency histogram sampler. Declares the
  *       per-machine baseline capture + the live histogram sampler that times the
  *       round-trip from a planted decoy 0xCC to the AC's first-chain VEH.

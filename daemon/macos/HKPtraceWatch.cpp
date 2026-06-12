@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKPtraceWatch.cpp
  * Role: P_TRACED transition-edge detector (signal 116) via
  *       sysctl(CTL_KERN, KERN_PROC, KERN_PROC_PID). Reports only the
  *       untraced->traced edge with the attaching pid (kp_eproc.e_ppid),

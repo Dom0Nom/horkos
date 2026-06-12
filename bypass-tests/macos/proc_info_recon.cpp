@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/proc_info_recon.cpp
  * Role: macOS bypass-test fixture (signal 115) [disabled until enforcement].
  *       When enabled: high-rate proc_pidinfo VM-region walk of the game from a
  *       foreign process and assert a hk_es_proc_check over the rate threshold;

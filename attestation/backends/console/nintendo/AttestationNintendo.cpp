@@ -1,5 +1,4 @@
 /*
- * attestation/backends/console/nintendo/AttestationNintendo.cpp
  * Role: Nintendo Switch attestation backend stub.
  *       Maps to: nn::account / nn::nifm identity attestation surface
  *       (documented at developer.nintendo.com — requires NDA dev account).

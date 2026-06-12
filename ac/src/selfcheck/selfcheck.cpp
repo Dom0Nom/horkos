@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/selfcheck.cpp
  * Role: Client self-integrity orchestrator (memory-integrity-selfcheck, catalog
  *       signals 145-153). Owns the scan cadence/budget, dispatches each per-signal
  *       sensor, batches the raw evidence into the large-record drain path, and feeds

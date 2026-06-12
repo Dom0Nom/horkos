@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_vm_access_logic.cpp
  * Role: Host-buildable unit tests for the win-handle-memory-access pure decision
  *       cores (no driver, no Win32): the section-flag classifier + the alloc->protect
  *       ->write staging assembler (VmAccessLogicWin.h, signals 64/72) and the

@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/text_crossview.cpp
  * Role: Signal 145 — cross-view .text hash divergence. Hashes our own .text three
  *       ways (in-process VA, kernel foreign read, relocated on-disk bytes) and emits
  *       the three SHA-256s + the agreement matrix + first-diff RVA as raw evidence.

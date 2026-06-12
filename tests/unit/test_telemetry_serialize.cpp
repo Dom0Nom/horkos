@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_telemetry_serialize.cpp
  * Role: Host unit test for the platform-free per-tick TickPayload serializer
  *       (sdk/src/TelemetrySerialize.cpp). Proves THE TICK ECHO: the emitted
  *       JSON `tick` field carries the SERVER simulation tick the client

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_render_hook_logic.cpp
  * Role: Host-runnable unit tests for the PLATFORM-FREE decision cores of the
  *       win-usermode-overlay render sensors (catalog signals 46-54). Exercises the
  *       pure provenance classifier, window-style folding, and rect-overlap helpers

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/InputQueueAttachWin.cpp
  * Role: Signal 61 (win-input-automation). GUI-thread input-queue-attach sensor.
  *       Reads GetGUIThreadInfo for the game's input thread and compares the
  *       active/focus/capture window ownership + queue-shared state against

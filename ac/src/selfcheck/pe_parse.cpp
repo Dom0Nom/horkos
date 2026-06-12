@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/pe_parse.cpp
  * Role: Implementation of the pure PE structure parser (pe_parse.h) for the
  *       Windows-format self-integrity signals (149/150/151/153) + image_baseline.
  *       Pure struct walk over a mapped buffer with strict bounds checks — no

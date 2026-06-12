@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/RawInputInventoryWin.cpp
  * Role: Signal substrate (win-input-automation). Builds and maintains the
  *       per-session raw-input device inventory (GetRawInputDeviceList +
  *       GetRawInputDeviceInfoW(RIDI_DEVICENAME / RIDI_DEVICEINFO), keyed by hDevice)

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/amfid_taskport.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 123. Intended to acquire amfid's task port (SIP-off dev box); assert it is reported HK_CS_AMFID_TASKPORT but tagged SIP-disabled / scored separately (SIP cross-check gate) and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

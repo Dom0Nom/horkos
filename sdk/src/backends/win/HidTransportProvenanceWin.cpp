@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/HidTransportProvenanceWin.cpp
  * Role: Signal 57 (win-input-automation). HID-collection-vs-transport provenance
  *       sensor. For each HID mouse/keyboard collection, reads the HID caps
  *       (UsagePage/Usage via HidD_GetPreparsedData + HidP_GetCaps), the VID/PID

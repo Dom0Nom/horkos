@@ -1,5 +1,3 @@
-//! tests/real_swtpm_quote.rs
-//!
 //! Role: end-to-end cross-component proof. These bytes are a REAL TPM2_Quote
 //! produced by the Linux tpm2-tss backend (`attestation/backends/linux/
 //! AttestationTpm2Linux.cpp`) running against `swtpm` in Docker — the ESAPI

@@ -1,5 +1,3 @@
-//! src/analyzers/attention_budget.rs
-//!
 //! Role: multi-target attention-impossibility analyzer (catalog signal 179). Over a
 //! sliding tick window it counts the DISTINCT occluded enemies that each independently
 //! drew a correct corrective reaction from the player; it subtracts any enemy a

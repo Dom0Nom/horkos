@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/dl_audit.bpf.c
  * Role: uprobe on the glibc rtld-audit dispatcher _dl_audit_symbind to detect
  *       that LD_AUDIT la_symbind callbacks are actively firing for a watched PID.
  *       Emits a compact record so the userspace correlator (signal 89, env

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/etwti_teardown.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 212 (ETW-TI provider
  *       liveness, win-kernel-syscall-etw-integrity). A Phase-5 fixture nulls
  *       EtwThreatIntProvRegHandle (or otherwise silences the TI feed); the AC must

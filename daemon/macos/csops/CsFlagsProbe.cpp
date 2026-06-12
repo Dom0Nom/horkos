@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CsFlagsProbe.cpp
  * Role: Signal 118 — csflags (CS_HARD/CS_KILL/CS_RUNTIME...) drift probe. Reads
  *       the kernel-held code-signing status bitmask for a game PID via
  *       csops(pid, CS_OPS_STATUS) and compares it against the known-good csflags

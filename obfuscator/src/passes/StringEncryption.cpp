@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/passes/StringEncryption.cpp
  * Role: XOR-encrypts the private C-string globals referenced by opted-in
  *       functions at build time, marks them writable, and injects a load-time
  *       constructor (llvm.global_ctors) that decrypts them in place before main.

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/cross/pointer_lattice_synthetic.cpp
  * Role: pointer-lattice physicality merge-gate bypass test (Phase: [disabled]) for
  *       signal 142. The activated body builds synthetic delta streams (uniform /
  *       integer-perfect curve / single fixed step) and a captured real-sensor stream of

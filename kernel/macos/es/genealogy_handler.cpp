@@ -1,5 +1,4 @@
 /*
- * kernel/macos/es/genealogy_handler.cpp
  * Role: Signal 207 — responsible-process / parent-responsibility mismatch. In the
  *       ES_EVENT_TYPE_NOTIFY_EXEC handler, extracts the responsible/parent audit
  *       tokens, Team ID, signing ID and cdhash of the launch chain and compares

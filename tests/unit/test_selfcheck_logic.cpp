@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_selfcheck_logic.cpp
  * Role: Host-buildable unit tests for the client self-integrity PURE decision cores
  *       (memory-integrity-selfcheck, catalog signals 145-153) and the pure PE parser.
  *       These are the platform-free functions the sensor TUs call; testing them here

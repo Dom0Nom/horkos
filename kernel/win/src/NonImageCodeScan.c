@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/NonImageCodeScan.c
  * Role: Signal 32 — non-image executable allocation (manually-mapped driver)
  *       scan. Enumerates big-pool allocations
  *       (ZwQuerySystemInformation(SystemBigPoolInformation)) and flags an

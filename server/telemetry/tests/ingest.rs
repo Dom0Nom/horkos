@@ -1,4 +1,3 @@
-//! tests/ingest.rs
 //! Role: Integration test: valid payload -> 202; invalid payload -> 400.
 //!       Also asserts the ort linkage marker so the riskiest dependency
 //!       on first install is exercised end-to-end.

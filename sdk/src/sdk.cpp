@@ -1,5 +1,4 @@
 /*
- * sdk/src/sdk.cpp
  * Role: Platform-neutral implementation of the public SDK surface (sdk.h).
  *       Composes the DRM and AC libraries and reports active vs degraded mode
  *       based on the platform driver probe (sdk_backend.h). Contains no

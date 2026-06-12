@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/lsm_ptrace.bpf.c
  * Role: BPF LSM sensors for inbound ptrace authorization (signal 73,
  *       lsm/ptrace_access_check) and PTRACE_TRACEME self-arm (signal 81,
  *       lsm/ptrace_traceme) against a protected game process. Both are

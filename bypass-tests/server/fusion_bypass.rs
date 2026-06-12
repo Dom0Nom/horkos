@@ -1,5 +1,3 @@
-//! bypass-tests/server/fusion_bypass.rs
-//!
 //! Role: merge-gate bypass tests (guardrail #12) for the fusion + pipeline
 //! decision path. Each test is an ATTACK on the ban path's policy invariants:
 //! the attacker either tries to get an honest player banned (FP attack) or to

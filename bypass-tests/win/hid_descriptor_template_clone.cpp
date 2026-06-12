@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/hid_descriptor_template_clone.cpp
  * Role: HID-fingerprint merge-gate bypass test (Phase: [disabled]) for signal 136. The
  *       activated body builds three synthetic preparsed-caps fixtures — an
  *       Arduino-HID-library / V-USB / LUFA TEMPLATE descriptor, a QMK/ZMK keyboard

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/TextPageBacking.h
  * Role: Signal 90 correlator — in-memory inline-hook / COW-broken text
  *       detection. On a text_sample tick it reads /proc/<pid>/smaps_rollup,
  *       per-VMA /proc/<pid>/smaps (Private_Dirty) and /proc/<pid>/pagemap

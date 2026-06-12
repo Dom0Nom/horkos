@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/guard_fault_cadence_win.cpp
  * Role: Signal 161 — guard-fault inter-arrival cadence sensor. Re-arms PAGE_GUARD via
  *       the shared decoy (the read auto-clears PAGE_GUARD; re-arm to keep observing),
  *       timestamps each STATUS_GUARD_PAGE_VIOLATION with QueryPerformanceCounter, and

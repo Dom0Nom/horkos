@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/tls_init_audit.cpp
  * Role: Signal 153 — TLS-callback & static-initializer table integrity. Re-parses the
  *       in-memory TLS callback array + CRT .CRT$XC* (Windows) / .init_array (Linux) /
  *       __mod_init_func (macOS), compares the count + each rebased pointer vs the

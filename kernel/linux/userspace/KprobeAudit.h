@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/KprobeAudit.h
  * Role: Signal 94 — kprobe/kretprobe placement on credential/exec/sig-verify
  *       symbols. Parses /sys/kernel/debug/kprobes/list (+ tracing/kprobe_events),
  *       resolves each probe address to a symbol, matches against the sensitive

@@ -1,5 +1,3 @@
-//! src/lib.rs
-//!
 //! Role: server-side TPM 2.0 attestation verifier. Parses the `TPMS_ATTEST`
 //! structure a client's TPM produces via `TPM2_Quote` (emitted by the
 //! `tpm2-tss` Linux/Windows backends behind `Attestation.h`), binds it to the

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/input/DeviceTrustMac.h
  * Role: macOS daemon-internal façade for the device-trust input sensors
  *       (hardware-input-devices domain, catalog signals 141 IOHIDDevice transport
  *       audit and 142 pointer-delta features, macOS half). Declares the two sensor

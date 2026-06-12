@@ -1,5 +1,3 @@
-//! src/arrival_cadence.rs
-//!
 //! Role: Server-side relativistic-burst (lag-switch) arrival-cadence detector,
 //! catalog signal 186 (`docs/detection-catalog.md` §network-anomaly). Consumes a
 //! per-`player_id` ring of `(tick, server_received_ts)` pairs taken from the

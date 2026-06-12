@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_rootfs_remount.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 105 (read-only rootfs breach). Demonstrates: steamos-readonly
  *       disable + write under /usr outside an update window on a simulated

@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/cpuid_leaf_fan_win.cpp
  * Role: Signal 162 — CPUID per-leaf latency-fan sensor. Times __cpuidex across a fixed
  *       leaf sweep with RDTSCP + LFENCE serialization fences, emitting a per-leaf
  *       latency vector. Bare-metal baselines are near-flat; selectively-emulated VMM

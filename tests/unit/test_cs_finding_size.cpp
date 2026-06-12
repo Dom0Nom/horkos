@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_cs_finding_size.cpp
  * Role: Host-buildable schema-pin test for the macOS code-signing finding wire
  *       payload (macos-codesign-integrity). The plan requires
  *       hk_event_cs_finding == 16 bytes so HK_EVENT_PAYLOAD_MAX stays 16 and the

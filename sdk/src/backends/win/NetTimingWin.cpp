@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/NetTimingWin.cpp
  * Role: Signal 181 — NIC-hardware-TX-timestamp vs QueryPerformanceCounter
  *       send-cadence sensor. Intends to enable SIO_TIMESTAMPING (WSAIoctl) and read
  *       the per-datagram TX timestamp via WSASendMsg/WSARecvMsg WSAMSG control

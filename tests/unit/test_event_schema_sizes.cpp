@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_event_schema_sizes.cpp
  * Role: Verifies event schema struct sizes from C++ side, matching the
  *       static_asserts in event_schema.h. Catches platform-specific padding
  *       divergence that static_assert might miss on a different compiler.

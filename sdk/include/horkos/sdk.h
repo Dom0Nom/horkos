@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/sdk.h
  * Role: Public SDK C surface a game integrates. Stable across versions
  *       (guardrail #10 spirit). Wraps drm_validate / ac_start and reports
  *       whether the kernel driver is present (active vs degraded mode).

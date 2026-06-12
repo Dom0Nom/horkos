@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/DeviceTrustWin.h
  * Role: SDK-internal façade for the Windows USB/HID device-trust usermode sensors
  *       (hardware-input-devices domain, catalog signals 136/137/139/142/143/144 and
  *       the 138 device-trust reconciliation framing). Declares the descriptor-audit

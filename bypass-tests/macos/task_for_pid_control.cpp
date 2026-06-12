@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/task_for_pid_control.cpp
  * Role: macOS bypass-test fixture (signals 109/110) [disabled until enforcement].
  *       When enabled: acquire the game's task CONTROL port from a foreign
  *       non-platform process and assert the daemon/server reports a

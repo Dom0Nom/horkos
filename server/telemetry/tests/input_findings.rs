@@ -1,4 +1,3 @@
-//! tests/input_findings.rs
 //! Role: Integration test for the input-provenance ingest plane
 //!       (`POST /api/input-findings`, win-input-automation signals 55-63). A valid
 //!       `InputFindingBatch` (findings + timing) -> 202; a wrong envelope

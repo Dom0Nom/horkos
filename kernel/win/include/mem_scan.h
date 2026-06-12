@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/mem_scan.h
  * Role: Kernel-private interface for the memory-scan plane (win-kernel-memory-
  *       injection, signals 10-18). Read-only sampling of a target process's
  *       address space (VAD tree, PEB loader lists, on-disk image backing) from a

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/SelfCheckRead.mm
  * Role: macOS self-read backend for client self-integrity (memory-integrity-
  *       selfcheck, signals 145/146/148/152). Over the AC's OWN task port it
  *       mach_vm_read_overwrite's the requested VA (145), mach_vm_region_recurse's

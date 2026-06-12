@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/TextPageBacking.cpp
  * Role: Implementation of the signal-90 text COW-broken correlator declared in
  *       TextPageBacking.h.
  * Target platform: Linux userspace.

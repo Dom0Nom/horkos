@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_module_map_resolve.cpp
  * Role: Host-buildable unit tests for the pure loaded-module address-range
  *       resolver (kernel/win/include/module_map_resolve.h, shared by integrity
  *       signals 29/31/32/34/35). Proves the lookup math: address inside one

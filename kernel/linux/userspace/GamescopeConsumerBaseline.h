@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/GamescopeConsumerBaseline.h
  * Role: Signal 106 baseliner — classify a frame-consumer record (a Wayland
  *       connect to the gamescope socket, or a DRM lease/PRIME import) against the
  *       allowlist of legitimate consumers: gamescope itself, the pipewire/

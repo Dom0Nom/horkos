@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/synthetic_input_provenance.cpp
  * Role: Input-provenance merge-gate bypass test (Phase: [disabled]). Intended to
  *       self-issue a BENIGN SendInput burst (including a KEYEVENTF_UNICODE event)
  *       into the test's OWN window and assert that signals 55 and 63 REPORT it with

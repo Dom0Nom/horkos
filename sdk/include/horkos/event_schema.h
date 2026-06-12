@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/event_schema.h
  * Role: Wire-format source of truth for all Horkos events.
  *       Phase 2 Rust serde structs mirror these field names and sizes.
  *       Phase 3 IOCTL header includes this file directly.

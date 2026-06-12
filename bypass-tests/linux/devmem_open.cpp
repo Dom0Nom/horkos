@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/devmem_open.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 78 (physical-
  *       memory-window open detection). Attempts to open /dev/mem (and
  *       /proc/kcore) and asserts the eBPF lsm/file_open devmem sensor emits

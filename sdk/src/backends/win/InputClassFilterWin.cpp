@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/InputClassFilterWin.cpp
  * Role: Signal 56 (win-input-automation). Keyboard/Pointer device-stack filter
  *       interloper scan. Enumerates the keyboard ({4d36e96b-...}) and mouse
  *       ({4d36e96f-...}) device-class UpperFilters/LowerFilters plus each device's

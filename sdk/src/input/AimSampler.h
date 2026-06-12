@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/AimSampler.h
  * Role: SDK-internal façade for the behavioral-aim input sensors (catalog
  *       signals 163/164/165/170/171 provenance + 166/167/168/169 engine-state
  *       transport). Declares the per-platform sensor entry points and the shared

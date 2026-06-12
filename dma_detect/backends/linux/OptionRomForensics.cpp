@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/OptionRomForensics.cpp
  * Role: Linux option-ROM identity forensics (sig 130). Reads the expansion ROM
  *       via /sys/bus/pci/devices/<BDF>/rom, parses the 0xAA55 signature and the
  *       PCIR structure, and compares the PCIR's VID/DID to the device's config

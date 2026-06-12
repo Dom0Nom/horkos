@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/image_baseline.cpp
  * Role: The single "what disk says" source for client self-integrity. Parses our
  *       OWN backing file once at init (PE on Windows, ELF on Linux, Mach-O on macOS;
  *       format dispatched by HK_PLATFORM_*), recording expected code-section ranges,

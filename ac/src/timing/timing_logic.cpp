@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/timing_logic.cpp
  * Role: The PURE timing classifier cores declared in timing_signals.h (modality,
  *       cadence, divergence, drift, leaf-fan spread). No platform API, no I/O — these
  *       are the platform-free functions the sampler TUs call, factored out so the

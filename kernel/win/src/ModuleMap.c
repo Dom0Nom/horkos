@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/ModuleMap.c
  * Role: Loaded-module address-range map — the shared scan cache consumed by
  *       integrity signals 29/31/32/34/35. Builds ONCE per integrity scan (in the
  *       PASSIVE_LEVEL work item) from ZwQuerySystemInformation(

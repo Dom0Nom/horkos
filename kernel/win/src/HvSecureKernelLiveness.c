@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HvSecureKernelLiveness.c
  * Role: Signal 41 kernel sensor (observe-only, weak corroborator) — samples
  *       isolated-user-mode / secure-kernel liveness and compares it against the
  *       VBS-running claim; a VBS-on claim with an inert secure-kernel callout path

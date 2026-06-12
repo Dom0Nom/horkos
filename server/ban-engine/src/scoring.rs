@@ -1,5 +1,3 @@
-//! src/scoring.rs
-//!
 //! Role: ONNX model scoring for the aim-kinematics signals (catalog 166-169).
 //! Wraps an `ort` inference session: the `aim_kinematics` segmenters produce
 //! raw feature structs, this module flattens them into the model's input

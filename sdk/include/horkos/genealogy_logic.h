@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/genealogy_logic.h
  * Role: Pure, platform-free decision helpers for the process-genealogy client
  *       sensors (signals 199, 203). The reparent test (true creator vs inherited
  *       parent) and the token-integrity delta are structural comparisons with no

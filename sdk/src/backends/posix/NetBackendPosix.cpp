@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/NetBackendPosix.cpp
  * Role: POSIX backend for the cross-platform clock-drift / send-backlog / probe-RTT
  *       probes (signals 182 / 184 / 187). Implements the `net_backend.h` seam:
  *       clock_gettime(CLOCK_MONOTONIC_RAW) vs CLOCK_REALTIME (182); ioctl(SIOCOUTQ)

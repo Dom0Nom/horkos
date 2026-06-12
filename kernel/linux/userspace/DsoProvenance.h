@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DsoProvenance.h
  * Role: Signal 82 correlator — DT_NEEDED-closure vs runtime-DSO divergence. At
  *       attach it parses the static DT_NEEDED transitive closure of
  *       /proc/<pid>/exe; for each _dl_map_object event it flags DSOs that are

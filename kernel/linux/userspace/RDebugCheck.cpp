@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/RDebugCheck.cpp
  * Role: Implementation of the signal-88 _r_debug r_brk / RELRO correlator
  *       declared in RDebugCheck.h.
  * Target platform: Linux userspace.

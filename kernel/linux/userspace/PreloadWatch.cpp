@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/PreloadWatch.cpp
  * Role: Implementation of the signal-85 transient-preload correlator declared in
  *       PreloadWatch.h. Pure correlation/scoring; the inotify FD lifetime is the
  *       loader's responsibility.

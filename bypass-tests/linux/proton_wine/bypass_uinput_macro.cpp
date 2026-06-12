@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_uinput_macro.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 108 (synthetic uinput/evdev injection). Demonstrates: a mid-session
  *       non-allowlisted process creates a uinput device and injects EV_KEY/EV_ABS

@@ -1,5 +1,3 @@
-//! tests/pipeline_flow.rs
-//!
 //! Role: HTTP-surface integration for the live application wiring
 //! (`build_app`): ingest accepts and forwards into the pipeline, the decision
 //! route 404s for unjudged players, healthz reflects pipeline liveness, and a

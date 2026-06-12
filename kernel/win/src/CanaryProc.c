@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/CanaryProc.c
  * Role: Guard-process canary (win-handle-memory-access, catalog signal 68). Would
  *       spawn a low-cost AC-owned guard process and arm an ObRegisterCallbacks
  *       filter on ITS process object, so that a foreign opener polling the guard at

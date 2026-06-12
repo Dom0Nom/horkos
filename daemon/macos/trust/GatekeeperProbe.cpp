@@ -1,5 +1,4 @@
 /*
- * daemon/macos/trust/GatekeeperProbe.cpp
  * Role: Signal 125 — Gatekeeper / quarantine / notarization-staple provenance.
  *       Reads the com.apple.quarantine xattr on the game bundle and (in the real
  *       path) SecAssessmentCopyResult / SecAssessmentTicketLookup for staple

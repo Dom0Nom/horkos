@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_route.cpp
  * Role: network-anomaly route-integrity merge-gate bypass test (signal 188)
  *       [disabled]. When enabled: a TAP/proxy that shifts the on-wire path WITHOUT an
  *       OS route/link event sets route_change_unattested; a real OS-mediated reroute

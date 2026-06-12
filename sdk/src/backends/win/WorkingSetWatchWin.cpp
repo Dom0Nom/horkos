@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/WorkingSetWatchWin.cpp
  * Role: Windows userspace working-set residency sampler (win-handle-memory-access,
  *       catalog signal 65). One tick: QueryWorkingSetEx over the game's address
  *       space to count newly-resident pages, correlated with the game's owning-thread

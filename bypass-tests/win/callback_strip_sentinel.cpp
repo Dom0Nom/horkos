@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/callback_strip_sentinel.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 31 (callback residency,
  *       self-sentinel half, win-kernel-driver-integrity). A Phase-5 fixture strips
  *       Horkos's own sentinel callback (its Ob registration handle / a Ps* notify

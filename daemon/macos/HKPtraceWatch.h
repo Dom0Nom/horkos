@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKPtraceWatch.h
  * Role: Interface for the P_TRACED transition-edge watcher (signal 116).
  *       Declares HKPtracePoll() and the watcher state holding the last-seen
  *       traced flag so only the untraced->traced edge is reported.

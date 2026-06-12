@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/PointerDeltaStatsWin.cpp
  * Role: Signal 142 (Windows half) — pointer-delta statistical-feature extractor.
  *       Accumulates RAWMOUSE.lLastX/lLastY relative deltas from the game's own
  *       WM_INPUT stream into a bounded window and folds them into the

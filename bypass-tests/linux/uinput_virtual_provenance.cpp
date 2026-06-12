@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/uinput_virtual_provenance.cpp
  * Role: evdev/uinput provenance merge-gate bypass test (Phase: [disabled]) for signal
  *       140. The activated body creates a /dev/uinput virtual mouse emitting EV_REL with
  *       no USB parent and asserts: (1) it is reported with bus_type == HK_BUS_VIRTUAL +

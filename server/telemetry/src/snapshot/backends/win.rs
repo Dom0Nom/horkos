@@ -1,5 +1,3 @@
-//! src/snapshot/backends/win.rs
-//!
 //! Role: Win32 `OpenFileMappingW` / `MapViewOfFile` backend for the
 //! authoritative snapshot ring (Windows game hosts). Implements
 //! `SnapshotRingAttach` against the Horkos-owned ring contract

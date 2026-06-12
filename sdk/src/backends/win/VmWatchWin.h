@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/VmWatchWin.h
  * Role: SDK-internal façade for the Windows userspace external-memory-access
  *       samplers (win-handle-memory-access, catalog signals 65/70/71). Declares the
  *       three sampler entry points and the small PLATFORM-FREE decision cores the

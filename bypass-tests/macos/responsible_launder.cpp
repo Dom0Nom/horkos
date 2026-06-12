@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/responsible_launder.cpp
  * Role: Merge-gate bypass fixture for process-genealogy signal 207 (responsibility
  *       laundering), [disabled]. Intended to launch the target from an unsigned /
  *       ad-hoc launcher (Terminal-equivalent) with no store client in the chain

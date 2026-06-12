@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_drm.cpp
  * Role: Host unit test for the DRM licence verifier (drm/src/drm.cpp). Signs
  *       licence claims with a libsodium-generated key, then drives
  *       drm_configure + drm_validate to prove: a valid licence passes; a wrong

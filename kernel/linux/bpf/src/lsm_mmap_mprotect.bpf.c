@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/lsm_mmap_mprotect.bpf.c
  * Role: BPF LSM mapping-anomaly sensors. Two emit paths over the same mmap hook
  *       plus an mprotect hook, all AUDIT-ONLY:
  *         - Signal 76: RWX map (lsm/mmap_file with PROT_WRITE|PROT_EXEC) and

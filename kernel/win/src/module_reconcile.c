@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/module_reconcile.c
  * Role: Signal 202 kernel half — maintains the authoritative loader-loaded module
  *       set from PsSetLoadImageNotifyRoutine (base + size + FILE_OBJECT presence)
  *       per PID, so userspace (region_walk.cpp) can diff its executable-region

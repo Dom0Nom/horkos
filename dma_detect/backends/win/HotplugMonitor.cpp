@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/HotplugMonitor.cpp
  * Role: Windows PCIe hot-plug arrival monitor (sig 134). Subscribes to PnP
  *       device-interface arrival notifications via CM_Register_Notification on the
  *       PCI device-interface class and emits a timestamped arrival per device —

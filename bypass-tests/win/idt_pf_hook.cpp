@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/idt_pf_hook.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 214 (IDT gate handler
  *       bounds, win-kernel-syscall-etw-integrity). A Phase-5 test-signed fixture
  *       detours a #PF/#DB IDT gate out of the kernel image; the AC must emit

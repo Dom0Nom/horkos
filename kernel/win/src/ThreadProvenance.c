@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/ThreadProvenance.c
  * Role: Kernel-side thread-create provenance capture (win-kernel-thread-injection,
  *       catalog signals 19/22/23/26 capture half). Arms the *Ex* create-thread
  *       notify and, per thread-create event, captures the new TID/PID, the

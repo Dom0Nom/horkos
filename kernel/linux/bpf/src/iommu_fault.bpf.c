@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/iommu_fault.bpf.c
  * Role: eBPF IOMMU-fault counter (catalog signal 135, Linux arm). Attaches the
  *       `iommu:io_page_fault` tracepoint and counts DMA-remapping faults per
  *       source-BDF, emitting a compact record to the shared hk_ringbuf. A genuine

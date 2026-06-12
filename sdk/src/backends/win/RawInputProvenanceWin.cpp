@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/RawInputProvenanceWin.cpp
  * Role: Signal 55 (win-input-automation). Raw-input source-handle correlation-gap
  *       sensor. For each WM_INPUT the game receives, reads RAWINPUTHEADER.hDevice
  *       and reconciles it against the shared inventory: counts NULL-hDevice and

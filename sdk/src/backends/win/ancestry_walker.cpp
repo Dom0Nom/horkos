@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/ancestry_walker.cpp
  * Role: Signal 201 sensor — walks the launch-ancestry chain (PID + create-time
  *       keyed to survive PID reuse) via the documented Toolhelp snapshot, reading
  *       each ancestor's image path, and ships the ordered root->game image list.

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckInputBaseline.h
  * Role: Signal 108 baseliner — classify a synthetic-input record (uinput create
  *       or evdev inject) against the Steam-Input/hid-steam/gamescope-libinput tgid
  *       baseline and the pre-focus uinput allowlist. HIGH FP — only a uinput

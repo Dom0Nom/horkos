@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/vad_layout.h
  * Role: The ONE place undocumented Windows-kernel struct layout lives, fenced
  *       behind a per-build allow-list. The memory-scan plane reads fields of
  *       _MMVAD / _MMVAD_SHORT / _SUBSECTION / _CONTROL_AREA / _PEB_LDR_DATA /

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/KallsymsAudit.cpp
  * Role: Implementation of signal 91 (kallsyms text-address drift) declared in
  *       KallsymsAudit.h. Pure analysis over the shared HkSymbolMap.
  * Target platform: Linux userspace.

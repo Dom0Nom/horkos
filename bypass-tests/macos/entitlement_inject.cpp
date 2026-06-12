@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/entitlement_inject.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 126. Intended to re-sign adding get-task-allow / disable-library-validation; assert HK_CS_ENTITLEMENT_DRIFT fires while a Rosetta OS-injected entitlement does NOT (allowlist proof) and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

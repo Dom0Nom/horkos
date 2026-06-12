@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/got_sample.bpf.c
  * Role: uprobe on a benign, frequently-called game function (symbol supplied
  *       per-title via config). On fire it reads a bounded batch of .got.plt slot
  *       VALUES via bpf_probe_read_user at offsets supplied by userspace in the

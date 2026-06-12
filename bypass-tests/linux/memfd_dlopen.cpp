@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/memfd_dlopen.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 86
  *       (fileless dlopen). Demonstrates: memfd_create + dlopen("/proc/self/fd/N")
  *       of an exec DSO -> signal 86 fires; a file-backed gconv-style dlopen -> no

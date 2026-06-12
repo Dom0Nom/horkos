@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ProtonOverrideCheck.h
  * Role: Signal 100 verifier — classify a WINEDLLOVERRIDES override token (emitted
  *       as an FNV64 hash by proton_env.bpf.c, re-resolved to a string from
  *       /proc/<pid>/environ here) against the per-Proton-version override manifest

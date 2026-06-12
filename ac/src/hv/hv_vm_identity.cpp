@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_vm_identity.cpp
  * Role: Signal 43 sampler — reads SMBIOS firmware (GetSystemFirmwareTable 'RSMB')
  *       and the CPUID hypervisor-present bit to classify the host as {bare-metal,
  *       honest-VM, covert-inspection} and fills hv_vm_identity with the RAW tuple

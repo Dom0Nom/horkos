@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/timing/hw_bp_perf.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 158, Linux). Intended to
  *       open a PERF_TYPE_BREAKPOINT perf event on a guarded symbol from OUTSIDE the
  *       game's thread group and demonstrate that signal 158's census counts it — and

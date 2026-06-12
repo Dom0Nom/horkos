@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CsIntegrityProbe.h
  * Role: Stable daemon-internal interface + PURE decision cores for the
  *       csops-based code-signing probes (signals 118/119/122/126). Declares the
  *       per-probe sample entry points the orchestrator registers, and — crucially

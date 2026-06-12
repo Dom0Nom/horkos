@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/ssdt_hook_detect.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 35 (SSDT range
  *       integrity, win-kernel-driver-integrity). With a Phase-5 self-built,
  *       test-signed fixture that points a KiServiceTable entry OUTSIDE ntoskrnl,

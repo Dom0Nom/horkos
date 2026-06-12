@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/net_timing.h
  * Role: Public-internal interface declaring the `hk::net` network-layer-integrity
  *       sensor surface for catalog signals 181-189 (network-anomaly), minus the
  *       server-only 186. One sampler per signal returning a fixed POD result, plus

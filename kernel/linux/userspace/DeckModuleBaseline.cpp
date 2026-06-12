@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckModuleBaseline.cpp
  * Role: Implementation of the signal-104 Deck module baseliner declared in
  *       DeckModuleBaseline.h. Distinguishes a post-boot BYOVD cheat module from a
  *       legitimate hotplug (xpad/hid-*) or an OS update-window load — the

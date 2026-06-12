@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/self_wire.h
  * Role: Userspace-private wire mirrors for the client self-integrity events
  *       (memory-integrity-selfcheck, catalog signals 145-153) and the self-read
  *       IOCTL request. The event-type discriminants are now FROZEN in

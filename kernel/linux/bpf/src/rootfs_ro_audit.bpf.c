@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/rootfs_ro_audit.bpf.c
  * Role: Signal 105 — read-only rootfs invariant audit (SteamOS/immutable distro).
  *       Stable arm: lsm/sb_mount (a mount operation on the root SB). Uncertain
  *       arm: lsm/sb_remount (catching the precise MS_RDONLY->RW transition) is a

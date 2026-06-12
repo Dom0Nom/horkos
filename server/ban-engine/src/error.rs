@@ -1,4 +1,3 @@
-//! src/error.rs
 //! Role: Ban-engine library error type.
 //! Target platforms: server.
 

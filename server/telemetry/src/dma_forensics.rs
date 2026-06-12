@@ -1,5 +1,3 @@
-//! src/dma_forensics.rs
-//!
 //! Role: Server-side serde/byte mirror + scoring INPUTS for the DMA / peripheral-
 //! hardware-trust signals (catalog 127-135). Decodes the platform-clean wire image
 //! produced by `dma_detect/src/forensics_report.cpp`

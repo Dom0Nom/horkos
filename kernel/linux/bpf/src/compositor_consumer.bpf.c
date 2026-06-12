@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/compositor_consumer.bpf.c
  * Role: Signal 106 — gamescope frame-consumer / DRM-lease siphon audit. Two arms:
  *       sys_enter_connect (AF_UNIX connect, hashes the sun_path) and
  *       sys_enter_ioctl filtered to DRM lease/PRIME ioctls. Emits the connecting/

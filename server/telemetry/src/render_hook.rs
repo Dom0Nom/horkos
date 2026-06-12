@@ -1,5 +1,3 @@
-//! src/render_hook.rs
-//!
 //! Role: Render/overlay-hook finding ingest plane (Windows usermode sensors,
 //! catalog signals 46-54, `win-usermode-overlay`). Serde mirror of the C99
 //! `hk_render_finding` numeric core in `sdk/include/horkos/render_hook_schema.h`

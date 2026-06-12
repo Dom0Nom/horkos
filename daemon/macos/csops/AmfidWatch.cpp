@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/AmfidWatch.cpp
  * Role: Signal 123 (daemon half) — amfid task-port acquisition watch. Consumes
  *       ES NOTIFY_GET_TASK / NOTIFY_GET_TASK_READ observations whose target
  *       resolves to /usr/libexec/amfid and emits HK_CS_AMFID_TASKPORT, cross-

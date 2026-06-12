@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/etw_session_disable.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 215 (ETW logger-session
  *       census, win-kernel-syscall-etw-integrity). A Phase-5 fixture stops a
  *       Horkos-DEPENDENCY provider (NT Kernel Logger / ETW-TI); the AC must emit

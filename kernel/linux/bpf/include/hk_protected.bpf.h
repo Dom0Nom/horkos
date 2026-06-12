@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/include/hk_protected.bpf.h
  * Role: BPF-side shared header for the protected-target gating map. Every
  *       memory-access sensor (.bpf.c) includes this to read the pinned
  *       `hk_protected` BPF_MAP_TYPE_HASH and decide, in-kernel and as early

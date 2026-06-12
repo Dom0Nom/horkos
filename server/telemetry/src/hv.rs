@@ -1,5 +1,3 @@
-//! src/hv.rs
-//!
 //! Role: Server-side ingest contract for the hypervisor/virtualization-state
 //! report sub-payload (win-hypervisor-detection, catalog signals 37/38/40/42/43/
 //! 44/45). Serde mirror of the usermode POD field names in

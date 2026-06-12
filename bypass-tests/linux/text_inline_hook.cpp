@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/text_inline_hook.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 90
  *       (text COW-broken). Demonstrates: patch a byte in a loaded DSO's .text
  *       (break COW) -> signal 90 fires; an IFUNC-prologue dirty page -> no event

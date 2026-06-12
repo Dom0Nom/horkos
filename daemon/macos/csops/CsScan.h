@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CsScan.h
  * Role: macOS code-signing scan orchestrator interface (signals 118-126).
  *       Declares HkCsScanInit/HkCsScanStop, the daemon-internal HkCsFinding
  *       struct probes fill before serialization, the in-process ES-observation

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proc_mem_open.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 75
  *       (/proc/<pid>/mem foreign opener detection). Cross-tgid opens
  *       /proc/<victim>/mem and asserts the eBPF fentry/mem_open sensor fires;

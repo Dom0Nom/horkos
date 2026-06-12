@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/timing/exc_hook.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 159, Windows). A present debugger / exception-port interposer that swallows-and-reinjects the decoy 0xCC; must demonstrate signal 159 detects the multi-modal latency inflation even with correct re-injection.
  * Target platforms: Windows only (built behind if(WIN32)).
  * Interface: drives the AC timing flag surface

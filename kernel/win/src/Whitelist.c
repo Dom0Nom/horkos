@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/Whitelist.c
  * Role: BYOVD (bring-your-own-vulnerable-driver) blocklist lookup. Phase 3
  *       ships the data structure and the lookup entry point with an EMPTY list,
  *       so the answer is always "not blocked". The real list is fetched as a

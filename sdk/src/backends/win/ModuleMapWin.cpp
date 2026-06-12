@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/ModuleMapWin.cpp
  * Role: Builds the per-process signed-module map shared by the render provenance
  *       sensors (catalog signals 46/47/52/54, win-usermode-overlay). Enumerates
  *       the own process's loaded modules (EnumProcessModulesEx, LIST_MODULES_ALL)

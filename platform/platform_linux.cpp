@@ -1,5 +1,4 @@
 /*
- * platform/platform_linux.cpp
  * Role: Linux backend for the hk::platform abstraction layer.
  * Target platforms: Linux only. Selected by CMake if(UNIX AND NOT APPLE).
  * Implements: platform/platform.h

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/InputTimingFeaturesWin.cpp
  * Role: Signal 58 (win-input-automation). WM_INPUT inter-arrival timing-feature
  *       extractor. Timestamps each WM_INPUT at receipt with QueryPerformanceCounter,
  *       buckets inter-arrival deltas per hDevice, and over a sliding window emits the

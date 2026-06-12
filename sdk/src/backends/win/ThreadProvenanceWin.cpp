@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/ThreadProvenanceWin.cpp
  * Role: Windows userspace thread-provenance enrichment (win-kernel-thread-
  *       injection, catalog signals 22/23/24/25). On demand for a flagged TID:
  *       compares the spoofable Win32StartAddress against the kernel-captured

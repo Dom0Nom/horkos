@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_ac_lifecycle.cpp
  * Role: Host unit test for the AC client lifecycle (ac/src/ac.cpp). Exercises
  *       the start/stop state machine (single-start guard, degraded-vs-active by
  *       driver presence) and the latched detection-flag channel that sensors

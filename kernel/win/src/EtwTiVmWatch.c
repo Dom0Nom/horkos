@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/EtwTiVmWatch.c
  * Role: External-memory-access watch (win-handle-memory-access, catalog signals
  *       64/69/71-input/72). Two parts:
  *         (1) A per-module section-flag cache for the PROTECTED process so a runtime

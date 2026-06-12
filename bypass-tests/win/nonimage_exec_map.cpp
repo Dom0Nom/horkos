@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/nonimage_exec_map.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 32 (non-image
  *       executable allocation scan, win-kernel-driver-integrity). A Phase-5
  *       fixture manually-maps a BENIGN test page executable in system space; the

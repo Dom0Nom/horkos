@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/exception_latency_win.cpp
  * Role: Signal 159 — INT3-decoy dispatch-latency histogram sensor. Plants a known 0xCC
  *       at a deliberately-executed decoy address (a writable+executable AC-owned page),
  *       times the round-trip into the AC's first-chain VEH with QueryPerformanceCounter

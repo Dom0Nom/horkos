@@ -1,5 +1,4 @@
-# obfuscator/test/lit.cfg.py
-# lit configuration for the Horkos obfuscation pass tests (Phase 5). Discovers
+# lit configuration for the Horkos obfuscation pass tests. Discovers
 # *.test files and substitutes %opt (pinned llvm@19 opt) and %plugin (the built
 # pass plugin). Run with:
 #   LLVM19_BIN=$(brew --prefix llvm@19)/bin \

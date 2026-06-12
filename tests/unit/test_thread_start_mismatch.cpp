@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_thread_start_mismatch.cpp
  * Role: Host-buildable unit tests for the thread start-address mismatch
  *       classifier (sdk/src/backends/win/ThreadProvenanceWin.h, signal 23).
  *       Proves the decision table: kernel-unbacked + user-in-module spoof fires;

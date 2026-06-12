@@ -1,5 +1,3 @@
-//! src/pointer_model.rs
-//!
 //! Role: Pointer-feature ML ingest plane (hardware-input-devices domain, catalog signal
 //! 142). Serde mirror of the C99 `hk_event_pointer_features` record in
 //! `sdk/include/horkos/device_trust_schema.h`. Exposes `POST /api/pointer-features`.

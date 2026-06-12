@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/PresentVtableProvenanceWin.cpp
  * Role: Signal 46 (win-usermode-overlay). COM vtable-slot provenance sensor for
  *       the swapchain / command-queue present path: reads the Present, Present1,
  *       ResizeBuffers and ID3D12CommandQueue::ExecuteCommandLists vtable slots,

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/staging_sequence.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 72 (alloc->protect->write
  *       staging, win-handle-memory-access). A Phase-5 fixture performs the ordered
  *       remote triad — VirtualAllocEx, VirtualProtectEx(->+X), WriteProcessMemory —

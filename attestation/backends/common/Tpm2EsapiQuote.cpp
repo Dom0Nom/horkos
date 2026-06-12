@@ -1,5 +1,4 @@
 /*
- * attestation/backends/common/Tpm2EsapiQuote.cpp
  * Role: Shared tpm2-tss ESAPI quote implementation for the Linux + Windows TPM
  *       backends (see Tpm2EsapiQuote.h). Verified end-to-end on Linux against
  *       swtpm; the Windows backend reuses this exact code via the tcti-tbs TCTI

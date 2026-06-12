@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/BpfEnumerate.h
  * Role: Signal 97 — foreign eBPF program enumeration on the game/client's hook
  *       points. Walks loaded BPF objects via BPF_PROG_GET_NEXT_ID +
  *       BPF_OBJ_GET_INFO_BY_FD (and links via BPF_LINK_GET_NEXT_ID), then flags

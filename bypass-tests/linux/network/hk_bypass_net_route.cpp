@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/network/hk_bypass_net_route.cpp
  * Role: network-anomaly Linux bypass-test merge gate (signal 188) [disabled].
  *       A TAP/proxy that shifts the path WITHOUT an rtnetlink RTM_NEWROUTE/RTM_NEWLINK event sets route_change_unattested; an OS-mediated reroute fires the event and does not.
  *       Compiled now for the merge gate (guardrail #12), DISABLED-but-compiled like

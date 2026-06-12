@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/Plugin.cpp
  * Role: Registers the three Horkos obfuscation passes with the LLVM-19 new pass
  *       manager so `opt -load-pass-plugin=... -passes=hk-cff,hk-opaque,hk-strenc`
  *       and the bundled lit tests can drive them. Build-time tool only.

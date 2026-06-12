@@ -1,5 +1,4 @@
 /*
- * dma_detect/src/forensics_report.cpp
  * Role: Platform-agnostic forensics aggregation + wire-serialization helpers.
  *       Merges the per-backend hk_dma_device_forensics records into the
  *       telemetry-plane payload bytes and computes the structural gate

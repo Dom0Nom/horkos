@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/mprotect_wx_audit.bpf.c
  * Role: Signal 107 (mprotect arm) — flag PROT_EXEC re-protection of a VMA that is
  *       currently executable-backed, i.e. a W^X re-arm of a Wine builtin's text
  *       page. Emits the VMA range + backing dev:ino + new prot; the in-builtin-

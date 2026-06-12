@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ContainerNsBaseline.cpp
  * Role: Implementation of the signal-103 pressure-vessel namespace baseliner
  *       declared in ContainerNsBaseline.h. The launcher-lineage descent check is
  *       the load-bearing FP gate: pressure-vessel's own setns is a descendant of

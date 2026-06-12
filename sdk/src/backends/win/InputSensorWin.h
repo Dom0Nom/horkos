@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/InputSensorWin.h
  * Role: SDK-internal façade for the Windows input-provenance usermode sensors
  *       (catalog signals 55-63, win-input-automation). Declares the nine sensor
  *       entry points, the shared raw-input device-inventory snapshot type, and the

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/EtwTiConsumer.h
  * Role: SDK-internal lifecycle interface for the protected ETW Threat-Intelligence
  *       consumer (win-kernel-thread-injection, catalog signals 20/21/27). Declares
  *       start/stop plus the platform-free causality-correlation core that the host

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/timing/lldb_exc_port.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 160, macOS). Intended to
  *       install a foreign Mach exception port for EXC_BREAKPOINT (LLDB-style) and
  *       demonstrate that signal 160 flags the non-self / non-system owner — AND that the

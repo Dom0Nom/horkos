@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/MemScanVad.c
  * Role: VAD-classification scanner for signals 10 (unbacked executable region),
  *       14 (oversized private executable commit) and 15 (exotic VadType / large-
  *       page executable). Consumes the normalized HK_VAD_NODE array produced by

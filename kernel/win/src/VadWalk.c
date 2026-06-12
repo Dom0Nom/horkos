@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/VadWalk.c
  * Role: Shared read-only walk of a target process's VAD tree for the memory-scan
  *       plane (signals 10/13/14/15/16/17). Runs while the worker is ATTACHED to
  *       the target (KeStackAttachProcess) so the VAD node virtual addresses are

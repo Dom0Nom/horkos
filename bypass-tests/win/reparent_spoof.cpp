@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/reparent_spoof.cpp
  * Role: Merge-gate bypass fixture for process-genealogy (signals 199/201),
  *       [disabled]. Intended to spawn a child via CreateProcess with
  *       UpdateProcThreadAttribute(PROC_THREAD_ATTRIBUTE_PARENT_PROCESS) forging a

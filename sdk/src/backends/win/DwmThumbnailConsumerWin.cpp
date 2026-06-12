@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/DwmThumbnailConsumerWin.cpp
  * Role: Signal 50 (win-usermode-overlay). Consumer-side cloaked DWM-thumbnail
  *       screen-mirror sensor. Source-side DwmRegisterThumbnail is NOT enumerable,
  *       so detection is consumer-side correlation: enumerate candidate top-level

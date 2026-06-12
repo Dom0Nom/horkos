@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_acs_p2p.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 133 (ACS / IOMMU-group topology). Demonstrates: an unbound +
  *       bus-master suspect sharing an oversized IOMMU group with a sensitive

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ModuleViewDiff.h
  * Role: Signal 92 — module-enumeration cross-view diff. Diffs the module set
  *       seen via /proc/modules, the /sys/module tree, and (when present) the LKM
  *       debugfs module-CRC view / bpf-iter view. A module visible in one source

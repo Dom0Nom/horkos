@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HvEptProbe.c
  * Role: Signal 39 kernel sensor — checksums a signed section of the game two ways
  *       (an exec-view read and an independent data-view read) and emits
  *       hk_event_hv_ept_split when they diverge; an EPT that maps different bytes

@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/render_hook_schema.h
  * Role: Wire-format source of truth for the Windows usermode render/overlay
  *       sensor findings (catalog signals 46-54). Defines the verdict enums,
  *       window-style bitmask, and the fixed-size numeric core record

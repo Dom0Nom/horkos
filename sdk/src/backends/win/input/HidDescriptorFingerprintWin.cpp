@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/HidDescriptorFingerprintWin.cpp
  * Role: Signal 136 — HID report-descriptor structural-fingerprint sensor. Enumerates
  *       GUID_DEVINTERFACE_HID, opens each device path, pulls the preparsed data
  *       (HidD_GetPreparsedData + HidP_GetCaps / HidP_GetButtonCaps /

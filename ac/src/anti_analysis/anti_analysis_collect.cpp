@@ -1,5 +1,4 @@
 /*
- * ac/src/anti_analysis/anti_analysis_collect.cpp
  * Role: Aggregator for the 194+197 anti-analysis report. Runs each available
  *       sampler, zeroes any sub-struct whose sampler is unavailable on this
  *       platform and clears its `sensors_ok` bit, and assembles the slim

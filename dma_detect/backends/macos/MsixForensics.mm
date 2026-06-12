@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/macos/MsixForensics.mm
  * Role: macOS MSI-X BIR/PBA containment forensics (sig 129). Sources the MSI-X
  *       capability fields (table size, Table/PBA Offset+BIR) from the device's
  *       config space and the referenced BAR lengths from the BAR profiler, then

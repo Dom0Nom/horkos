@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/namespace_entry.bpf.c
  * Role: Signal 103 — namespace-entry audit (pressure-vessel breach). Stable arm:
  *       sys_enter_setns tracepoint (reports the nsfd + nstype the caller is
  *       joining). Uncertain arm: a kprobe on the internal namespace-install

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_latency_only.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 132 (TLP latency, LOW WEIGHT). Demonstrates the never-standalone
  *       gate: high TLP-read jitter as the ONLY signal on a structural suspect must

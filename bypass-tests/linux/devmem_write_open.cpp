@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/devmem_write_open.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 98 (devmem
  *       write-intent open). Opens /dev/mem O_RDWR and asserts signal 98 emits
  *       with write_intent=1; opening read-only asserts no write-intent flag;

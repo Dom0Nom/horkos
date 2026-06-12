@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/OverlayAllowlist.cpp
  * Role: Implementation of the signed overlay/allocator allowlist declared in
  *       OverlayAllowlist.h. Canonical body format is a simple line-oriented text
  *       so it is trivially testable and the signature covers exact bytes:

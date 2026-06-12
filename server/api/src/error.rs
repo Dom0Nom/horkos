@@ -1,4 +1,3 @@
-//! src/error.rs
 //! Role: API binary error type. Library code uses `thiserror`; only `main` may
 //!       use `anyhow` per CLAUDE.md guardrail #8.
 //! Target platforms: server (any tokio-supported OS).

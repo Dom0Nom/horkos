@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/SocketTableProbePosix.cpp
  * Role: Signal 189 POSIX half — flow-owner / loopback-interposer sensor. A local
  *       MITM proxy on the game 5-tuple makes the game's own socket connect to a
  *       LOOPBACK/local foreign address instead of the real server IP; that is the

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckRootfsBaseline.cpp
  * Role: Implementation of the signal-105 Deck rootfs baseliner declared in
  *       DeckRootfsBaseline.h. The immutable-distro gate is the load-bearing FP
  *       control: a desktop distro's RW root must NOT flag; a SteamOS RO->RW

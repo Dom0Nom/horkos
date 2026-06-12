@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/cs_invalidate_mmap.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 121. Intended to CoW-break __TEXT then PROT_EXEC-mmap a foreign page; assert HK_CS_INVALIDATED_TAMPER fires for the correlated pair while a benign Sparkle-style self-update does NOT and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

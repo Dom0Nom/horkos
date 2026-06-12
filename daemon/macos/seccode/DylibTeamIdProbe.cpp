@@ -1,5 +1,4 @@
 /*
- * daemon/macos/seccode/DylibTeamIdProbe.cpp
  * Role: Signal 122 (daemon half) — per-dylib team-id / library-validation
  *       divergence. Consumes ES NOTIFY_MMAP observations (Option A in-process
  *       HkEsObservation), classifies each loaded dylib's team-id against the

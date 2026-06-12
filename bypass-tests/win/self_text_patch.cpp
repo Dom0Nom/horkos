@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/self_text_patch.cpp
  * Role: Merge-gate bypass test (memory-integrity-selfcheck signals 145/146/152,
  *       Windows). Intended to inline-patch our OWN .text and install a
  *       self-read-restoring NtReadVirtualMemory hook, then assert: signal 145

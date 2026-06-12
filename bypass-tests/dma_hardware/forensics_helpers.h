@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/forensics_helpers.h
  * Role: extern "C" declarations of the host-buildable, platform-clean aggregator
  *       helpers defined in dma_detect/src/forensics_report.cpp, shared by the
  *       DMA-hardware bypass-test fixtures (guardrail #12). These are the same

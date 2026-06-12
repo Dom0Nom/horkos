@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/VulkanLayerChainWin.cpp
  * Role: Signal 54 (win-usermode-overlay). Vulkan implicit/forced-layer overlay-
  *       injection chain sensor. Reads the implicit-layer manifests registered under
  *       HKLM/HKCU\SOFTWARE\Khronos\Vulkan\ImplicitLayers, parses each referenced

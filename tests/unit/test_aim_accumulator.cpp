@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_aim_accumulator.cpp
  * Role: Host unit test for the platform-free behavioral-aim per-tick fold
  *       (sdk/src/input/AimAccumulator.cpp, catalog signals 163/165/171). Exercises
  *       the count/summed-delta/newest-ts provenance fold (163), the inter-arrival

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/RouteWatchWin.cpp
  * Role: Signal 188 Windows half — route/interface-change-without-OS-event sensor.
  *       Registers NotifyRouteChange2 / NotifyIpInterfaceChange /
  *       NotifyUnicastIpAddressChange (iphlpapi) callbacks and snapshots the

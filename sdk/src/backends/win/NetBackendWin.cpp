@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/NetBackendWin.cpp
  * Role: Windows backend for the cross-platform clock-drift / send-backlog /
  *       probe-RTT probes (signals 182 / 184 / 187). Implements the `net_backend.h`
  *       seam: QueryPerformanceCounter vs GetSystemTimePreciseAsFileTime (182);

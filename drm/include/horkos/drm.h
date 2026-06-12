@@ -1,5 +1,4 @@
 /*
- * drm/include/horkos/drm.h
  * Role: Public C API for Horkos DRM. Applies only to game init, licence,
  *       integrity, and attestation paths — never the hot loop (guardrail #9).
  *       A licence is an Ed25519-signed claim binding a product + hardware id +

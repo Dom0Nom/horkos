@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/passes/ControlFlowFlattening.cpp
  * Role: Flattens the control-flow graph of an opted-in function into a single
  *       switch dispatcher driven by a state variable, so the original block
  *       order is not recoverable from the CFG. SSA correctness is guaranteed by

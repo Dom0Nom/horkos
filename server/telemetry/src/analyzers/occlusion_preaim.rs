@@ -1,5 +1,3 @@
-//! src/analyzers/occlusion_preaim.rs
-//!
 //! Role: occlusion-resolved pre-aim lead analyzer (catalog signal 172). Per tick it
 //! integrates the client-reported `aim_delta_*` into a 3-D aim direction in the
 //! snapshot's authoritative view frame, then measures the angular error to each

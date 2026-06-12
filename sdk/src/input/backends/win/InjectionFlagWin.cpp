@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/win/InjectionFlagWin.cpp
  * Role: Windows OS-injection-bit aim sensor (catalog signal 171). Over the GAME'S
  *       OWN low-level mouse hook (WH_MOUSE_LL), reads MSLLHOOKSTRUCT.flags
  *       (LLMHF_INJECTED / LLMHF_LOWER_IL_INJECTED) per aim-moving event and emits

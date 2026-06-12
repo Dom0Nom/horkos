@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_txcadence.cpp
  * Role: network-anomaly TX-cadence merge-gate bypass test (signal 181) [disabled].
  *       When enabled: a userland send-shim that buffers + re-bursts datagrams must
  *       produce a NIC-HW-TX vs QueryPerformanceCounter divergence the TxCadenceProbe

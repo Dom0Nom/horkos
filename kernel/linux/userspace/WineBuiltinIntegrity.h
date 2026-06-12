@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/WineBuiltinIntegrity.h
  * Role: Signal 107 verifier — Wine builtin PE-section integrity. Two arms:
  *       (a) the inode/SHA arm: walk /proc/<pid>/maps, find VMAs whose pathname is
  *           a Wine builtin SO (ntdll/kernelbase/win32u), stat the backing inode,

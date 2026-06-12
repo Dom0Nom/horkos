@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/text_patch.cpp
  * Role: macOS bypass-test fixture (signal 117) [disabled until enforcement].
  *       When enabled: mach_vm_protect the game __TEXT to RW + byte-patch and
  *       assert a hk_es_text_wx writable/COW-broken page with csops_valid=0.

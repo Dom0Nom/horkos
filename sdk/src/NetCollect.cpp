@@ -1,5 +1,4 @@
 /*
- * sdk/src/NetCollect.cpp
  * Role: The `hk::net` aggregator — folds every available per-signal client probe
  *       (181/182/183/184/185/187/188/189; 186 is server-only) into one
  *       `hk_net_report` per upload window. Starts from the empty/no-data report so

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/SocketTableProbeWin.cpp
  * Role: Signal 189 Windows half — loopback/local-proxy interposition (5-tuple
  *       owner) sensor. GetExtendedTcpTable / GetExtendedUdpTable
  *       (TCP/UDP_TABLE_OWNER_PID_ALL) map the game flow to its owning PID + remote

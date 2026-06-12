@@ -1,5 +1,3 @@
-//! src/aim_kinematics.rs
-//!
 //! Role: Server-side aim-kinematics feature extractor + event segmenters for
 //! catalog signals 166 (flick onset-to-target curvature), 167 (reaction-latency
 //! floor vs. visibility-onset), 168 (recoil-compensation phase-lock residual)

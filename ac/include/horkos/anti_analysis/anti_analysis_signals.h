@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/anti_analysis/anti_analysis_signals.h
  * Role: Usermode analysis-tooling-presence sensor surface for catalog signals
  *       194 (dynamic-instrumentation / DBI residency fingerprint) and 197
  *       (memory-editor / debugger host fingerprint). Declares the two fixed POD

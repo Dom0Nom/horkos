@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/dl_map_object.bpf.c
  * Role: uretprobe on the glibc dynamic loader's _dl_map_object. Emits one
  *       compact record per DSO the loader maps (a link-map append index, the
  *       soname user pointer, and the load bias) so the userspace correlators

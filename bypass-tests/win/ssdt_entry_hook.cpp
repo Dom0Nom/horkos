@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/ssdt_entry_hook.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 208 (native SSDT entry
  *       bounds, win-kernel-syscall-etw-integrity). A Phase-5 test-signed fixture
  *       repoints one KiServiceTable entry OUTSIDE ntoskrnl; the AC must emit

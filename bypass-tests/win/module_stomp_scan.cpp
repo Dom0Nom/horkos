@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/module_stomp_scan.cpp
  * Role: Merge-gate bypass fixture for the memory-scan plane (signals 11/12),
  *       [disabled]. Intended to overwrite a benign loaded module's .text (module
  *       stomping) and separately RW->RX-flip a region, then drain

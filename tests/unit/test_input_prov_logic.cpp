@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_input_prov_logic.cpp
  * Role: Host-runnable unit tests for the PLATFORM-FREE decision cores of the
  *       win-input-automation input-provenance sensors (catalog signals 55-63).
  *       Exercises the pure provenance classifier, ratio folding, RAWMOUSE/scan-code

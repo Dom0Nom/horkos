@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/BarProfile.cpp
  * Role: Windows BAR geometry profiler (sig 131). Reconstructs each BAR's
  *       {size, 64-bit, prefetchable, io} from the PnP-translated resource
  *       descriptors the OS already recorded (CM_Get_First/Next_Log_Conf +

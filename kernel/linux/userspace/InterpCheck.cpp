@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/InterpCheck.cpp
  * Role: Implementation of the signal-84 PT_INTERP-mismatch correlator declared in
  *       InterpCheck.h.
  * Target platform: Linux userspace.

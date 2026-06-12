@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/decoy_shared.h
  * Role: TU-local accessors over the SHARED first-chain VEH + decoy PAGE_GUARD state
  *       owned by veh_fault_attribution_win.cpp (signal 154). The 159 (dispatch latency)
  *       and 161 (guard cadence) samplers read fault counts / QPC / TF and re-arm the

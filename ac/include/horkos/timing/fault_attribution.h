@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/fault_attribution.h
  * Role: Signal-154 VEH fault-attribution sampler + the self-armed decoy PAGE_GUARD
  *       arming/teardown. Declares the install/sample/teardown surface; the body reads
  *       the first-chain VEH's CONTEXT.Dr6/Dr7 and resolves the dispatch-frame return

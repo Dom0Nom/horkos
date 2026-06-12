@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_dlloverride_inject.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 100 (WINEDLLOVERRIDES anomaly). Demonstrates: launch Proton with
  *       WINEDLLOVERRIDES=ntdll=n (native shadowing a builtin-only DLL) plus an

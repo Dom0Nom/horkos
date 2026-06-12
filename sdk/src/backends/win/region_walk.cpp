@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/region_walk.cpp
  * Role: Signal 202 userspace half — enumerates the game's executable memory
  *       regions (VirtualQueryEx MEM_PRIVATE/MEM_IMAGE + PAGE_EXECUTE_*) and the
  *       PEB Ldr module list, and reports regions absent from both the kernel

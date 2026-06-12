@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/macos/ConfigSpaceForensics.mm
  * Role: macOS config-space forensics backend and the macOS
  *       hk_dma_forensics_scan entry point. Enumerates IOPCIDevice nodes from the
  *       IOKit registry, sweeps PCIe config space with IOPCIDevice::configRead32,

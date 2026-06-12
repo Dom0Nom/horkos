@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/LayeredWindowScanWin.cpp
  * Role: Signal 49 (win-usermode-overlay). Foreign layered/transparent/topmost
  *       click-through overlay-window scanner: EnumWindows over visible top-level
  *       windows, reads GWL_EXSTYLE (layered/transparent/topmost/noactivate),

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/cross/frida_gadget_residency.cpp
  * Role: Merge-gate bypass test (anti-analysis-environment signal 194, cross-
  *       platform). Adversarial fixture for the dynamic-instrumentation / DBI
  *       residency fingerprint. It (1) drives the REAL signal-194 sampler on the

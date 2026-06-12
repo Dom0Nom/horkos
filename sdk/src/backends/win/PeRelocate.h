@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/PeRelocate.h
  * Role: Pure PE export-RVA + base-relocation math reused by the Present-prologue
  *       reconciliation sensor (signal 47). Given a module's on-disk image bytes
  *       and the live load base, it (a) resolves an export's RVA, (b) maps an RVA

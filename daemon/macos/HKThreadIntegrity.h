@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKThreadIntegrity.h
  * Role: Interface for thread-origin scanning (signal 114). Declares HKThreadScan()
  *       and the pure image-region resolver that classifies an entry PC as inside
  *       a known mach-o image vs anonymous vs a sanctioned JIT region.

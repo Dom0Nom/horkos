@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/csflags_strip.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 118. Intended to launch a fixture with CS_KILL/CS_HARD cleared (re-signed/ad-hoc or AMFI-weakened VM); assert HK_CS_FLAGS_DRIFT fires while a clean notarized launch does NOT and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

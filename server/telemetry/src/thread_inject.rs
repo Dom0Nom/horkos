@@ -1,5 +1,3 @@
-//! src/thread_inject.rs
-//!
 //! Role: Server-side decode + feature extraction for the Windows thread-origin
 //! event records (win-kernel-thread-injection): thread-create provenance
 //! (`hk_event_thread_create`), alloc/setcontext/resume injection causality

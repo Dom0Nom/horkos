@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_clockdrift.cpp
  * Role: network-anomaly clock-drift merge-gate bypass test (signal 182) [disabled].
  *       When enabled: a scaled clock source (monotonic at 0.8x realtime) must yield
  *       the expected clock_ratio_ppm, while an NTP-style discrete step trips

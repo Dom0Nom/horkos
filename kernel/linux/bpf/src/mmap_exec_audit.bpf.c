@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/mmap_exec_audit.bpf.c
  * Role: Signal 101 — audit PROT_EXEC mappings, emitting the backing dev:ino so
  *       the userspace classifier (PrefixMapAudit.cpp) can decide off-tree /
  *       off-allowlist. Anonymous|memfd PROT_EXEC maps are tagged HK_PW_MAP_MEMFD

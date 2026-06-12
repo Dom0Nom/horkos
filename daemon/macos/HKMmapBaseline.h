@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKMmapBaseline.h
  * Role: Interface for the per-title mmap-exec baseline. Declares the manifest
  *       struct and HKMmapBaselineMatch(), consulted by the ES MMAP handler (via
  *       the daemon) to classify an executable mmap source as KNOWN / UNKNOWN /

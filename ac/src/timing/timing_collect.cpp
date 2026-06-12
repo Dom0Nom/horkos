@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/timing_collect.cpp
  * Role: The timing-domain aggregator. Zero-initializes a timing_report, runs each
  *       available per-signal sampler (154/156/157/159/161/162) and folds the kernel
  *       ring (155), setting the matching SensorOk bit per sampler that produced a

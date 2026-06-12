@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ModuleViewDiff.cpp
  * Role: Implementation of signal 92 (module-view cross-enumeration diff) declared
  *       in ModuleViewDiff.h.
  * Target platform: Linux userspace.

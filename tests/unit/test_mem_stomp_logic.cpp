@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_mem_stomp_logic.cpp
  * Role: Host-buildable unit tests for the module-stomp section-diff core
  *       (kernel/win/include/mem_logic_stomp.h, signal 12). Drives the
  *       reloc/IAT-normalized comparison with synthetic section buffers — no WDK,

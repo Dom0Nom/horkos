@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_selfcheck_fpgate.cpp
  * Role: Host-buildable unit tests for the Windows self-check false-positive-gate
  *       decision logic (kernel/win/include/selfcheck_fpgate.h). These are the
  *       pure predicates the kernel work item calls; testing them here proves the

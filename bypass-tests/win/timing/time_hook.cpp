@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/timing/time_hook.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 157, Windows). IAT/inline-hooks GetTickCount64/QueryPerformanceCounter to dilate time; must demonstrate signal 157 detects sustained shared-page-vs-API ratio drift.
  * Target platforms: Windows only (built behind if(WIN32)).
  * Interface: drives the AC timing flag surface

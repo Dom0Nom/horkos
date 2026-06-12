@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/common/PointerFeatureFold.h
  * Role: Pure, platform-free pointer-delta feature extractor (catalog signal 142),
  *       shared by the three platform halves (PointerDeltaStatsWin.cpp /
  *       PointerDeltaStatsPosix.cpp / PointerDeltaStatsMac.mm). Accumulates raw

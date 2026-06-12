@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/RingBuffer.c
  * Role: Single-producer / single-consumer event ring for the Horkos driver.
  *       Producers are the Ps* notify callbacks and the Ob pre-callback;
  *       the consumer is the HK_IOCTL_DRAIN_EVENTS handler. Access is serialized

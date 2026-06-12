@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/ModuleStomp.c
  * Role: Module-stomp scanner (signal 12) + evidence staging for the unsigned-
  *       image signal (18). For each signed module it maps the on-disk backing
  *       file read-only, normalizes relocations + zeroes IAT thunks, and diffs the

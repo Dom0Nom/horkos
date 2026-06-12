@@ -1,5 +1,4 @@
 /*
- * obfuscator/test/fixtures/fixture.c
  * Role: Source for fixture.ll. `secret` is opted into obfuscation via the
  *       annotate attribute and exercises a branch (CFF + opaque) and a string
  *       literal (string encryption). `plain` is NOT annotated and must come out

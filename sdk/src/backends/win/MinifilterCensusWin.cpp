@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/MinifilterCensusWin.cpp
  * Role: Userspace minifilter altitude census (signal 6). Enumerates loaded
  *       minifilters and their instances via fltlib (FilterFindFirst /
  *       FilterInstanceFindFirst), parses each altitude, and runs the pure

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/loader_trust.bpf.c
  * Role: Signal 206 — dynamic-linker-hijack detection at exec. On
  *       sys_enter_execve it scans the new process's environment (the syscall's
  *       third arg, envp) for LD_PRELOAD / LD_AUDIT / LD_LIBRARY_PATH and tags a

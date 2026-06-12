@@ -1,5 +1,3 @@
-//! src/lib.rs
-//!
 //! Role: Ban-engine crate. Exposes `router()` mounting `GET /api/rules/current`,
 //! `router_with_decisions()` adding `GET /api/decisions/{player_id}`, and the
 //! analysis pipeline (`pipeline::spawn`) that fuses analyzer suspicions into

@@ -1,5 +1,3 @@
-//! src/fusion.rs
-//!
 //! Role: deterministic cross-signal fusion — the ONLY place a verdict is
 //! formed. Consumes the per-session `SuspicionEvent`s the telemetry analyzers
 //! emit (signals 172-180) plus the arrival-cadence observation (signal 186)

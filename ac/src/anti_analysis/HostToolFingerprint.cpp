@@ -1,5 +1,4 @@
 /*
- * ac/src/anti_analysis/HostToolFingerprint.cpp
  * Role: Signal 197 (memory-editor / debugger host fingerprint) sampler,
  *       Windows. Three read-only host enumerations:
  *         (a) EnumWindows + RealGetWindowClassW against a static table of known

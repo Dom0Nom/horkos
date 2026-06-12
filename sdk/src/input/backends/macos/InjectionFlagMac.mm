@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/macos/InjectionFlagMac.mm
  * Role: macOS OS-injection-source aim sensor (catalog signal 171). Over the same
  *       listen-only CGEventTap as the 170 sensor, distinguishes hardware vs.
  *       CGEventPost-synthesized mouse motion via CGEventGetIntegerValueField

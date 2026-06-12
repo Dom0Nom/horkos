@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/CompositeInterfaceAuditWin.cpp
  * Role: Signal 143 — composite-interface-collection sensor. Over the shared
  *       UsbTopology snapshot (config-descriptor IAD parse + interface-class set),
  *       flags an input device (HID, bInterfaceClass 0x03) co-resident with a

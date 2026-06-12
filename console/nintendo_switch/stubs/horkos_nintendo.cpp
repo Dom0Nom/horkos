@@ -1,5 +1,4 @@
 /*
- * console/nintendo_switch/stubs/horkos_nintendo.cpp
  * Role: Placeholder for the NintendoSDK Horkos integration. Nintendo SDK docs
  *       are NDA-only, so unlike GDK there is NO public-doc-shaped signature here
  *       (Locked Decision #7, guardrail #2). The README describes the public-doc

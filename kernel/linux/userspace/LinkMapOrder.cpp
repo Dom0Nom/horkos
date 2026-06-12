@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/LinkMapOrder.cpp
  * Role: Implementation of the signal-87 (corroborating-only) load-order
  *       interposition correlator declared in LinkMapOrder.h.
  * Target platform: Linux userspace.

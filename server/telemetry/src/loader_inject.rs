@@ -1,5 +1,3 @@
-//! src/loader_inject.rs
-//!
 //! Role: Server-side decode + feature extraction for the Linux eBPF
 //! loader-injection event records (linux-ebpf-injection, catalog signals 82-90):
 //! DT_NEEDED-divergence + load-order (`hk_event_dso_anomaly`), GOT/PLT redirect

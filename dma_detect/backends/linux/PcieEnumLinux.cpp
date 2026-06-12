@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/PcieEnumLinux.cpp
  * Role: Linux backend for DMA-attack detection.
  *       Walks /sys/bus/pci/devices/ to enumerate PCIe devices and inspect
  *       class codes, driver binding, and Bus Master Enable state.

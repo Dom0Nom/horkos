@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/macos/BarProfile.mm
  * Role: macOS BAR geometry profiler (sig 131). Reconstructs each BAR's
  *       {size, 64-bit, prefetchable, io} from the kernel-recorded
  *       "assigned-addresses" IORegistry property (and IOPCIDevice memory-range

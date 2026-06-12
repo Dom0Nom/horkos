@@ -1,5 +1,3 @@
-//! src/routes/account.rs
-//!
 //! Role: GDPR Article 17 deletion route. Phase 2 returns 503 + Retry-After:
 //! 86400 so clients can compile against the URL surface but no false
 //! 202+SLA promise is made before durable persistence lands.

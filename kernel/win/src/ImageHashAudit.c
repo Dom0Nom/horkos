@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/ImageHashAudit.c
  * Role: Signal 29 — in-memory vs on-disk driver .text hash audit. For each loaded
  *       driver, parse the in-memory PE (RtlImageNtHeader + IMAGE_SECTION_HEADER),
  *       find the executable sections, read the on-disk file (PASSIVE_LEVEL,

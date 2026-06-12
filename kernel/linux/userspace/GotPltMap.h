@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/GotPltMap.h
  * Role: Signal 83 correlator — GOT/PLT redirection detection. Computes .got.plt
  *       slot offsets from ELF section headers + load bias, hands them to the
  *       got_sample BPF program via the hk_got_cfg map, and resolves each sampled

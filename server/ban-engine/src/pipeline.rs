@@ -1,5 +1,3 @@
-//! src/pipeline.rs
-//!
 //! Role: the end-to-end analysis pipeline — the running system between HTTP
 //! ingest and a persisted decision. `spawn()` starts N hash-sharded tokio
 //! tasks; each shard SOLELY owns the sessions of the players routed to it

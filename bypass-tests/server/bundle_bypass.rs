@@ -1,5 +1,3 @@
-//! bypass-tests/server/bundle_bypass.rs
-//!
 //! Role: merge-gate bypass tests (guardrail #12) for the signed-rule-bundle
 //! trust boundary. The attacker model: control of the bundle distribution
 //! channel (CDN, MITM, compromised mirror) but NOT the signing key. Every

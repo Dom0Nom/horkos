@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckRootfsBaseline.h
  * Role: Signal 105 baseliner — classify a rootfs-RW record against the immutable-
  *       distro gate (os-release), the /proc/mounts RO baseline, and the SteamOS
  *       update window (frzr/rauc). On a desktop distro with a normally-RW root the

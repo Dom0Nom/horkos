@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/uinput_inject_audit.bpf.c
  * Role: Signal 108 — synthetic-input (uinput/evdev) audit. The injecting tgid is
  *       attributed and the EV type/code emitted; the Steam-Input/hid-steam/
  *       gamescope-libinput allowlist + pre-focus gate is userspace

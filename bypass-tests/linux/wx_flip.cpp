@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/wx_flip.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 76 (W^X /
  *       text->writable flip detection). Inside a process registered as
  *       protected, mmaps a region RW then mprotect()s it to RX (and an executable

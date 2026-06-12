@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/CallbackResidency.c
  * Role: Signal 31 — registered driver-callback table residency check. Ships ONLY
  *       the documented self-sentinel half: it confirms Horkos's OWN registered
  *       callbacks (the Ob handle-filter registration handle and the Ps* notify

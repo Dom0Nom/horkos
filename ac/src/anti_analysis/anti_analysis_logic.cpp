@@ -1,5 +1,4 @@
 /*
- * ac/src/anti_analysis/anti_analysis_logic.cpp
  * Role: Pure, platform-free decision cores for the anti-analysis sensors (catalog
  *       signals 194 + 197). These take already-sampled inputs (observable counts
  *       and flags) and return the raw tier the sensor ships as evidence. NO

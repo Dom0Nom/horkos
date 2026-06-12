@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/dynamic_validity_patch.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 120. Intended to mprotect + patch a signed __TEXT page in memory only (disk untouched); assert HK_CS_DYNAMIC_INVALID fires after N-of-M while a transient JIT region does NOT and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

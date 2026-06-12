@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/syscall_prologue_patch.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 213 (syscall-entry
  *       prologue tamper, win-kernel-syscall-etw-integrity). A Phase-5 test-signed
  *       fixture inline-patches KiSystemCall64; the AC must emit

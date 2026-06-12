@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/pe_parse.h
  * Role: Shared PE structure parser (sections / export-directory / import / TLS /
  *       exception-unwind data-directory locations) used by the Windows-format
  *       self-integrity signals (149/150/151/153) and image_baseline. It is a pure

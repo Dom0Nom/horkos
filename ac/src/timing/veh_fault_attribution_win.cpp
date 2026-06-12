@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/veh_fault_attribution_win.cpp
  * Role: Signal 154 — VEH-ordering / fault-resolver attribution sensor, plus the SHARED
  *       first-chain VEH install/teardown + self-armed decoy PAGE_GUARD machinery reused
  *       by signals 159 (dispatch latency) and 161 (guard cadence). The first-in-chain

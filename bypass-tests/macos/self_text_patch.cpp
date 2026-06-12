@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/self_text_patch.cpp
  * Role: Merge-gate bypass test (memory-integrity-selfcheck signals 145/146/152,
  *       macOS). Intended to mach_vm_write-patch our OWN __TEXT, then assert the daemon
  *       mach_vm_region_recurse SM_COW (146) + mach_vm_read divergence (145) path flags

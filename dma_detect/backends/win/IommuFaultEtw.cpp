@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/IommuFaultEtw.cpp
  * Role: Windows IOMMU-fault (DMA-remapping fault) consumer (catalog signal 135,
  *       Windows arm). Intended to consume DMA-remapping fault events surfaced by a
  *       platform ETW provider (DeviceGuard / Microsoft-Windows-Kernel-* family) and

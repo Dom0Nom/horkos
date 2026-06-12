@@ -1,4 +1,3 @@
-//! tests/render_findings.rs
 //! Role: Integration test for the render/overlay-hook ingest plane
 //!       (POST /api/render-findings): a valid batch -> 202; a wrong envelope
 //!       schema_version -> 400 via TelemetryError::RenderSchema; a finding-level

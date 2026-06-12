@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/MagnifierHostScanWin.cpp
  * Role: Signal 51 (win-usermode-overlay). Magnification-API host scanner.
  *       Enumerates top-level windows hosting a WC_MAGNIFIER child (the control a
  *       Magnification-API host creates), attributes the owning PID + window class,

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/RawInputSourceReconcileWin.cpp
  * Role: Signal 138 — raw-input source-handle reconciliation sensor (device-trust
  *       framing of sibling signal 55). For each WM_INPUT, the RAWINPUTHEADER.hDevice
  *       is reconciled against the enumerated raw-input inventory

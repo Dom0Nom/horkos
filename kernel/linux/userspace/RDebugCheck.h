@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/RDebugCheck.h
  * Role: Signal 88 correlator — _r_debug r_brk / RELRO integrity. On an
  *       rdebug_sample tick it locates _r_debug via PT_DYNAMIC DT_DEBUG at the
  *       load-biased address (read through /proc/<pid>/mem), range-checks r_brk

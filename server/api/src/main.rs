@@ -1,5 +1,3 @@
-//! src/main.rs
-//!
 //! Role: Horkos API binary entrypoint. Owns the tokio runtime and tracing
 //! subscriber. Only file in this crate that may use `anyhow` (per
 //! CLAUDE.md guardrail #8 — library code uses `thiserror`).

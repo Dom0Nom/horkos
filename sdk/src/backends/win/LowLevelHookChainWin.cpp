@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/LowLevelHookChainWin.cpp
  * Role: Signal 59 (win-input-automation). Low-level-hook chain-participation sensor.
  *       Installs the GAME's OWN WH_MOUSE_LL / WH_KEYBOARD_LL hooks and measures the
  *       call-out delay around CallNextHookEx (a foreign hook earlier in the chain

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_iommu_fault_storm.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 135 (IOMMU faults). Demonstrates: a steady-state fault stream
  *       attributed to a FLAGGED (structural-suspect) BDF scores; AND that init-window

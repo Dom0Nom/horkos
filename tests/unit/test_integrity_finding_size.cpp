@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_integrity_finding_size.cpp
  * Role: Host-buildable schema-pin test for the driver/module-integrity wire
  *       payload (win-kernel-driver-integrity). The plan requires
  *       hk_event_integrity_finding == 16 bytes so that HK_EVENT_PAYLOAD_MAX stays

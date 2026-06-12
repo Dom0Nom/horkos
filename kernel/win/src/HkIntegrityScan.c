@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HkIntegrityScan.c
  * Role: Integrity-scan orchestrator + work-item scheduling for the driver/module
  *       trust sensors (win-kernel-driver-integrity, signals 28-36). Owns the
  *       single periodic PASSIVE_LEVEL work item: a KTIMER fires a DISPATCH_LEVEL

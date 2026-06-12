@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/DebugStateProbe.c
  * Role: Signal 33 — kernel-debugger attach-state probe. Reads the exported
  *       KdDebuggerEnabled / KdDebuggerNotPresent globals and corroborates with
  *       SystemKernelDebuggerInformation, distinguishing "boot-debug allowed but

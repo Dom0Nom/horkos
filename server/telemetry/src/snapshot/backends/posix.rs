@@ -1,5 +1,3 @@
-//! src/snapshot/backends/posix.rs
-//!
 //! Role: POSIX `shm_open` + `mmap` backend for the authoritative snapshot ring
 //! (Linux/macOS game hosts). Owns the only platform syscalls in the snapshot
 //! domain (guardrail #1, isolated in `backends/`). Maps the Horkos-owned ring

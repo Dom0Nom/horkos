@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/gatekeeper_xattr_strip.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 125. Intended to strip com.apple.quarantine; assert HK_CS_GATEKEEPER_BYPASS is emitted ONLY when a 119/126 finding co-occurs (corroborating-only gate), never standalone and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

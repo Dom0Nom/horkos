@@ -1,4 +1,3 @@
-//! tests/license_routes.rs
 //! Role: Real licence lifecycle assertions — issue mints a verifiable token,
 //!       verify enforces signature + hardware binding + revocation, revoke
 //!       invalidates, and tampering/forgery is rejected fail-closed. A shared

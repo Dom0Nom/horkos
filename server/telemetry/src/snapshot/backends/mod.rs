@@ -1,5 +1,3 @@
-//! src/snapshot/backends/mod.rs
-//!
 //! Role: platform backend selection for the snapshot shared-memory ring attach. This
 //! is the ONLY place in the behavioral-gamestate domain that touches an OS API
 //! (guardrail #1); the two implementations are selected by target `cfg` keyed to the

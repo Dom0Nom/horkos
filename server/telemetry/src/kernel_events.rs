@@ -1,5 +1,3 @@
-//! src/kernel_events.rs
-//!
 //! Role: Server-side decode + feature extraction for the Linux kernel/module-trust
 //! event records (linux-module-integrity, signals 91-99): kallsyms drift
 //! (`hk_event_ksym_drift`), module cross-view diff (`hk_event_module_view_diff`),

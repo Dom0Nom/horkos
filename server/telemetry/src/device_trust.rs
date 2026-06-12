@@ -1,5 +1,3 @@
-//! src/device_trust.rs
-//!
 //! Role: USB/HID device-trust finding ingest plane (hardware-input-devices domain,
 //! catalog signals 136/137/140/141/143). Serde mirror of the C99
 //! `hk_device_descriptor_audit` and `hk_event_hid_descriptor` records in

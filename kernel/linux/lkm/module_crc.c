@@ -1,5 +1,4 @@
 /*
- * kernel/linux/lkm/module_crc.c
  * Role: Signal 95 in-memory half — a READ-ONLY debugfs seq_file
  *       (horkos/module_crcs) that emits one "(name, build-id-or-crc-digest)" line
  *       per loaded module, for userspace (ModuleDiskDrift.cpp) to compare against

@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/mem_logic_vad.h
  * Role: Pure, platform-free classifiers for the VAD-walk memory signals 10
  *       (unbacked executable region), 14 (oversized private executable commit),
  *       and 15 (exotic VadType / large-page executable). Each is structural

@@ -1,5 +1,4 @@
 /*
- * ac/src/anti_analysis/InstrumentationResidency.cpp
  * Role: Signal 194 (dynamic-instrumentation / DBI residency fingerprint)
  *       sampler. Read-only, own-process only. Gathers three combined observables
  *       and folds them through the pure confidence-tier core

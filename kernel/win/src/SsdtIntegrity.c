@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/SsdtIntegrity.c
  * Role: Signal 35 — SSDT range integrity check. Decodes each KiServiceTable
  *       entry (x64 packed-offset form, via the pure HkSsdtDecodeTarget) and
  *       verifies the resolved target lands inside ntoskrnl per the ModuleMap. An

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/self_hwbp.cpp
  * Role: Merge-gate bypass test (memory-integrity-selfcheck signal 148, Windows).
  *       Intended to set a hardware breakpoint on a critical function via
  *       SetThreadContext, then spoof usermode GetThreadContext to read back clean, and

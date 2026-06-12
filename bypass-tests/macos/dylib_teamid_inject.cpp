@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/dylib_teamid_inject.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]) for macos-codesign-
  *       integrity signal 122. Intended to DYLD_INSERT_LIBRARIES a foreign-team dylib into an LV-enabled host; assert HK_CS_LV_TEAMID_DIVERGENCE fires while an allowlisted Apple/Steam dylib does NOT and assert the Horkos daemon /
  *       server reports the corresponding HK_CS_* finding. Compiled now for the

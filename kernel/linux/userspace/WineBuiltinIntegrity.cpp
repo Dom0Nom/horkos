@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/WineBuiltinIntegrity.cpp
  * Role: Implementation of the signal-107 Wine builtin integrity verifier declared
  *       in WineBuiltinIntegrity.h. Hashes the ON-DISK dist file (so ESYNC/FSYNC +
  *       PE-loader relocations do not false-positive); a swapped builtin SO or a

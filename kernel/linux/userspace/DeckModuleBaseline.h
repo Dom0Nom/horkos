@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckModuleBaseline.h
  * Role: Signal 104 baseliner — classify a module-load record against the boot
  *       /proc/modules snapshot, the SteamOS signed-module hash set, the hotplug
  *       allowlist (usb-storage/xpad/hid-*), and the SteamOS update window. Gates

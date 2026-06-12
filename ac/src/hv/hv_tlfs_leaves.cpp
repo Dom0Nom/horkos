@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_tlfs_leaves.cpp
  * Role: Signal 37 sampler — reads the hypervisor CPUID leaf range
  *       (0x40000000..0x4000000A) plus the leaf-1 hypervisor-present bit and the
  *       OS hypervisor/VBS posture, filling hv_tlfs_leaves with the RAW vector.

@@ -1,5 +1,4 @@
 /*
- * attestation/backends/linux/AttestationTpm2Linux.cpp
  * Role: Linux TPM 2.0 attestation backend. Thin factory over the shared
  *       tpm2-tss ESAPI quote routine (backends/common/Tpm2EsapiQuote.cpp); on
  *       Linux libtss2 reaches the TPM through the default device TCTI

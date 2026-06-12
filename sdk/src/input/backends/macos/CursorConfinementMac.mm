@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/macos/CursorConfinementMac.mm
  * Role: macOS cursor/synthetic-source provenance sensor (catalog signal 170
  *       analog). A LISTEN-ONLY CGEventTap checks the synthetic-source flag
  *       (kCGEventSourceStateID) on mouse-move events to populate the 170 cursor-

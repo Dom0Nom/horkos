@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/input_prov_schema.h
  * Role: Wire-format source of truth for the Windows usermode input-provenance
  *       sensor findings (catalog signals 55-63, win-input-automation). Defines the
  *       signal enum, the provenance verdict enum, the per-event source/mode flag

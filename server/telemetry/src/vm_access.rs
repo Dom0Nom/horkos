@@ -1,5 +1,3 @@
-//! src/vm_access.rs
-//!
 //! Role: Server-side decode + feature extraction for the Windows external-memory-
 //! access event records (win-handle-memory-access, signals 64-72): cross-process
 //! ReadVm/WriteVm/AllocVm/ProtectVm (`hk_event_vm_access`), Ob handle provenance /

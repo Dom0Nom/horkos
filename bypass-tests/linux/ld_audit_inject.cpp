@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/ld_audit_inject.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 89
  *       (LD_AUDIT). Demonstrates: launch with LD_AUDIT pointing at a
  *       no-provenance module -> signal 89 fires (la_symbind observed via the

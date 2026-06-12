@@ -1,4 +1,3 @@
-//! src/error.rs
 //! Role: License-server library error type. Every verification failure is a
 //!       distinct, fail-closed variant.
 //! Target platforms: server.

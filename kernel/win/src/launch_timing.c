@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/launch_timing.c
  * Role: Signal 200 sensor — correlates the create-process timestamp with the
  *       initial thread's creation and pre-resume image-loads so the server can
  *       compute a suspended-launch window. Per the plan's UNCERTAINTY resolution,

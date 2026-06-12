@@ -1,5 +1,4 @@
 /*
- * examples/pc_basic/main.cpp
  * Role: Minimal SDK integration example. Calls horkos_init, horkos_drm_validate,
  *       and horkos_ac_start, then prints whether the stack is running in ACTIVE
  *       (kernel driver present) or DEGRADED (userspace-only) mode. Must not

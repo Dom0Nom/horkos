@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_tcpinfo.cpp
  * Role: network-anomaly TCP_INFO merge-gate bypass test (signal 183) [disabled].
  *       When enabled: a selective UDP-drop lag-switch leaves kernel TCP_INFO healthy
  *       (low RTT/retrans on the TCP control channel) while the app perceives a UDP

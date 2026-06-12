@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/got_target_audit.cpp
  * Role: Signal 149 (Linux/macOS) — the .got.plt/.rela.plt (Linux) and
  *       __la_symbol_ptr/__got (macOS) analog of the Windows IAT audit: resolve each
  *       scoped slot via dladdr/dynsym, verify the target lands inside the expected

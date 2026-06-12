@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKExceptionPortBaseline.h
  * Role: Interface for the exception-port poller (signal 113). Declares the
  *       launch-time baseline handle and HKExcPortPoll(), which diffs the game
  *       task's current exception-port set against the baseline and flags a

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/ftrace_hook_commit_creds.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 93 (ftrace
  *       ownership audit). Attaches a benign ftrace hook to commit_creds from an
  *       unsigned research module and asserts signal 93 FLAGS it

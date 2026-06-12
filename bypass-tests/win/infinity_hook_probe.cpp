@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/infinity_hook_probe.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 211 (infinity-hook
  *       perf-trace callback, win-kernel-syscall-etw-integrity). A Phase-5 fixture
  *       enables the perf-trace callback technique; the AC must emit

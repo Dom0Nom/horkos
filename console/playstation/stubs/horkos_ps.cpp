@@ -1,5 +1,4 @@
 /*
- * console/playstation/stubs/horkos_ps.cpp
  * Role: Placeholder for the PlayStation SDK Horkos integration. PlayStation SDK
  *       docs are NDA-only, so there is NO public-doc-shaped signature here
  *       (Locked Decision #7, guardrail #2). The README describes the public-doc

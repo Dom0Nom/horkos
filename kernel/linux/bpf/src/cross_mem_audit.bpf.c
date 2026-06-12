@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/cross_mem_audit.bpf.c
  * Role: Signal 102 — cross-process memory-access audit. Three arms over the same
  *       record: sys_enter_process_vm_readv / _writev tracepoints, lsm/
  *       ptrace_access_check, and a kprobe on mem_open (/proc/pid/mem). Emits the

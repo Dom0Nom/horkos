@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/clock_consistency.h
  * Role: Signal-157 KUSER_SHARED_DATA vs time-API ratio sampler. Declares the
  *       shared-page-vs-API clock-consistency sampler that reads the documented
  *       read-only user-mode page at 0x7FFE0000 and compares advance ratios against

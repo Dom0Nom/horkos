@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/usb_bridge_descriptor_spoof.cpp
  * Role: USB descriptor-coherence + composite-interface merge-gate bypass test (Phase:
  *       [disabled]) for signals 137 and 143. The activated body drives the pure
  *       classify_descriptor_coherence + fold_composite_interface_flags cores with three

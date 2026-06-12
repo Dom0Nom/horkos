@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/dylib_inject.cpp
  * Role: macOS bypass-test fixture (Phase 5: [disabled]). Intended to inject a
  *       dylib via DYLD_INSERT_LIBRARIES and assert the Horkos daemon reports the
  *       injection flag (Phase 4 daemon / ES path). Compiled now for the merge

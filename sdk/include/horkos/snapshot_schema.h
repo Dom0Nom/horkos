@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/snapshot_schema.h
  * Role: Wire-format source of truth for the AUTHORITATIVE game-state snapshot IPC
  *       plane (server-side behavioral-gamestate domain, catalog signals 172-180).
  *       This is a THIRD wire plane, distinct from both event_schema.h (the C99

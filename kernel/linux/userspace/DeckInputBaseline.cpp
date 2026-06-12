@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DeckInputBaseline.cpp
  * Role: Implementation of the signal-108 Deck synthetic-input baseliner declared
  *       in DeckInputBaseline.h. The allowlist + mid-session gate is the
  *       load-bearing FP control: Steam Input's own pre-focus uinput device

@@ -1,4 +1,3 @@
-//! src/error.rs
 //! Role: Telemetry library error type. `thiserror` only — no `unwrap()`
 //!       outside tests (CLAUDE.md guardrail #8).
 //! Target platforms: server.

@@ -1,4 +1,3 @@
-//! tests/account_deletion.rs
 //! Role: Asserts the GDPR-17 deletion route's 503 + Retry-After contract
 //!       (Phase 2 stub). The contract flips to 202 only after the durable
 //!       persistence layer lands under /tdd in a follow-up phase.

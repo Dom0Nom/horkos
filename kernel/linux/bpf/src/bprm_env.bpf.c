@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/bprm_env.bpf.c
  * Role: BPF LSM program on bprm_creds_for_exec. At exec it scans the new
  *       program's environment for the dynamic-loader injection keys
  *       LD_PRELOAD / LD_AUDIT / LD_LIBRARY_PATH and stamps a presence bitmask

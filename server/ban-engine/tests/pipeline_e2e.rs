@@ -1,5 +1,3 @@
-//! tests/pipeline_e2e.rs
-//!
 //! Role: end-to-end pipeline integration — ingest sink -> sharded session ->
 //! analyzer registry -> fusion -> latched verdict + persisted audit record.
 //! Drives the real `pipeline::spawn` with synthetic authoritative snapshots

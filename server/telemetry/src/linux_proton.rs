@@ -1,5 +1,3 @@
-//! src/linux_proton.rs
-//!
 //! Role: Server-side decode + feature extraction for the Linux Proton/Wine/Steam-
 //! Deck integrity event records (domain `linux-proton-wine`, catalog signals
 //! 100-108): WINEDLLOVERRIDES anomaly (`hk_event_proton_override`), off-tree

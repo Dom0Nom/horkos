@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/shadow_ssdt_hook.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 209 (shadow SSDT /
  *       W32pServiceTable bounds, win-kernel-syscall-etw-integrity). A Phase-5
  *       test-signed fixture hooks a W32pServiceTable entry; the AC must emit

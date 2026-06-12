@@ -1,5 +1,4 @@
 /*
- * bypass-tests/dma_hardware/bypass_rom_identity.cpp
  * Role: DMA-hardware bypass-test fixture (merge gate, guardrail #12) for catalog
  *       signal 130 (option-ROM identity). Demonstrates: an option ROM whose PCIR
  *       VID/DID contradicts the device's config VID/DID sets rom_pcir_id_mismatch

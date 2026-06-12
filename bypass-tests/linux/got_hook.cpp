@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/got_hook.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 83
  *       (GOT/PLT redirection). Demonstrates: overwrite a .got.plt slot to a RWX
  *       trampoline -> signal 83 fires; an IFUNC slot left untouched -> no event

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ProtonOverrideCheck.cpp
  * Role: Implementation of the signal-100 WINEDLLOVERRIDES classifier declared in
  *       ProtonOverrideCheck.h. The manifest diff is here (userspace), per the
  *       impl-plan's split: the BPF side only hashes the offending token; this

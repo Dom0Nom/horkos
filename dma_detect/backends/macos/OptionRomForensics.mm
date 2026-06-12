@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/macos/OptionRomForensics.mm
  * Role: macOS option-ROM identity forensics (sig 130). Reads the device's
  *       expansion-ROM image where IOKit publishes it, parses the 0xAA55 + PCIR
  *       structure, and compares the PCIR VID/DID to the device's config VID/DID.

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_flowowner.cpp
  * Role: network-anomaly flow-owner merge-gate bypass test (signal 189) [disabled].
  *       When enabled: a loopback MITM proxy on the game 5-tuple is observed as a
  *       local owner PID; a direct connection to the server IP is not. A signed

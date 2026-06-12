@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/module_unlink_hidden.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 92 (module-view
  *       cross-enumeration diff). Loads a benign test module that list_del-unlinks
  *       itself from /proc/modules while keeping its sysfs kobject, then asserts

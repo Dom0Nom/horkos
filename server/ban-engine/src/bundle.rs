@@ -1,5 +1,3 @@
-//! src/bundle.rs
-//!
 //! Role: Rule bundle data structures + the Ed25519 verifier. A bundle carries
 //! the signed-rule parameters (fusion thresholds, cadence params, ...); the
 //! verifier is the trust boundary between the rule author and the ban path.

@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/mem_types.h
  * Role: Host-safe normalized POD types shared by the memory-scan pure-logic
  *       decision cores (mem_logic_vad.h / mem_logic_image.h / mem_logic_stomp.h)
  *       and the kernel scan TUs. The kernel sampler reduces build-specific

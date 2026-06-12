@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/genealogy.bpf.c
  * Role: Signal 205 — launch-under-tracer. Joins the ptrace syscall stream with
  *       exec (sched_process_exec) keyed by (tgid,pid) and a BPF LSM
  *       ptrace_access_check hook, tagging an exec that occurs while the task is

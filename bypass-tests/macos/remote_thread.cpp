@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/remote_thread.cpp
  * Role: macOS bypass-test fixture (signal 114) [disabled until enforcement].
  *       When enabled: thread_create_running in the game from another task with
  *       its entry in an anon region and assert a hk_es_thread_origin

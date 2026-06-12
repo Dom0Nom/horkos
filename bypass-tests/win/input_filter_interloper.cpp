@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/input_filter_interloper.cpp
  * Role: Input-class-filter merge-gate bypass test (Phase: [disabled]). Intended to
  *       inject a SIMULATED unsigned/unknown class upper-filter inventory/registry
  *       fixture entry (NO real driver loaded) and assert that signal 56 surfaces it in

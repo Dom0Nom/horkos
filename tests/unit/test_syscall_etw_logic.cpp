@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_syscall_etw_logic.cpp
  * Role: Host-buildable unit tests for the pure syscall-/ETW-surface decision math
  *       (kernel/win/include/syscall_etw_logic.h, signals 210/212/214/215). Proves:
  *       IDT 64-bit handler reconstruction from the three split offset fields; the

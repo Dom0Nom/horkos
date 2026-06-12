@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ProtectedSet.cpp
  * Role: Userspace populator for the shared `hk_protected` BPF map. Translates a
  *       hk_protected_entry into the in-kernel `struct hk_protected_val` layout
  *       and writes it via bpf_map_update_elem / bpf_map_delete_elem on the map

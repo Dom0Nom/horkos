@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKExceptionPortBaseline.cpp
  * Role: Poll task_get_exception_ports against the validated game task, diff vs a
  *       launch baseline, flag a foreign exception-port owner (signal 113).
  *       Correlated server-side with the ES GET_TASK source.

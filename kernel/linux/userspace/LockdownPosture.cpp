@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/LockdownPosture.cpp
  * Role: Implementation of signal 96 (kernel posture) declared in
  *       LockdownPosture.h.
  * Target platform: Linux userspace.

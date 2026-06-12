@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_genealogy_logic.cpp
  * Role: Host-buildable unit tests for the process-genealogy pure helpers
  *       (sdk/include/horkos/genealogy_logic.h, signals 199/203). Exercises the
  *       reparent-suspect comparison (incl. the incomplete-data guard) and the

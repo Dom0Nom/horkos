@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/RawMouseModeWin.cpp
  * Role: Signal 60 (win-input-automation). Raw-mouse coordinate-mode-transition
  *       sensor. Inspects RAWMOUSE.usFlags on each WM_INPUT for MOUSE_MOVE_ABSOLUTE /
  *       MOUSE_VIRTUAL_DESKTOP / MOUSE_MOVE_RELATIVE transitions per hDevice; a device

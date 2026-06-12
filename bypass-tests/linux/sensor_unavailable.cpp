@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/sensor_unavailable.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for the single most
  *       important correctness rule of the linux-module-integrity domain (§7
  *       "General"): a sensor whose source FS is unmounted or CAP_*-denied emits

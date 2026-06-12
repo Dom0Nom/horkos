@@ -1,5 +1,4 @@
 /*
- * kernel/macos/es/EsClient.mm
  * Role: EndpointSecurity client for macOS. Subscribes to ES_EVENT_TYPE_NOTIFY_EXEC
  *       and ES_EVENT_TYPE_AUTH_EXEC; converts NOTIFY events to hk_event_record
  *       payloads and queues them for the userspace daemon. Every AUTH event is

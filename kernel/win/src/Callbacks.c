@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/Callbacks.c
  * Role: Registers an ObRegisterCallbacks handle-filter for the protected
  *       process/thread types. Phase 3 is observe-and-log: the pre-callback
  *       records each handle-open into the ring and only strips rights when the

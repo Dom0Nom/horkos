@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/SyscallIntegrity.c
  * Role: x64 syscall/IDT dispatch-surface integrity scan (read-only bounds +
  *       prologue + MSR checks). Signals 208 (native SSDT entry bounds), 209
  *       (shadow SSDT, default-OFF), 210 (IA32_LSTAR per-CPU), 213 (syscall-entry

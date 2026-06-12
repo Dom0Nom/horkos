@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_probertt.cpp
  * Role: network-anomaly probe-RTT merge-gate bypass test (signal 187) [disabled].
  *       When enabled: a game-port-only throttle diverges probe_rtt from game_rtt,
  *       while symmetric path congestion hits both equally (no divergence). Requires

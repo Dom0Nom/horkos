@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_ioctl_sizes.cpp
  * Role: Compiles the userspace<->kernel IOCTL wire header on the dev host and
  *       verifies every wire struct size from the C++ side. This is the only
  *       host-buildable check of the Phase 3 IOCTL contract (the kernel TUs that

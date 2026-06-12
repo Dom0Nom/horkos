@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_attestation_create.cpp
  * Role: Verifies that Attestation::create() returns a non-null backend and
  *       that quote() returns AttestationStatus::NotImplemented on Phase 1 stubs.
  * Target platforms: all.

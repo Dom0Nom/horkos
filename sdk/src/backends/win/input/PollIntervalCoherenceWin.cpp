@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/PollIntervalCoherenceWin.cpp
  * Role: Signal 139 — USB interrupt-endpoint poll-interval-coherence sensor. For each
  *       UsbTopology node with an interrupt-IN endpoint, derives the descriptor-
  *       permitted report-rate ceiling from bInterval + speed (reusing the sibling

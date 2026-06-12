@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/InterpCheck.h
  * Role: Signal 84 correlator — PT_INTERP vs mapped-loader build-id check. Reads
  *       PT_INTERP + NT_GNU_BUILD_ID from /proc/<pid>/exe, identifies the mapped
  *       interpreter from /proc/<pid>/maps, and resolves the EXPECTED interpreter

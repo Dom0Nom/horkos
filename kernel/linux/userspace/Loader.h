@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/Loader.h
  * Role: Public interface for the Horkos Linux eBPF loader.  Callers open and
  *       attach the BPF programs, then drive a poll loop to receive translated
  *       hk_event_records via the provided sink callback.

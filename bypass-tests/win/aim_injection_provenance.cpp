@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/aim_injection_provenance.cpp
  * Role: behavioral-aim provenance merge-gate bypass test (Phase: [disabled]).
  *       Intended to self-issue a BENIGN SendInput/mouse_event aim move (NULL-
  *       hDevice, LLMHF_INJECTED set) and a sub-count FRACTIONAL view nudge into

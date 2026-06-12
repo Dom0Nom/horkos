@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/vm_read_external.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 64 (external VM read,
  *       win-handle-memory-access). A Phase-5 test-signed fixture issues
  *       ReadProcessMemory against the protected target; the AC must emit an

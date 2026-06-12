@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/self_iat_veh_hook.cpp
  * Role: Merge-gate bypass test (memory-integrity-selfcheck signals 149/150/153,
  *       Windows). Intended to hook a scoped IAT slot, install a VEH ahead of ours, and
  *       append a TLS callback, then assert: 149 fires with the slot RVA + displaced

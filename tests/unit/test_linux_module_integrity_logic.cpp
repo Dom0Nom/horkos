@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_linux_module_integrity_logic.cpp
  * Role: Host-runnable pure-logic tests for the linux-module-integrity auditors
  *       (signals 91-99). The proc/sysfs/debugfs PARSERS and decision cores are
  *       plain C++17 (no libbpf, no Linux-only syscalls in the tested paths) so

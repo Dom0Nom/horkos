@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/timing_kernel_correlate.cpp
  * Role: Signal 155 correlator — drains the kernel timing-skew records
  *       (HK_EVENT_TIMING_FREQ_SKEW / hk_event_timing_freq_skew, emitted by
  *       kernel/win/src/TimingProbe.c) from the driver via the SDK IOCTL drain bridge

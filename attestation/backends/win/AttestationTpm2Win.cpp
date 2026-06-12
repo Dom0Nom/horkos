@@ -1,5 +1,4 @@
 /*
- * attestation/backends/win/AttestationTpm2Win.cpp
  * Role: Windows TPM 2.0 attestation backend. Thin factory over the shared
  *       tpm2-tss ESAPI quote routine (backends/common/Tpm2EsapiQuote.cpp) — the
  *       Esys_* sequence is identical to Linux; on Windows libtss2 reaches the

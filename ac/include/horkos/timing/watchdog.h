@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/timing/watchdog.h
  * Role: Signal-156 sibling-thread RDTSCP watchdog. Declares the cross-platform
  *       dual-clock sampler: an in-section __rdtscp vs a watchdog-thread __rdtscp read
  *       from a lock-free atomic slot, with the IA32_TSC_AUX core-id cross-check. The

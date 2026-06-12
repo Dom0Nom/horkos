@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_vbs_attest.cpp
  * Role: Signal 40 correlator — reads the VBS/HVCI posture (Win32_DeviceGuard WMI:
  *       VirtualizationBasedSecurityStatus / SecurityServicesRunning /
  *       CodeIntegrityPolicyEnforcementStatus) and pairs it with a TPM attestation

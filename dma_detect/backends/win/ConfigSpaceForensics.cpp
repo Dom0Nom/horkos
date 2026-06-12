@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/ConfigSpaceForensics.cpp
  * Role: Windows config-space forensics backend and the Windows
  *       hk_dma_forensics_scan entry point. Enumerates PCIe devices via SetupAPI,
  *       resolves VID/DID/subsystem and the structural gates (bus master / driver

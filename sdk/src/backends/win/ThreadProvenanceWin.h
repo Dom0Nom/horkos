@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/ThreadProvenanceWin.h
  * Role: SDK-internal interface for the Windows userspace thread-provenance
  *       enrichment plane (win-kernel-thread-injection, catalog signals
  *       22/23/24/25). Declares threadprov::enrich(tid) and the small,

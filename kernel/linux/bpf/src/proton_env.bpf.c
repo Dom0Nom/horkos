@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/proton_env.bpf.c
  * Role: Signal 100 — capture WINEDLLOVERRIDES (and the offending override token)
  *       at exec by scanning the new process's env block, FNV-hashing the
  *       offending token, and pushing a hk_bpf_pw_proton_override to hk_ringbuf.

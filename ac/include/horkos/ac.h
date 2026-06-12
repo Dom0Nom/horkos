@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/ac.h
  * Role: Public C API for Horkos anti-cheat client. Logic lands in a later
  *       phase under /tdd with bypass tests in Phase 5.
  * Target platforms: Windows, Linux, macOS (PC first; console-ready interface).

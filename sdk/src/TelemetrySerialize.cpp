@@ -1,5 +1,4 @@
 /*
- * sdk/src/TelemetrySerialize.cpp
  * Role: Implementation of the platform-free per-tick TickPayload serializer
  *       (TelemetrySerialize.h). Hand-rolls minimal JSON (no allocation, no JSON
  *       library) into a caller buffer, echoing the server simulation tick into

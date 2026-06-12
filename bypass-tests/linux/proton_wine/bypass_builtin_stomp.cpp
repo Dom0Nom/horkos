@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_builtin_stomp.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 107 (Wine builtin integrity / W^X re-arm). Demonstrates: swap a Wine
  *       builtin (ntdll) with an off-dist SO, and hot-patch a builtin .text page

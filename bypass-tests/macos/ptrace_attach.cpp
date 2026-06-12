@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/ptrace_attach.cpp
  * Role: macOS bypass-test fixture (signal 116) [disabled until enforcement].
  *       When enabled: ptrace(PT_ATTACHEXC) against a release-signed game and
  *       assert a hk_es_ptrace transition edge with the tracer pid; a dev /

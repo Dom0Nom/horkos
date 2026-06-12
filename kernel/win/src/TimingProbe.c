@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/TimingProbe.c
  * Role: Signal 155 — APERF/MPERF-vs-RDTSC invariant-skew sensor (KMDF). Userspace
  *       cannot read IA32_APERF/IA32_MPERF, so this kernel probe reads them around a
  *       fixed busy-loop, derives the effective frequency, and compares it to the

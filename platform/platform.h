@@ -1,5 +1,4 @@
 /*
- * platform/platform.h
  * Role: Single source of platform truth for the entire codebase.
  *       Defines HK_PLATFORM_* macros and declares cross-platform abstractions.
  *       Every platform-conditional include or API must route through this header.

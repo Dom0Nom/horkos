@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DsoProvenance.cpp
  * Role: Implementation of the signal-82 DT_NEEDED-divergence correlator declared
  *       in DsoProvenance.h.
  * Target platform: Linux userspace.

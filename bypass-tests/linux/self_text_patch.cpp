@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/self_text_patch.cpp
  * Role: Merge-gate bypass test (memory-integrity-selfcheck signals 145/146/152,
  *       Linux). Intended to process_vm_writev/ptrace-patch our OWN .text, then assert
  *       the eBPF foreign read (145) + soft-dirty (146) + exec-VMA mprotect (152) path

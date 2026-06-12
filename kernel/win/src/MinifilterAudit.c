@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/MinifilterAudit.c
  * Role: Signal 28 — FltMgr callback-node owner/altitude audit. Walks the
  *       registered minifilters and their instances and cross-checks each
  *       FLT_OPERATION_REGISTRATION pre/post-op callback pointer against the owning

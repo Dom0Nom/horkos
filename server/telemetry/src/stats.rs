@@ -1,5 +1,3 @@
-//! src/stats.rs
-//!
 //! Role: Shared statistical gating for the behavioral-gamestate analyzers (catalog
 //! signals 172-180): population-baseline z-score, an EWMA / p95-high RTT estimator
 //! (174 widens the peeker budget by jitter so a false sub-budget cannot arise from

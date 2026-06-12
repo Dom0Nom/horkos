@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/BootLoadAudit.c
  * Role: Signal 36 (kernel half) — boot-start / ELAM load-order audit. Reads the
  *       live PsLoadedModuleList load order and SystemBootEnvironmentInformation to
  *       confirm OUR boot-start driver loaded and is early, and that the ELAM

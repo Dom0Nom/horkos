@@ -1,5 +1,3 @@
-//! src/geom.rs
-//!
 //! Role: Pure geometry / visibility math for the behavioral-gamestate analyzers
 //! (catalog signals 172-180). Ray-vs-AABB, view-frustum containment, angular error
 //! between an aim vector and a target direction, and view-basis reconstruction from

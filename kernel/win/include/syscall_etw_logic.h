@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/syscall_etw_logic.h
  * Role: Pure, platform-free decision/decode math for the x64 syscall-/ETW-surface
  *       integrity sensors (SyscallIntegrity.c signals 210/213/214, EtwIntegrity.c
  *       signals 212/215). The kernel TUs perform the unsafe reads (MSR, IDTR,

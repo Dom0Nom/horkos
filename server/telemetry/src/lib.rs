@@ -1,5 +1,3 @@
-//! src/lib.rs
-//!
 //! Role: Telemetry crate. Exposes `router()` mounting `POST /api/telemetry`.
 //! Phase 2 validates the payload schema and drops it on the floor (logged).
 //! The real ingest path lands in a /tdd phase. The `ort` dependency is

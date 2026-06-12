@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/LockdownPosture.h
  * Role: Signal 96 — kernel lockdown level + module-signature-enforcement
  *       posture. Reads /sys/kernel/security/lockdown,
  *       /sys/module/module/parameters/sig_enforce, /proc/sys/kernel/tainted, and

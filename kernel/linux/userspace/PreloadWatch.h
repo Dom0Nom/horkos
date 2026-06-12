@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/PreloadWatch.h
  * Role: Signal 85 correlator — transient preload (env/file) divergence. Watches
  *       /etc/ld.so.preload via inotify (IN_MODIFY|IN_CLOSE_WRITE|IN_DELETE) for
  *       the steady-state file content and correlates it against the at-exec

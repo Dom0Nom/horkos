@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/IrpDispatch.c
  * Role: WDF IOCTL handler for the control device. Implements the three IOCTL
  *       codes from sdk/include/horkos/ioctl.h: drain the event ring, report
  *       status, and push a (Phase 3: minimal) policy.

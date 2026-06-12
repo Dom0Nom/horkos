@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/rdebug_sample.bpf.c
  * Role: uprobe-triggered CADENCE program for signal 88. On fire it emits a
  *       lightweight "this watched PID needs an _r_debug r_brk / RELRO re-check"
  *       tick. The actual integrity work — locating _r_debug via PT_DYNAMIC

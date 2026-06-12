@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_cross_mem_scan.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 102 (cross-process memory scan). Demonstrates: an external scanner
  *       reads the game via process_vm_readv AND via /proc/<pid>/mem ->

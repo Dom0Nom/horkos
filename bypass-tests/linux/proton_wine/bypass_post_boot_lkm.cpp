@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_post_boot_lkm.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 104 (post-boot / unsigned module load — Deck BYOVD). Demonstrates:
  *       finit_module of an unsigned module after the boot window ->

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_timing_logic.cpp
  * Role: Host-buildable unit tests for the timing-side-channels PURE decision cores
  *       (catalog signals 154-162). These are the platform-free functions the sampler
  *       TUs call; testing them here proves the divergence/modality/cadence/drift/fan

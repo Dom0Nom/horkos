@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/CodeIntegrityProbe.c
  * Role: Signal 30 — code-integrity / DSE / HVCI state probe. Snapshots
  *       SYSTEM_CODEINTEGRITY_INFORMATION (the CodeIntegrityOptions bitfield) at
  *       scan init as a baseline, re-reads it on each rescan, and emits a

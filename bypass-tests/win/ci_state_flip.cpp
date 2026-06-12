@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/ci_state_flip.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 30 (code-integrity
  *       state probe, win-kernel-driver-integrity). In a VM, flip testsigning/HVCI
  *       POST-boot: the AC must emit HK_INTEGRITY_CI_STATE_DELTA for the post-boot

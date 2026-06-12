@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/PrefixMapAudit.h
  * Role: Signal 101 verifier — classify a PROT_EXEC mapping (emitted with dev:ino
  *       + map_flags by mmap_exec_audit.bpf.c) as off-tree / off-allowlist. Holds
  *       the dist-tree / sniper-sysroot / prefix drive_c path set and the overlay-

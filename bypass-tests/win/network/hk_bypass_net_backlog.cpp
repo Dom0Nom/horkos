@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/network/hk_bypass_net_backlog.cpp
  * Role: network-anomaly send-backlog merge-gate bypass test (signal 184) [disabled].
  *       When enabled: a held-uplink (paused send thread) shows the app send-ring
  *       rising while the kernel unsent/ideal-backlog stays ~0 and the link reports no

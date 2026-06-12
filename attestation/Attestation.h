@@ -1,5 +1,4 @@
 /*
- * attestation/Attestation.h
  * Role: Stable attestation interface. Backends change; this header does not
  *       (Locked Decision #6 and guardrail #10).
  * Target platforms: Windows, Linux, macOS, console stubs.

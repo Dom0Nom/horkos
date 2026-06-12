@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/KallsymsAudit.h
  * Role: Signal 91 — kallsyms text-address drift. Cross-checks each sensitive
  *       kernel symbol's resolved address against the kernel core .text bounds
  *       (_stext.._etext) and the per-module .text ranges from the shared

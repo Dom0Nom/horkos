@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/TcpInfoProbeWin.cpp
  * Role: Signal 183 Windows half — kernel-TCP_INFO vs perceived-stall sensor.
  *       WSAIoctl(SIO_TCP_INFO) on the game TCP CONTROL/matchmaking channel reads
  *       the kernel's SmoothedRtt + retransmits so the server can spot the

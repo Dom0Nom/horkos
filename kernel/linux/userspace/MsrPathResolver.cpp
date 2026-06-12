@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/MsrPathResolver.cpp
  * Role: Implementation of the signal-98/99 fd→device + MSR-sensitivity resolver
  *       declared in MsrPathResolver.h.
  * Target platform: Linux userspace.

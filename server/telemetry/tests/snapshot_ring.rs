@@ -1,5 +1,3 @@
-//! tests/snapshot_ring.rs
-//!
 //! Role: round-trip the live POSIX shared-memory snapshot ring — a test
 //! producer writes the Horkos-owned ring contract (`HkSnapshotRingHeader` +
 //! seqlock slots) into a real `shm_open` object, and the production

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ElfModel.h
  * Role: Shared read-only ELF + /proc parsing utilities for the Linux injection
  *       correlators (signals 82-90). Provides the DT_NEEDED closure,
  *       section-header / load-bias math, NT_GNU_BUILD_ID extraction, a VMA-map

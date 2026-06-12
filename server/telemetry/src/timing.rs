@@ -1,5 +1,3 @@
-//! src/timing.rs
-//!
 //! Role: Server-side ingest contract for the timing & execution-trace side-channel
 //! report (timing-side-channels domain, catalog signals 154/155/156/157/159/161/162).
 //! Serde mirror of the usermode `timing_report` field names in

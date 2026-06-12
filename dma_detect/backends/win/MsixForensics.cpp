@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/MsixForensics.cpp
  * Role: Windows MSI-X BIR/PBA containment forensics (sig 129). The containment
  *       check itself (offset + entries*16 <= bar_len, 64-bit-correct) is the
  *       shared platform-clean helper in forensics_report.cpp; this TU's job is to

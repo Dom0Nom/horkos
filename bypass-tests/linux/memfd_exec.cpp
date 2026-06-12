@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/memfd_exec.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 77 (fileless-
  *       exec correlation). Creates an anonymous memfd, writes a tiny static ELF
  *       into it, and execveat()s it with AT_EMPTY_PATH, asserting the JOINED

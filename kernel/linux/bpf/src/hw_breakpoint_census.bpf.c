@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/hw_breakpoint_census.bpf.c
  * Role: Signal 158 — hardware-breakpoint census on guarded symbols (timing-side-
  *       channels, Linux). Counts PERF_TYPE_BREAKPOINT perf events whose owning task is
  *       OUTSIDE the game's thread group (and absent from an allowlisted-tracer set),

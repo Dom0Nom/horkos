@@ -1,5 +1,4 @@
 /*
- * sdk/src/ProbeChannel.cpp
  * Role: Signal 187 cross-platform core — dual-channel probe-RTT divergence sensor.
  *       Owns a dedicated low-rate UDP echo socket to the same server IP on a
  *       separate ephemeral port (raw socket I/O via `net_backend.h`), timestamps

@@ -1,5 +1,4 @@
 /*
- * drm/src/drm.cpp
  * Role: DRM C API implementation — Ed25519 licence verification with hardware
  *       binding and expiry. A licence token is `hk_drm_claims || signature[64]`;
  *       drm_validate verifies the detached signature against the pinned server

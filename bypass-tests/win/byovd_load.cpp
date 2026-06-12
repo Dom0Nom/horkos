@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/byovd_load.cpp
  * Role: BYOVD bypass test fixture (Phase 3: [disabled]). Intended to load a
  *       self-built, deliberately-vulnerable test driver and assert the AC stack
  *       raises the BYOVD flag. Phase 3 lands the test body but marks it disabled

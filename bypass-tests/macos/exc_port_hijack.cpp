@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/exc_port_hijack.cpp
  * Role: macOS bypass-test fixture (signal 113) [disabled until enforcement].
  *       When enabled: a foreign task installs itself as the game's EXC_MASK_ALL
  *       handler and asserts a hk_es_exc_port is_foreign=1; the game's own

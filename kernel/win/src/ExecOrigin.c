@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/ExecOrigin.c
  * Role: Execution-origin scanner (signal 17). Resolves each thread's Win32 start
  *       address (preferring the documented ZwQueryInformationThread /
  *       ThreadQuerySetWin32StartAddress over the build-varying ETHREAD field) and

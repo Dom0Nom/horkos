@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/interp_shim.cpp
  * Role: Linux bypass-test fixture (merge gate, guardrail #12) for signal 84
  *       (PT_INTERP mismatch). Demonstrates: launch via a patched ld.so path ->
  *       signal 84 fires; a patchelf'd PT_INTERP resolvable via the (mock)

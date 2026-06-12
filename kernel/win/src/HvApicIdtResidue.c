@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HvApicIdtResidue.c
  * Role: Signal 44 kernel sensor (observe-only, low standalone weight) — reads the
  *       __sidt IDT base and compares it against the KPCR-authoritative IDT base;
  *       a mismatch is APIC/IDT virtualization residue. Emits hk_event_hv_apic_idt.

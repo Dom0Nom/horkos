@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/input/DeviceTrustPosix.h
  * Role: SDK-internal façade for the Linux/POSIX device-trust usermode sensors
  *       (hardware-input-devices domain, catalog signals 140 evdev/uinput provenance
  *       and 142 pointer-delta features, Linux half). Declares the two sensor entry

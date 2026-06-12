@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/mem_logic_image.h
  * Role: Pure, platform-free classifiers for the loader/image memory signals 13
  *       (image region absent from the PEB loader lists = "ghost"), 16
  *       (hollow/doppelgang backing: name/state mismatch), and 17 (thread Win32

@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/DlopenBacking.h
  * Role: Signal 86 correlator — fileless/memfd dlopen backing resolution. On each
  *       dlopen event it inspects the matching /proc/<pid>/maps line(s) for the
  *       resolved path and flags (deleted) / memfd: / anon-exec backing. Gate:

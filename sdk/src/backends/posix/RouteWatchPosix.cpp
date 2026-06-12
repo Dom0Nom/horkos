@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/RouteWatchPosix.cpp
  * Role: Signal 188 POSIX half — route/interface-change-without-OS-event sensor.
  *       Snapshots a bound-interface/route identity hash for the game destination
  *       each window and reports a flag iff that identity changed with NO

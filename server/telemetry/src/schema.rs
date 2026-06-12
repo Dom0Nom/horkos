@@ -1,5 +1,3 @@
-//! src/schema.rs
-//!
 //! Role: The HTTP/JSON per-tick telemetry ingest contract (`TickPayload`). This
 //! is an INDEPENDENT wire plane from the C99 kernel-event schema in
 //! `sdk/include/horkos/event_schema.h` — it is a serde JSON struct (no

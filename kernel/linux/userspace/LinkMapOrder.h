@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/LinkMapOrder.h
  * Role: Signal 87 correlator (CORROBORATING-ONLY) — load-order symbol
  *       interposition. Builds the per-PID link_map insertion order from the
  *       dl_map_object event stream; for a fixed set of security-relevant exported

@@ -1,5 +1,4 @@
 /*
- * daemon/macos/csops/CsInvalidationCorrelator.cpp
  * Role: Signal 121 (daemon half) — CS_INVALIDATED <-> exec-mmap correlation.
  *       Joins an ES NOTIFY_CS_INVALIDATED on the game's audit_token with a recent
  *       PROT_EXEC mmap from a NON-platform FD within a short window, then (in the

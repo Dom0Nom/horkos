@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/SymbolMap.cpp
  * Role: Implementation of the shared per-cycle kernel text-layout view declared
  *       in SymbolMap.h (signals 91/93/94 backbone). Pure procfs/sysfs text
  *       parsing; the parse helpers take captured content so they are testable on

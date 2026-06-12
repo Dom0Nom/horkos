@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/input_provenance.bpf.c
  * Role: Signal 140 — evdev/uinput virtual-device provenance sensor. CO-RE reads of
  *       input_dev->id.{bustype,vendor,product} on device registration, pushing a
  *       compact hk_input_prov_bpf record into the shared hk_ringbuf. The userspace

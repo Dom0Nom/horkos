@@ -1,5 +1,3 @@
-//! src/driver_integrity.rs
-//!
 //! Role: Server-side decode + feature extraction for the Windows driver/module
 //! integrity event record (win-kernel-driver-integrity): the single
 //! `hk_event_integrity_finding` payload carrying `{signal_id, finding, detail}`

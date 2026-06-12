@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/memfd_exec.bpf.c
  * Role: BPF sensors for fileless-execution staging (signal 77). Two hooks whose
  *       correlation completes in Loader.cpp:
  *         - Stage A: tracepoint syscalls/sys_enter_memfd_create records

@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_ssdt_decode.cpp
  * Role: Host-buildable unit tests for the pure x64 SSDT packed-offset decoder
  *       (kernel/win/include/ssdt_decode.h, signal 35). Proves the encoding math
  *       against known-encoded values: positive offset, negative (sign-extended)

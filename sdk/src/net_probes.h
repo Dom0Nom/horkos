@@ -1,5 +1,4 @@
 /*
- * sdk/src/net_probes.h
  * Role: Internal per-signal probe entry points the `net_collect_all()` aggregator
  *       (NetCollect.cpp) calls. Each is implemented by exactly one core or backend
  *       TU and returns its signal's fixed POD sub-result in the "no data / clean"

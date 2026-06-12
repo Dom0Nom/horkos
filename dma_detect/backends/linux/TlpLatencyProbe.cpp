@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/linux/TlpLatencyProbe.cpp
  * Role: Linux config-read TLP latency probe (sig 132 — LOW WEIGHT side-channel).
  *       Tight-loops identical config reads of one register timed with
  *       CLOCK_MONOTONIC_RAW, builds robust stats (median + IQR), and tags the

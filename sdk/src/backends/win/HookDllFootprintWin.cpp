@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/HookDllFootprintWin.cpp
  * Role: Signal 52 (win-usermode-overlay). Injected GUI-hook-DLL footprint sensor:
  *       diffs the own process's loaded-module set (from the shared signed-module
  *       map) against the expected-module baseline to surface a DLL that was mapped

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/proton_wine/bypass_foreign_so_map.cpp
  * Role: Linux Proton/Wine bypass-test fixture (merge gate, guardrail #12) for
  *       signal 101 (off-tree PROT_EXEC mapping). Demonstrates: LD_PRELOAD/dlopen a
  *       cheat SO from /tmp, and a memfd_create + mmap PROT_EXEC reflective load ->

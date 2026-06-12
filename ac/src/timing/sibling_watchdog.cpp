@@ -1,5 +1,4 @@
 /*
- * ac/src/timing/sibling_watchdog.cpp
  * Role: Signal 156 — sibling-thread RDTSCP watchdog. A watchdog thread (pinned
  *       best-effort to a sibling core via the platform/ affinity seam) keeps a
  *       lock-free atomic TSC slot fresh; the sampler reads an in-section __rdtscp and

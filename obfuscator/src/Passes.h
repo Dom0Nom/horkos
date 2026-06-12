@@ -1,5 +1,4 @@
 /*
- * obfuscator/src/Passes.h
  * Role: Declares the three Horkos LLVM-19 obfuscation passes (new pass manager).
  *       All are module passes so they can read @llvm.global.annotations once and
  *       transform only the opted-in functions/globals.

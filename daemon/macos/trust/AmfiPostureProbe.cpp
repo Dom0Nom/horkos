@@ -1,5 +1,4 @@
 /*
- * daemon/macos/trust/AmfiPostureProbe.cpp
  * Role: Signal 124 — AMFI / SIP / Developer-Mode / boot-arg posture probe.
  *       Samples the host's trust posture (CSR/SIP config, boot-args presence,
  *       Developer-Mode state) via the hk::platform helpers and reports it

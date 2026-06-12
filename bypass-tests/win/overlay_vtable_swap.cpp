@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/overlay_vtable_swap.cpp
  * Role: Render-hook merge-gate bypass test (Phase: [disabled]). Intended to
  *       self-apply a BENIGN Present vtable swap on the fixture's OWN swapchain (a
  *       signed test binary hooking itself) and assert signal 46 REPORTS the swap

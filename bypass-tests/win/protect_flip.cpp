@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/protect_flip.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 71 (page-protection drift,
  *       win-handle-memory-access). A Phase-5 fixture issues VirtualProtectEx RX->RWX
  *       on a shipped (+X) section of the protected target. The AC's page-protect

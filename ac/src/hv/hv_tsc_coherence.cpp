@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_tsc_coherence.cpp
  * Role: Signal 45 sampler — per-logical-processor RDTSCP sampling to surface
  *       cross-vCPU TSC skew vs the invariant-TSC capability. Pins to each LP with
  *       SetThreadAffinityMask, reads RDTSCP (whose IA32_TSC_AUX returns the CPU id

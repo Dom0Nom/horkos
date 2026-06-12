@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/SelfHandleAuditWin.cpp
  * Role: Windows userspace self-handle audit (win-handle-memory-access, catalog
  *       signal 70). One tick: NtQuerySystemInformation(SystemExtendedHandleInformation)
  *       to enumerate every Process-type handle in the system, filter to those whose

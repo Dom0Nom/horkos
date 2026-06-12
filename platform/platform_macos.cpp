@@ -1,5 +1,4 @@
 /*
- * platform/platform_macos.cpp
  * Role: macOS backend for the hk::platform abstraction layer.
  * Target platforms: macOS only. Selected by CMake if(APPLE).
  * Implements: platform/platform.h

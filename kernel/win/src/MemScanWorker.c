@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/MemScanWorker.c
  * Role: Orchestrator for the memory-scan plane (signals 10-18). Owns a
  *       PASSIVE_LEVEL system worker thread, a non-blocking pending-target queue
  *       (pushed from the notify routines / HK_IOCTL_SCAN_PROCESS), and the

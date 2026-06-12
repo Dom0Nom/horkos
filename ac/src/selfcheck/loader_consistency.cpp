@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/loader_consistency.cpp
  * Role: Signal 151 — loader-structure consistency. Cross-checks our loader entry
  *       (PEB Ldr / link_map / dyld_all_image_infos) base/size/entrypoint/path against
  *       the in-memory headers we re-parse, the kernel section-object query, and disk.

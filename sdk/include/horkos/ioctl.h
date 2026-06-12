@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/ioctl.h
  * Role: Userspace <-> kernel IOCTL contract for the Horkos Windows driver.
  *       Defines the IOCTL control codes and the DRAIN buffer envelope that
  *       wraps the shared event records from event_schema.h.

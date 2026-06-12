@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/manual_map_scan.cpp
  * Role: Merge-gate bypass fixture for the memory-scan plane (signals 10/13/16/17),
  *       [disabled]. Intended to manually map a benign signed DLL into a victim
  *       test process WITHOUT the loader (raw NtCreateSection + NtMapViewOfSection,

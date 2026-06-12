@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ModuleDiskDrift.cpp
  * Role: Implementation of signal 95 userspace half (build-id memory-vs-disk
  *       drift) declared in ModuleDiskDrift.h.
  * Target platform: Linux userspace.

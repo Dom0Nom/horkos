@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKGameTaskHandle.h
  * Role: Interface for the validated game-task handle. Centralises the single
  *       privileged task_for_pid-equivalent path and its audit-token validation
  *       so the pollers (113/114/117) share one reviewed acquisition routine.

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/EtwTiConsumer.cpp
  * Role: Windows userspace ETW Threat-Intelligence consumer + cross-process
  *       causality correlation (win-kernel-thread-injection, catalog signals
  *       20/21/27). Correlates ALLOCVM_REMOTE -> SETTHREADCONTEXT -> RESUMETHREAD

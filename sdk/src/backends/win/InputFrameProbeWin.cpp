@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/InputFrameProbeWin.cpp
  * Role: Signal 185 — raw-input frame timestamp-coherence sensor. Correlates the
  *       OS-capture timestamps of the game's outbound input frames (GetMessageTime /
  *       GetRawInputData RAWINPUT) against their send sequence and flags

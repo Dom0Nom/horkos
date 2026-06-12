@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/hv_logic.h
  * Role: Pure, platform-free structural-consistency cores for the hypervisor
  *       sensors. They turn the RAW sampled fields (CPUID leaf vectors, synthetic-
  *       MSR flags, __sidt-vs-KPCR bases, per-LP TSC samples, VBS posture) into

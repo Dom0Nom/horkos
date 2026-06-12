@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/lsm_devmem.bpf.c
  * Role: BPF LSM sensor for physical-memory-window opens (signal 78). On
  *       lsm/file_open it filters by the opened node's device number to catch
  *       /dev/mem (MEM major 1, minor 1) and /dev/kmem (minor 2), plus the

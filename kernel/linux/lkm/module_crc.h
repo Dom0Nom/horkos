@@ -1,5 +1,4 @@
 /*
- * kernel/linux/lkm/module_crc.h
  * Role: Read-only per-module symbol-version CRC / build-id export for signal 95's
  *       in-memory half. Declares the init/exit the main horkos.c calls to create
  *       and tear down a debugfs seq_file under horkos/module_crcs. NO text writes,

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/lstar_repoint.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 210 (IA32_LSTAR per-CPU
  *       validation, win-kernel-syscall-etw-integrity). A Phase-5 test-signed
  *       fixture rewrites IA32_LSTAR on ONE CPU; the AC must emit

@@ -1,5 +1,4 @@
 /*
- * dma_detect/src/page_hash.c
  * Role: Implementation of the platform-free page-hash helper (page_hash.h).
  *       Non-cryptographic FNV-1a digests + a byte-delta counter, reused by the
  *       Windows thread-provenance enrichment plane for module-stomping checks

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/UsbDescriptorAuditWin.cpp
  * Role: Signal 137 — USB device-descriptor self-consistency sensor. Over the shared
  *       UsbTopology snapshot, cross-checks (VID, PID, bcdDevice, bMaxPacketSize0,
  *       iSerialNumber-presence) coherence and classifies HK_INPUT_SRC_DESCRIPTOR_

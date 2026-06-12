@@ -1,5 +1,4 @@
 /*
- * ac/src/selfcheck/wx_pte_audit.cpp
  * Role: Signal 152 — self-image W^X / PTE protection-drift audit. Correlates the
  *       usermode protection view (VirtualQuery / /proc/self/maps / mach_vm_region)
  *       with the kernel PTE write/NX read of the same VAs and flags ONLY on

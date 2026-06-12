@@ -1,5 +1,4 @@
 /*
- * kernel/macos/es/ExceptionPortAudit.mm
  * Role: Signal 160 — Mach exception-port ownership audit (timing-side-channels, macOS).
  *       For a process observed on the ES path, audits the registered Mach exception
  *       ports for EXC_MASK_BREAKPOINT | EXC_MASK_BAD_INSTRUCTION | EXC_MASK_BAD_ACCESS

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/ImageSigningWin.cpp
  * Role: Signal-18 userspace half (win-kernel-memory-injection). The kernel
  *       (ModuleStomp.c) ships a backing file path + SHA-256 with
  *       signer_verdict = HK_SIGN_UNKNOWN on the mem ring; this backend computes

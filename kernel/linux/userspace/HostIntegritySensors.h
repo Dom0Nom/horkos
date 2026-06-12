@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/HostIntegritySensors.h
  * Role: Orchestration interface + provisional wire payloads for the Linux
  *       kernel/module-trust audit sensors (signals 91-99). Declares the audit
  *       aggregator (owns a timer thread, drives each sensor on its cadence and

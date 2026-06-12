@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/ld_preload_launch.cpp
  * Role: Merge-gate bypass fixture for process-genealogy signal 206 (LD_PRELOAD /
  *       linker hijack), [disabled]. Intended to exec a target with
  *       LD_PRELOAD=<unlisted.so> and assert the loader-taint flag fires, AND that

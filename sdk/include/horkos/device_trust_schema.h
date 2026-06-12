@@ -1,5 +1,4 @@
 /*
- * sdk/include/horkos/device_trust_schema.h
  * Role: Wire-format source of truth for the USB/HID device-trust sensor findings
  *       (hardware-input-devices domain, catalog signals 136-144). Defines four
  *       fixed-size records: the hk_device_descriptor_audit detail block

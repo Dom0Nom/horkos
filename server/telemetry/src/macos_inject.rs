@@ -1,5 +1,3 @@
-//! src/macos_inject.rs
-//!
 //! Role: Server-side serde/`#[repr(C)]` mirror + scoring for the macOS
 //! process-inspection / injection payloads (`hk_es_*`, catalog signals
 //! 109-117). Decodes the macOS daemon-sink byte records into mirrors of the C99

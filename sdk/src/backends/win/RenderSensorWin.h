@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/RenderSensorWin.h
  * Role: SDK-internal façade for the Windows render/overlay usermode sensors
  *       (catalog signals 46-54, win-usermode-overlay). Declares the nine sensor
  *       entry points, the shared signed-module-map snapshot type, and the small

@@ -1,5 +1,3 @@
-//! src/lib.rs
-//!
 //! Role: API library — exposes the composed Router for both the binary
 //! entrypoint and integration tests. `build_app` is the live wiring (spawns
 //! the analysis pipeline and connects ingest to it); `build_router` is the

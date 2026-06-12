@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/MemScanPte.c
  * Role: W^X divergence scanner (signal 11). For committed pages of a VAD it
  *       resolves the leaf-PTE execute state and compares it against the VAD's
  *       declared protection; a divergence (VAD says non-exec, live PTE says exec,

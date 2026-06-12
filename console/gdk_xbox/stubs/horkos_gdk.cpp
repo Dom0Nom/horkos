@@ -1,5 +1,4 @@
 /*
- * console/gdk_xbox/stubs/horkos_gdk.cpp
  * Role: Public-doc-shaped GDK integration stubs for Horkos attestation/identity
  *       on Xbox / Microsoft Game Development Kit. Signatures mirror the PUBLIC
  *       XGameRuntime / XUser surface documented on learn.microsoft.com; the real

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/vmwatch_whitelist_fp.cpp
  * Role: Merge-gate FALSE-POSITIVE guard (guardrail #12) for the win-handle-memory-
  *       access gating (signals 64/71). A Phase-5 fixture runs a legitimate
  *       self-modifying / overlay-style actor (RTSS- or Steam-overlay-style

@@ -1,5 +1,4 @@
 /*
- * dma_detect/backends/win/AcsTopology.cpp
  * Role: Windows ACS / IOMMU-group topology forensics (sig 133). Intended to read
  *       the ACS extended capability (cap ID 0x000D) control bits — Source
  *       Validation and P2P Request Redirect — on the path bridges. Windows has no

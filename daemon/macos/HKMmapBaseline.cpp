@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKMmapBaseline.cpp
  * Role: Per-title signed-dylib + sanctioned-JIT manifest used to gate MMAP-exec
  *       reports (signal 111). Classifies an executable mmap source as KNOWN
  *       (signed dylib in the manifest), UNKNOWN (unrecognised exec source), or

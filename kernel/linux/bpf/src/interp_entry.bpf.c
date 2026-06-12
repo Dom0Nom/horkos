@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/interp_entry.bpf.c
  * Role: uprobe on the mapped dynamic loader's entry/_start to confirm WHICH
  *       ld.so actually serviced relocation for a watched exec. Emits a compact
  *       record so the userspace correlator InterpCheck.cpp (signal 84) can

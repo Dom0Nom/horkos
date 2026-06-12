@@ -1,5 +1,4 @@
 /*
- * bypass-tests/macos/mmap_exec_foreign.cpp
  * Role: macOS bypass-test fixture (signal 111) [disabled until enforcement].
  *       When enabled: mmap a foreign mach-o / RWX anon page into the game and
  *       assert a hk_es_mmap with baseline_match != KNOWN; a sanctioned-JIT map

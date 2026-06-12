@@ -1,5 +1,4 @@
 /*
- * daemon/macos/HKThreadIntegrity.cpp
  * Role: task_threads + thread_get_state enumeration of the game task, resolve
  *       each thread's entry PC against the dyld image map, flag foreign/anon
  *       entries (signal 114). Intersects with the signal-111 mmap baseline so a

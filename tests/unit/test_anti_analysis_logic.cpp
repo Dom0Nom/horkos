@@ -1,5 +1,4 @@
 /*
- * tests/unit/test_anti_analysis_logic.cpp
  * Role: Host unit tests for the anti-analysis pure decision cores (catalog
  *       signals 194 + 197). The cores live in hk_ac (anti_analysis_logic.cpp);
  *       this test links hk_ac and exercises them with synthetic observable sets —

@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/input/UsbTopologyWin.cpp
  * Role: Shared USB hub/node descriptor snapshot provider for the device-trust
  *       sensors (catalog 137/139/143). Enumerates GUID_DEVINTERFACE_USB_HUB, walks
  *       each hub's node connections, and pulls the raw 18-byte device descriptor, the

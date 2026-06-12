@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/ssdt_decode.h
  * Role: Pure, platform-free decoder for the x64 packed System Service Descriptor
  *       Table entry form (SsdtIntegrity.c, signal 35). On x64 each KiServiceTable
  *       entry is a 32-bit value encoding a signed 28-bit offset (entry >> 4) added

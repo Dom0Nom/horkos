@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/macos/RawHidSamplerMac.mm
  * Role: macOS raw-HID aim sampler (catalog signals 163/164/165). Drains the GAME'S
  *       OWN pointer HID values via IOHIDManager value callbacks, stamping each with
  *       IOHIDValueGetTimeStamp, into platform-free hk_hid_sample records the

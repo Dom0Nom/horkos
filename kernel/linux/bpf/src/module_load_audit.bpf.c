@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/module_load_audit.bpf.c
  * Role: Signal 104 — post-boot / unsigned module-load audit (Deck BYOVD). Stable
  *       arms: module:module_load tracepoint (hashes the module name) and lsm/
  *       kernel_module_request. Uncertain arm: lsm/kernel_read_file with the

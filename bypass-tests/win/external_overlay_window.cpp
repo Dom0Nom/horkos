@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/external_overlay_window.cpp
  * Role: External-overlay-window merge-gate bypass test (Phase: [disabled]).
  *       Intended to spawn a FOREIGN-process layered/transparent/topmost click-
  *       through window over the game client rect and assert signal 49 surfaces it

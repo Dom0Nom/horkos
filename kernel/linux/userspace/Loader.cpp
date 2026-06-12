@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/Loader.cpp
  * Role: libbpf userspace loader for the Horkos Linux eBPF programs.
  *       Opens both BPF skeletons (lsm_file_open + tracepoints), attaches all
  *       programs, then polls the shared ring buffer and translates each raw

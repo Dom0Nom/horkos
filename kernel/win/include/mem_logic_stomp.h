@@ -1,5 +1,4 @@
 /*
- * kernel/win/include/mem_logic_stomp.h
  * Role: Pure, platform-free section-diff core for signal 12 (on-disk vs
  *       in-memory code mismatch = "module stomp"). The FP-prone heart of the
  *       signal: a loaded module's code legitimately differs from its on-disk

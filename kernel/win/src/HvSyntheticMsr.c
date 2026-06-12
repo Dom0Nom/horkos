@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/HvSyntheticMsr.c
  * Role: Signal 42 kernel sensor — guarded __readmsr of the Hyper-V synthetic MSR
  *       range, gated on CPUID claiming Hyper-V, with reference-TSC vs rdtsc
  *       coherence. Emits hk_event_hv_synth_msr (HK_HV_MSR_* flags) on the ring.

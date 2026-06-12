@@ -1,5 +1,4 @@
 /*
- * kernel/linux/bpf/src/fentry_proc_mem.bpf.c
  * Role: BPF TRACING (fentry) sensor for /proc/<pid>/mem opens (signal 75).
  *       fs/proc/base.c:mem_open() runs on every open of a /proc/<pid>/mem node;
  *       we recover the TARGET task from the proc inode, compare its tgid to the

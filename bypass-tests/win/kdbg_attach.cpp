@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/kdbg_attach.cpp
  * Role: Merge-gate bypass test (guardrail #12) for signal 33 (kernel-debugger
  *       attach-state probe, win-kernel-driver-integrity). An ATTACHED debugger
  *       must yield HK_INTEGRITY_KDBG_ATTACHED (high weight) while a

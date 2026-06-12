@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/selfcheck_read.c
  * Role: Windows KMDF handler for HK_IOCTL_SELF_READ_VA (memory-integrity-selfcheck,
  *       signals 145/146/148/151/152). Foreign-reads the CALLING AC process's OWN VA
  *       range (145 bytes), page-share/CoW state (146), leaf-PTE write/NX bits (152),

@@ -1,5 +1,3 @@
-//! src/analyzers/vision_cone.rs
-//!
 //! Role: vision-cone knowledge-leakage analyzer (catalog signal 173). Detects a player
 //! reacting to an enemy that is OUTSIDE the authoritative view frustum
 //! (`geom::frustum_contains` false), with NO authoritative audio path and NO teammate

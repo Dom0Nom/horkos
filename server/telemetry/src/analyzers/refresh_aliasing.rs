@@ -1,5 +1,3 @@
-//! src/analyzers/refresh_aliasing.rs
-//!
 //! Role: knowledge-update lag fingerprint / cheat refresh-rate aliasing analyzer
 //! (catalog signal 178). A cheat refreshes its illegitimate world knowledge (ESP/radar
 //! redraw, memory poll) at its OWN fixed rate, distinct from the client's display

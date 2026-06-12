@@ -1,5 +1,4 @@
 /*
- * daemon/macos/seccode/DynamicValidityProbe.cpp
  * Role: Signal 120 — dynamic SecCode validity probe. Periodically resolves the
  *       game's running SecCode (SecCodeCopyGuestWithAttributes by pid) and runs
  *       SecCodeCheckValidity against Horkos's own designated requirement, with

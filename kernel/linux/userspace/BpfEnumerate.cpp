@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/BpfEnumerate.cpp
  * Role: Implementation of signal 97 (foreign BPF enumeration) declared in
  *       BpfEnumerate.h. The pure classifier is host-testable; the live entry
  *       uses the libbpf bpf_prog_get_next_id / bpf_obj_get_info_by_fd surface and

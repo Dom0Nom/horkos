@@ -1,5 +1,4 @@
 /*
- * ac/src/hv/hv_kernel_correlate.cpp
  * Role: Drains the kernel HV records (signals 39/41/42/44, hk_event_type
  *       14..17 on the existing 16-byte ring) via the SDK IOCTL bridge and folds
  *       their flag words into hv_kernel_summary, then runs every usermode sampler

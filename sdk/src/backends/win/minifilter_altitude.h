@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/minifilter_altitude.h
  * Role: Pure, platform-free classifier for the minifilter altitude census
  *       (signal 6). Decides whether a neighboring minifilter is SUSPECT given
  *       its altitude, Authenticode result, and position relative to Horkos —

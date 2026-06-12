@@ -1,5 +1,4 @@
 /*
- * kernel/linux/userspace/ElfModel.cpp
  * Role: Implementation of the shared ELF + /proc parsing helpers declared in
  *       ElfModel.h. Maps-line parsing and backing classification are fully
  *       self-contained (no libelf) so they unit-test on any host. ELF64 note /

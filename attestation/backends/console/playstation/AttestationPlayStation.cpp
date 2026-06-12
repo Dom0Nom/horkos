@@ -1,5 +1,4 @@
 /*
- * attestation/backends/console/playstation/AttestationPlayStation.cpp
  * Role: PlayStation attestation backend stub.
  *       Maps to: sceNpTrophy / SCE attestation surface for platform identity
  *       (documented in PS5/PS4 SDK — requires NDA dev account).

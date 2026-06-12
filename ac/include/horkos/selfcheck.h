@@ -1,5 +1,4 @@
 /*
- * ac/include/horkos/selfcheck.h
  * Role: The stable self-check interface the detection catalog names for client
  *       self-integrity (memory-integrity-selfcheck, catalog signals 145-153).
  *       Declares the hk::selfcheck orchestrator (SelfCheck::arm/run_once/last_flag),

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/thread_origin/correlator_replay.cpp
  * Role: Host-runnable merge-gate bypass test (guardrail #12) for the ETW-TI
  *       causality core of win-kernel-thread-injection (signals 20/21). Unlike the
  *       DISABLED live-fixture gate (thread_origin.cpp), this one RUNS NOW on the

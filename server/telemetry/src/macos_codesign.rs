@@ -1,5 +1,3 @@
-//! src/macos_codesign.rs
-//!
 //! Role: Server-side serde/`#[repr(C)]` mirror + scoring for the macOS
 //! code-signing / platform-trust finding payload (`hk_event_cs_finding`, catalog
 //! signals 118-126). Decodes the 16-byte macOS daemon-sink record into a mirror

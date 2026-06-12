@@ -1,5 +1,3 @@
-//! src/lib.rs
-//!
 //! Role: Licence lifecycle routes — issue / revoke / verify. A licence is an
 //! Ed25519-signed token binding an account + product to a specific hardware id;
 //! verification checks the signature against the server's pinned key, the

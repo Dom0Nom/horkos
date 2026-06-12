@@ -1,5 +1,3 @@
-//! src/routes/healthz.rs
-//!
 //! Role: Liveness route. `GET /healthz` returns `{"status":"ok"}`, or 503
 //! `{"status":"degraded"}` once the analysis pipeline has died — a server
 //! that ingests telemetry it can no longer analyze must not report healthy

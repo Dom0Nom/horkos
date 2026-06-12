@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/host_memory_editor.cpp
  * Role: Merge-gate bypass test (anti-analysis-environment signal 197, Windows).
  *       The activated body creates an x64dbg-class-named top-level window
  *       (RealGetWindowClassW observable), drives the pure severity-tier core

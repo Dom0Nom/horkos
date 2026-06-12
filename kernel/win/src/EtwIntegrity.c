@@ -1,5 +1,4 @@
 /*
- * kernel/win/src/EtwIntegrity.c
  * Role: kernel ETW provider/logger-session integrity + infinity-hook probe.
  *       Signal 212 (ETW-TI provider liveness: raw-handle read + version-
  *       independent consumer keepalive), 215 (kernel logger-session census vs boot

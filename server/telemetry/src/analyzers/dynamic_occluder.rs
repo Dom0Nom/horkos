@@ -1,5 +1,3 @@
-//! src/analyzers/dynamic_occluder.rs
-//!
 //! Role: through-smoke / particle-volume tracking-continuity analyzer (catalog signal
 //! 175). For an enemy whose line-of-sight from the local view origin is pierced by an
 //! ACTIVE dynamic occluder volume (`geom::segment_intersects_aabb` against the smoke

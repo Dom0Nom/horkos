@@ -1,5 +1,4 @@
 /*
- * bypass-tests/linux/msr_lstar_write.cpp
  * Role: Linux bypass-test merge gate (guardrail #12) for signal 99 (sensitive
  *       MSR write). Writes to /dev/cpu/0/msr at the LSTAR offset (in a throwaway
  *       VM) and asserts signal 99 flags it (sensitive=1); writing a power/perf

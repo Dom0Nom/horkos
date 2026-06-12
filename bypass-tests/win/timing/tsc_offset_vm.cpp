@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/timing/tsc_offset_vm.cpp
  * Role: Merge-gate bypass test (timing-side-channels signal 155, Windows). Runs the probe under a TSC-offsetting/RDTSC-trapping VM context; must demonstrate signal 155 reports effective-freq-vs-RDTSC skew AND that it is tagged VM-context (not an autonomous ban).
  * Target platforms: Windows only (built behind if(WIN32)).
  * Interface: drives the AC timing flag surface

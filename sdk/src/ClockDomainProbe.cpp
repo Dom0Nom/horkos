@@ -1,5 +1,4 @@
 /*
- * sdk/src/ClockDomainProbe.cpp
  * Role: Signal 182 cross-platform core — monotonic-vs-realtime clock-domain drift
  *       sensor. Computes the per-window rate ratio of the two clock domains from a
  *       sequence of paired reads dispatched through `net_backend.h`, and emits the

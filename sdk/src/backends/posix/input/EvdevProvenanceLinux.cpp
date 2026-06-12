@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/posix/input/EvdevProvenanceLinux.cpp
  * Role: Signal 140 (userspace half) — evdev/uinput provenance correlator. Drains the
  *       hk_input_prov_bpf records the input_provenance.bpf.c program pushes into the
  *       shared ringbuf, supplements each with an EVIOCGID/EVIOCGPHYS poll over

@@ -1,5 +1,4 @@
 /*
- * bypass-tests/win/aim_framelock_cadence.cpp
  * Role: behavioral-aim polling-cadence merge-gate bypass test (Phase: [disabled]).
  *       Intended to feed two synthetic report streams into the aim accumulator and
  *       assert that the signal-165 inter-arrival feature distinguishes timer-locked

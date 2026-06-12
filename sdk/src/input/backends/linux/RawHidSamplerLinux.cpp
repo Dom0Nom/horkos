@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/backends/linux/RawHidSamplerLinux.cpp
  * Role: Linux raw-HID aim sampler (catalog signals 163/164/165). Reads the GAME'S
  *       OWN evdev node for relative-motion reports (EV_REL REL_X/REL_Y), stamping
  *       each with a monotonic timestamp (input_event.time / clock_gettime

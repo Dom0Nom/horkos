@@ -1,5 +1,4 @@
 /*
- * sdk/src/backends/win/SyntheticInputArtifactWin.cpp
  * Role: Signal 63 (win-input-automation). Synthetic-input desktop/journal-artifact
  *       sensor. In the game's OWN LL-hook path, reads GetMessageExtraInfo() and the
  *       KBDLLHOOKSTRUCT.scanCode/flags (and MSLLHOOKSTRUCT): physical HID input

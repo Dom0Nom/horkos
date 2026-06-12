@@ -1,5 +1,3 @@
-//! src/analyzers/flick_precog.rs
-//!
 //! Role: flick-endpoint precognition / pre-LoS aim seeding analyzer (catalog signal
 //! 177). At the tick an enemy transitions occluded->visible (line-of-sight onset), it
 //! compares the player's aim error to (a) the enemy's LAST-VISIBLE position vs (b) the

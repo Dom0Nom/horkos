@@ -1,5 +1,4 @@
 /*
- * sdk/src/input/AimAccumulator.cpp
  * Role: Platform-neutral per-tick aim-feature accumulator. Folds the raw HID
  *       samples the platform backends drained this tick (hk_hid_sample[]) into
  *       the 163/165/171 fields of the fixed feature block (hk_aim_features):
