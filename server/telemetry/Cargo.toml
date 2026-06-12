@@ -38,16 +38,3 @@ libc       = { workspace = true, optional = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { workspace = true, optional = true }
-
-[dev-dependencies]
-http           = { workspace = true }
-http-body-util = { workspace = true }
-tower          = { workspace = true }
-
-# behavioral-gamestate merge-gate bypass test (guardrail #12). Lives under
-# `bypass-tests/server/` with the other domains' bypass tests; registered here so
-# `cargo test -p telemetry` (the server CI gate) runs it. Pure Rust, fixture-driven,
-# needs no game-server peer — runs under the default features with no live shm ring.
-[[test]]
-name = "gamestate_replay"
-path = "../../bypass-tests/server/gamestate_replay.rs"

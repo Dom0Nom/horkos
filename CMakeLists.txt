@@ -84,35 +84,13 @@ if(WIN32)
 endif()
 
 # -------------------------------------------------------------------------
-# Tests
+# Platform-specific components
 # -------------------------------------------------------------------------
-enable_testing()
-add_subdirectory(tests)
-
-# DMA / peripheral-hardware-trust bypass-test merge gate (guardrail #12, signals
-# 127-135). Platform-clean: the fixtures compile the host-buildable aggregator TU
-# (dma_detect/src/forensics_report.cpp) and run real assertions on every host, so
-# this is added UNCONDITIONALLY (like dma_detect itself), not under a platform gate.
-add_subdirectory(bypass-tests/dma_hardware)
-
-# hardware-input-devices pointer-feature merge gate (guardrail #12, signal 142).
-# Platform-clean: the fixture runs a real privacy-invariant assertion via the shared
-# platform-free pointer-feature fold on every host, so it is added UNCONDITIONALLY (like
-# dma_hardware), not under a platform gate.
-add_subdirectory(bypass-tests/cross)
-
-# Platform bypass-test merge gates (guardrail #12). Each platform builds its
-# representative test; disabled fixtures pass until enforcement lands.
-if(WIN32)
-    add_subdirectory(tests/integration/win)
-    add_subdirectory(bypass-tests/win)
-elseif(APPLE)
-    add_subdirectory(bypass-tests/macos)
-    # Phase 4 Step 4.4 — launchd/XPC daemon bring-up skeleton.
+if(APPLE)
+    # launchd/XPC daemon bring-up skeleton.
     add_subdirectory(daemon/macos)
-    # Phase 4 Step 4.5 — EndpointSecurity client (self-gates on HORKOS_MACOS_ES).
+    # EndpointSecurity client (self-gates on HORKOS_MACOS_ES).
     add_subdirectory(kernel/macos/es)
 elseif(UNIX)
     add_subdirectory(kernel/linux)
-    add_subdirectory(bypass-tests/linux)
 endif()

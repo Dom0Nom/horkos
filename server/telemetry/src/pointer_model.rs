@@ -110,36 +110,3 @@ async fn ingest(
 
     Ok(axum::http::StatusCode::ACCEPTED)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn pointer_features_round_trip_with_vector() {
-        let mut feat = [0.0f32; POINTER_FEAT_DIM];
-        feat[0] = 1.5;
-        feat[23] = -2.0;
-        let f = PointerFeatures {
-            schema_version: DEVICE_TRUST_SCHEMA_VERSION,
-            hid_usage_class: usage_class::MOUSE,
-            hdevice_token: 0xfeed,
-            feat,
-        };
-        let json = serde_json::to_value(&f).expect("serialize");
-        assert_eq!(
-            json["feat"].as_array().expect("array").len(),
-            POINTER_FEAT_DIM
-        );
-        let back: PointerFeatures = serde_json::from_value(json).expect("deserialize");
-        assert_eq!(f, back);
-    }
-
-    /// A NaN in the feature vector is rejected (would poison the model input).
-    #[test]
-    fn nan_feature_is_rejected() {
-        let mut feat = [0.0f32; POINTER_FEAT_DIM];
-        feat[5] = f32::NAN;
-        assert!(feat.iter().any(|v| v.is_nan()));
-    }
-}

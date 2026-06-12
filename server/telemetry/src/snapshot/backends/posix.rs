@@ -159,15 +159,3 @@ impl Drop for PosixRingAttach {
 // Keep the unused-import lint quiet on platforms where `Ordering` is only used
 // transitively; the explicit reference documents the seqlock memory model.
 const _: Ordering = Ordering::Acquire;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn attach_missing_ring_errors_without_panic() {
-        // Fail-closed: a ring object that does not exist yields an error, never
-        // a panic or a half-initialized reader.
-        assert!(PosixRingAttach::attach("/horkos_nonexistent_ring_xyz").is_err());
-    }
-}

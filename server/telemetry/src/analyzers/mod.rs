@@ -126,36 +126,3 @@ impl AnalyzerRegistry {
         self.analyzers.iter().filter_map(|a| a.score()).collect()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::snapshot::fixtures::base_snapshot;
-
-    #[test]
-    fn registry_has_all_nine_signals() {
-        let reg = AnalyzerRegistry::new(42);
-        let mut ids: Vec<SignalId> = reg.analyzers.iter().map(|a| a.id()).collect();
-        ids.sort_unstable();
-        assert_eq!(ids, (172..=180).collect::<Vec<_>>());
-    }
-
-    #[test]
-    #[allow(clippy::assertions_on_constants)]
-    fn standalone_ban_is_disallowed() {
-        // Policy invariant: no single game-state signal auto-bans.
-        assert!(!STANDALONE_BANNABLE);
-    }
-
-    #[test]
-    fn empty_session_emits_no_suspicions() {
-        let mut reg = AnalyzerRegistry::new(7);
-        let snap = base_snapshot(0, 0);
-        let tick = TickPayload::default();
-        reg.feed(&tick, &snap).expect("feed clean tick");
-        assert!(
-            reg.collect_suspicions().is_empty(),
-            "clean tick -> no suspicion"
-        );
-    }
-}

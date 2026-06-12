@@ -68,3 +68,6 @@ __pycache__/
 .env.*.local
 secrets.json
 credentials.json
+
+# Local agent/tooling state
+.claude/

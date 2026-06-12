@@ -27,9 +27,3 @@ tracing-subscriber = { workspace = true }
 telemetry      = { path = "../telemetry" }
 ban-engine     = { path = "../ban-engine" }
 license-server = { path = "../license-server" }
-
-[dev-dependencies]
-tower            = { workspace = true }
-http-body-util   = { workspace = true }
-serde_json       = { workspace = true }
-tokio            = { workspace = true }

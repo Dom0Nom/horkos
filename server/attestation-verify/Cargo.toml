@@ -15,6 +15,3 @@ path = "src/lib.rs"
 p256      = { workspace = true }
 sha2      = { workspace = true }
 thiserror = { workspace = true }
-
-[dev-dependencies]
-hex = { workspace = true }

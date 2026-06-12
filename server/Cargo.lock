@@ -31,7 +31,6 @@ dependencies = [
  "axum",
  "ban-engine",
  "http",
- "http-body-util",
  "license-server",
  "serde",
  "serde_json",
@@ -54,7 +53,6 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 name = "attestation-verify"
 version = "0.1.0"
 dependencies = [
- "hex",
  "p256",
  "sha2",
  "thiserror",
@@ -121,8 +119,6 @@ dependencies = [
  "axum",
  "ed25519-dalek",
  "hex",
- "http",
- "http-body-util",
  "ort",
  "serde",
  "serde_json",
@@ -130,7 +126,6 @@ dependencies = [
  "thiserror",
  "time",
  "tokio",
- "tower",
  "tracing",
 ]
 
@@ -724,13 +719,9 @@ dependencies = [
  "axum",
  "ed25519-dalek",
  "hex",
- "http",
- "http-body-util",
  "serde",
  "serde_json",
  "thiserror",
- "tokio",
- "tower",
  "tracing",
 ]
 
@@ -1428,8 +1419,6 @@ name = "telemetry"
 version = "0.1.0"
 dependencies = [
  "axum",
- "http",
- "http-body-util",
  "libc",
  "ort",
  "rustfft",
@@ -1437,7 +1426,6 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
- "tower",
  "tracing",
  "windows-sys 0.59.0",
 ]

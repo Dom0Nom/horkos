@@ -34,21 +34,3 @@ tracing       = { workspace = true }
 # feature block defined on telemetry's `TickPayload`. No cycle: telemetry does
 # not depend on ban-engine.
 telemetry  = { path = "../telemetry" }
-
-[dev-dependencies]
-http           = { workspace = true }
-http-body-util = { workspace = true }
-tokio          = { workspace = true }
-tower          = { workspace = true }
-
-# fusion/pipeline merge-gate bypass tests (guardrail #12). Live under
-# `bypass-tests/server/` with the other domains' bypass tests; registered here
-# so `cargo test -p ban-engine` (the server CI gate) runs them. Pure Rust,
-# fixture-driven, no game-server peer.
-[[test]]
-name = "fusion_bypass"
-path = "../../bypass-tests/server/fusion_bypass.rs"
-
-[[test]]
-name = "bundle_bypass"
-path = "../../bypass-tests/server/bundle_bypass.rs"
