@@ -606,4 +606,3 @@ record is the only artifact an appeal can audit.
 - Game-state snapshot wire format: `sdk/include/horkos/snapshot_schema.h`
 - Anti-analysis sensor surface (194 + 197): `ac/include/horkos/anti_analysis/anti_analysis_signals.h`; server mirror `server/telemetry/src/anti_analysis.rs`
 - GDPR-17 rollout plan: `docs/gdpr-17-rollout.md`
-- Risk register entry: R10 in `plans/horkos-ac-drm-scaffold.md`

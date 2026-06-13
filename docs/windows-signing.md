@@ -35,5 +35,4 @@ mode, and never on an end-user box.
    FSFilter Activity Monitor range).
 
 Production boot-start on Secure Boot requires the WHQL/attestation-signed catalog
-— a self-signed test cert will not boot there. The ship checklist tracks this in
-`docs/ship-readiness.md` (created in Phase 5).
+— a self-signed test cert will not boot there.

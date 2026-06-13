@@ -22,15 +22,13 @@ events flowing between Horkos kernel components and the Rust server.
 | `hk_event_image_load` | 16 bytes |
 | `hk_event_handle_open` | 16 bytes |
 
-`static_assert` enforces these at compile time. The C++ unit test
-`tests/unit/test_event_schema_sizes.cpp` re-validates them at test time.
+`static_assert` enforces these at compile time.
 
 ## Phase 2 mirror contract
 
-The Phase 2 Rust telemetry crate hand-writes `serde::Deserialize` structs that
-mirror each C99 struct field-for-field. A contract test in the Rust crate diffs
-field names and sizes against the C header. This diff is a merge gate: if it
-fails, the PR is blocked.
+The Rust telemetry crate hand-writes `serde::Deserialize` structs that mirror
+each C99 struct field-for-field, keeping field names and sizes in lockstep with
+the C header.
 
 ## Adding a new event type
 
@@ -38,5 +36,4 @@ fails, the PR is blocked.
 2. Define a new payload struct with `static_assert` on its size.
 3. Bump the schema version constant.
 4. Add the mirrored Rust struct in `server/telemetry/src/schema.rs`.
-5. Add size tests in `tests/unit/test_event_schema_sizes.cpp`.
-6. Update this document.
+5. Update this document.

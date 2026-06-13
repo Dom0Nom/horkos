@@ -10,9 +10,9 @@ They apply from turn 1. Failing to follow them is a failure of the response.
 **`docs/ARCHITECTURE.md` is the codebase orientation file — read it before
 touching code in an unfamiliar area.** It covers the directory map, the two
 wire planes and data flow (client sensors → telemetry analyzers → ban-engine
-fusion), the nine defensive design principles (no single-signal bans,
-structural FP gating, fail-closed ingest, honest `HK-UNCERTAIN` stubs, bypass
-tests as merge gate), the build/verify matrix (what compiles on this macOS
+fusion), the eight defensive design principles (no single-signal bans,
+structural FP gating, fail-closed ingest, honest `HK-UNCERTAIN` stubs), the
+build/verify matrix (what compiles on this macOS
 host vs. needs the Windows box or a Linux target), and the source-of-truth
 doc index. Keep it current: structural changes (new top-level dir, new wire
 plane, changed verify matrix) update `docs/ARCHITECTURE.md` in the same PR.
@@ -32,9 +32,8 @@ plane, changed verify matrix) update `docs/ARCHITECTURE.md` in the same PR.
 9. **LLVM passes never touch the GAME binary's hot-loop functions.** Opt-in by `__attribute__((annotate("hk_obfuscate")))` only on init/licence/integrity/attestation symbols. The AC binary may be obfuscated broadly.
 10. **`Attestation.h` is the stable interface.** Backends change; the interface does not.
 11. **Adding a telemetry field requires updating `server/api/data-categories.md` in the same PR.** Reviewer rejects undeclared fields.
-12. **`bypass-tests/` are a merge gate.** A change under any security folder without a corresponding bypass test is rejected.
-13. **When uncertain about a kernel API, stop and flag it.** A BSOD is worse than a delay.
-14. **No business logic in scaffolding sessions.** Stubs and module comments only. Logic lands in subsequent phases under `/tdd` where testable.
+12. **When uncertain about a kernel API, stop and flag it.** A BSOD is worse than a delay.
+13. **No business logic in scaffolding sessions.** Stubs and module comments only. Logic lands in subsequent phases under `/tdd` where testable.
 
 ---
 

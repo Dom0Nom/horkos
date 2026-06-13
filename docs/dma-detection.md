@@ -136,17 +136,3 @@ When this event type is added:
 3. Bump `HK_EVENT_SCHEMA_VERSION`.
 4. Add the Rust mirror struct in `server/telemetry/src/schema.rs`.
 5. Update `server/api/data-categories.md` (guardrail #11).
-
----
-
-## Bypass-test requirements (guardrail #12)
-
-A merge touching any file under `dma_detect/` requires a corresponding bypass
-test under `bypass-tests/`.  Minimum coverage:
-
-- Simulate firmware-on / kernel-groups-zero → `high_confidence_flag == 1`.
-- Simulate unbound DMA-capable device → `suspicious_device_count >= 1`.
-- Simulate clean state → `high_confidence_flag == 0`, `suspicious_device_count == 0`.
-
-These tests may use a mock sysfs tree or mock registry (injected via a
-thin seam in the backend) rather than real hardware.

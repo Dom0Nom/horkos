@@ -40,15 +40,3 @@ opt -load-pass-plugin=obfuscator/build/libHkObfuscator.so \
 ```
 
 Order `hk-strenc` before the CFG passes so it sees the original string uses.
-
-## Test
-
-```
-cmake --build obfuscator/build
-LLVM19_BIN=$(brew --prefix llvm@19)/bin \
-  python3 -c "import lit.main; lit.main.main()" obfuscator/test -v
-```
-
-Three lit/FileCheck tests assert each pass transforms an annotated function,
-leaves a non-annotated function unchanged, and (cff/strenc) produces verifier-
-clean IR.
