@@ -33,7 +33,7 @@ int sense_device_arrival(std::vector<hk_pointer_cadence_features> &out)
      * (new source + bursty activity + prior-device idle) MUST hold before any feature
      * is emitted; emitting on arrival alone would make a benign KVM switch / dongle
      * re-pair / mid-session mouse swap a false positive (catalog FP gate). Per
-     * guardrail #13 the live join is left a stub: with no arrival+activity feed wired,
+     * guardrail #12 the live join is left a stub: with no arrival+activity feed wired,
      * this emits nothing rather than a fabricated lifetime/correlation feature.
      *
      * The on-box implementer wires:

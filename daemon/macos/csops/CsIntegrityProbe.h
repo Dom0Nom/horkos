@@ -6,7 +6,7 @@
  *       factors into (csflags baseline diff, cdhash fold/compare, team-id
  *       classification, entitlement canonical diff). The pure cores let the FP
  *       gates be unit-tested host-side behind the csops() syscall seam
- *       (guardrail #14: logic where testable).
+ *       (guardrail #13: logic where testable).
  * Target platform: macOS (userspace daemon). The PURE cores are host-runnable.
  * Interface: implemented by Cs*Probe.cpp / EntitlementDiffProbe.cpp; consumed by
  *            the orchestrator (CsScanOrchestrator.cpp). Userspace TU (guardrail #4).

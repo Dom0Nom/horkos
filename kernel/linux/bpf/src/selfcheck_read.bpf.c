@@ -51,7 +51,7 @@ struct hk_bpf_self_read_event {
  * possible via bpf_probe_read_user; the uprobe-on-the-AC-itself pattern (this
  * program's current approach) IS correct for self-read since the uprobe fires in
  * the AC task's context. Soft-dirty (146) and mprotect (152) halves still need
- * kernel config verification. Per guardrail #13 the actual bpf_probe_read_user
+ * kernel config verification. Per guardrail #12 the actual bpf_probe_read_user
  * of the requested VA is NOT performed here; this program only emits a keyed tick
  * that the loader correlates. The LKM path (locked decision 3) is the fallback. */
 SEC("uprobe")

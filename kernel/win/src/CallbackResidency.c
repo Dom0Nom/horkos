@@ -61,7 +61,7 @@ void HkCallbackResidencyScan(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
      * PspCreateProcessNotifyRoutine / PspLoadImageNotifyRoutine /
      * CmCallbackListHead — is UNEXPORTED and undocumented. Reading it to resolve
      * every system callback handler against `Map` requires pattern-scanning
-     * ntoskrnl or hardcoded per-build offsets, which guardrail #13 forbids. Per
+     * ntoskrnl or hardcoded per-build offsets, which guardrail #12 forbids. Per
      * plan Risk 1 (the HIGHEST-RISK sensor) the full table walk is OUT until a
      * documented or robustly version-resolved surface is agreed. `Map` is accepted
      * so the signature is stable for when the resolve-against-image half lands;

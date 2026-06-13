@@ -17,7 +17,7 @@
  * a kernel-mode bus-driver interface; not accessible from userspace.
  * (docs: kernel API restriction confirmed — still needs KMDF IOCTL design + on-box
  * test for the legacy+extended config read path)
- * Per guardrail #13 this TU does NOT guess that API surface: MSI-X fields are left
+ * Per guardrail #12 this TU does NOT guess that API surface: MSI-X fields are left
  * unknown (0) with the "needs kernel routing" sentinel. The 64-bit-correct
  * containment math is fully implemented in forensics_report.cpp and unit-tested. ***
  */

@@ -15,7 +15,7 @@
  * see ConfigSpaceForensics.cpp). No documented userspace Win32 path exists for
  * extended config. Additionally, Windows has no /sys/kernel/iommu_groups equivalent
  * surfaced to userspace (IOMMU group membership is managed by the DMA-remapping
- * driver, not exposed via SetupAPI or cfgmgr32 in public APIs). Per guardrail #13
+ * driver, not exposed via SetupAPI or cfgmgr32 in public APIs). Per guardrail #12
  * this TU does NOT guess either API path. acs_source_validation / acs_p2p_redirect /
  * iommu_group_membership stay 0 = unknown; server treats as "cannot corroborate".
  * (docs: kernel restriction + ACS cap layout per PCIe spec confirmed — still needs

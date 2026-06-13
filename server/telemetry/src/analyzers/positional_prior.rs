@@ -13,8 +13,8 @@
 //!
 //! Guardrails: #8 — no `unwrap()` outside tests; `feed` is total over its input.
 //!
-//! HK-UNCERTAIN(navmesh): A*/navmesh ownership is unresolved (impl-plan UNCERTAINTY
-//! flag #2). If the engine supplies the optimal route, divergence is cheap to compute;
+//! HK-UNCERTAIN(navmesh): A*/navmesh ownership is unresolved. If the engine
+//! supplies the optimal route, divergence is cheap to compute;
 //! if telemetry must run A* itself it needs the navmesh blob + a pathfinder
 //! dependency. Until that decision is made, the A*-divergence term is NOT computed —
 //! only the heading-entropy / beeline-straightness term (which needs only the logged

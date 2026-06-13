@@ -3,8 +3,8 @@
  *       integrity sensors (SyscallIntegrity.c signals 210/213/214, EtwIntegrity.c
  *       signals 212/215). The kernel TUs perform the unsafe reads (MSR, IDTR,
  *       descriptor walks, logger-table query); the *arithmetic and FP-gate
- *       verdicts* are factored here so they are unit-testable on the host build
- *       (tests/unit/test_syscall_etw_logic.cpp) without a WDK. Contains NO
+ *       verdicts* are factored here so they are host-buildable without a WDK.
+ *       Contains NO
  *       kernel/Win32 API: plain C99, includes only <stdint.h>, so it is includable
  *       from a kernel C TU and a host C++ TU alike (never the same TU —
  *       guardrail #4; header-only inline helpers, not a shared object file).
@@ -45,8 +45,8 @@ static inline uint64_t HkIdtReconstructHandler(uint16_t offset_low,
 /*
  * Signal 210 — choose the expected IA32_LSTAR value. Under KVA-shadow (Meltdown
  * mitigation) the CPU enters at KiSystemCall64Shadow; otherwise at KiSystemCall64.
- * Mis-detecting the KVA-shadow state would false-positive on every clean machine
- * (plan Risk 2), so this selection is isolated and tested. Both candidate
+ * Mis-detecting the KVA-shadow state would false-positive on every clean machine,
+ * so this selection is isolated and tested. Both candidate
  * addresses are resolved by the caller (they are unexported — see the sensor's
  * HK-UNCERTAIN note); a zero candidate means "unresolved", which the caller must
  * treat as UNVERIFIABLE rather than a mismatch.
@@ -103,7 +103,7 @@ static inline int HkKeepaliveStale(uint64_t last_count, uint64_t now_count,
  * (version-independent), so this is the half that can ship without resolving any
  * unexported global.
  *
- * FP gate (plan, catalog medium): profiling/EDR toggles ETW constantly, so a
+ * FP gate: profiling/EDR toggles ETW constantly, so a
  * disable of a NON-dependency provider must NOT alert. The dependency mask is
  * intersected last, so a stopped xperf/WPR session that Horkos does not depend on
  * yields 0.

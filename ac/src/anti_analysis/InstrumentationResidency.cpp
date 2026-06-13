@@ -323,7 +323,7 @@ int anti_analysis_sample_instrumentation(aa_instrumentation* out) {
      * thread's START address (vs its current PC) is not available — task_threads +
      * thread_get_state returns the current register state, not the entry point, and
      * mapping that to an "unbacked anon-RX agent thread" under the hardened runtime
-     * is not verified here (guardrail #13). Left at 0 (no signal) rather than
+     * is not verified here (guardrail #12). Left at 0 (no signal) rather than
      * guessing; the export-name observable still drives the tier. */
     out->unbacked_rx_threads = 0u;
 

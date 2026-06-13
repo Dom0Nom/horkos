@@ -15,8 +15,7 @@
  * Target platforms: Windows (userspace). Pure cores are platform-free (mirrors
  *       ThreadProvenanceWin.h / InputSensorWin.h).
  * Interface: implemented by WorkingSetWatchWin.cpp / SelfHandleAuditWin.cpp /
- *       PageProtectAuditWin.cpp; the cores are exercised by
- *       tests/unit/test_vm_access_logic.cpp.
+ *       PageProtectAuditWin.cpp; the cores are platform-free host logic.
  *
  * HK-TODO(schema): the userspace findings (hk_event_foreign_holder #70,
  * hk_event_protect_drift #71, the HK_VM_ETWTI_SILENT correlation #69) flow on the

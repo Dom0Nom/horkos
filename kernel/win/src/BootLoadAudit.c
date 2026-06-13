@@ -49,7 +49,7 @@ void HkBootLoadAudit(PHK_DEVICE_CONTEXT Ctx)
      * IoRegisterBootDriverCallback, must be registered very early (boot-start)
      * with strict callback constraints (plan Risk 5). Registering it from this
      * scan path is WRONG — the registration point is DriverEntry-at-boot, and the
-     * timing/constraints are unverified. Per guardrail #13 the ELAM-verdict read
+     * timing/constraints are unverified. Per guardrail #12 the ELAM-verdict read
      * is left UNIMPLEMENTED until the registration timing is confirmed on-box. The
      * PsLoadedModuleList load-order read below IS implementable (the list is
      * exported and documented-for-walk), but correlating "our driver is early

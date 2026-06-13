@@ -1,6 +1,6 @@
 //! Role: Ban-engine scoring weights for the Linux eBPF loader-injection signals
-//! (linux-ebpf-injection, catalog 82-90). Encodes the impl-plan's two
-//! load-bearing scoring rules: (1) signal 87 (load-order inversion) is
+//! (linux-ebpf-injection, catalog 82-90). Two load-bearing scoring rules:
+//! (1) signal 87 (load-order inversion) is
 //! CORROBORATING-ONLY — it can never reach the ban threshold standalone; its
 //! weight only counts when at least one independent injection signal is also
 //! present. (2) signal 85 (transient preload) carries the env-setting ancestor

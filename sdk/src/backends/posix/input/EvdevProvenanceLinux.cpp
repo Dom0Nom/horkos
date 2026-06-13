@@ -32,7 +32,7 @@ int sense_evdev_provenance(std::vector<hk_device_descriptor_audit> &out)
      * (b) an EVIOCGID/EVIOCGPHYS ioctl poll over /dev/input/event* plus the uinput
      * creator-PID lookup (the kernel candidate creator_pid is re-validated against the
      * uinput fd owner via /proc, per the .bpf.c HK-UNCERTAIN). Both are integration the
-     * loader/sdk tick owns and are absent in this scaffolding TU. Per guardrail #13 the
+     * loader/sdk tick owns and are absent in this scaffolding TU. Per guardrail #12 the
      * drain + ioctl supplement are left a stub here; the pure classify_evdev_provenance
      * core (the testable decision) is exercised by the host unit test and the bypass
      * test with synthetic facts. With no live drain wired, this emits nothing rather

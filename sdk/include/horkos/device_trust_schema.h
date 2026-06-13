@@ -126,12 +126,12 @@ typedef struct hk_device_descriptor_audit {
 /* Layout: 4+4 (8) + 2+2+2+2 (8) = 16, then 1+1+1+1 (4) = 20; container_token is a
  * 64-bit member so it is 8-byte aligned — 4 bytes of padding push it to offset 24,
  * +8 = 32; creator_pid (4) + reserved (4) = 40. Max align 8, 40 % 8 == 0, no tail
- * pad. NOTE: the impl-plan's draft asserted == 32, which omitted the 4-byte pre-u64
+ * pad. NOTE: an earlier draft asserted == 32, which omitted the 4-byte pre-u64
  * alignment pad and the two trailing u32s; the correct fixed size is 40. The server
- * mirror and any bypass fixture must use 40. */
+ * mirror must use 40. */
 HK_STATIC_ASSERT(sizeof(hk_device_descriptor_audit) == 40,
     "hk_device_descriptor_audit size mismatch — update server/telemetry/src/device_trust.rs "
-    "DescriptorAudit in lockstep (correct size is 40, not the plan's draft 32)");
+    "DescriptorAudit in lockstep (correct size is 40)");
 
 /* -------------------------------------------------------------------------
  * Cadence feature block (catalog 139 descriptor ceiling + 144 arrival/lifetime).

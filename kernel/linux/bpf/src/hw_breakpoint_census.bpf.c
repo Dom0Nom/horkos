@@ -68,7 +68,7 @@ struct hk_bpf_hwbp_census_event {
  *     task-ownership read.
  * The attr.type / bp_addr / owning-task CO-RE paths differ across kernels, and reading
  * the CREATOR's tgid vs the TARGET task tgid requires care (perf events can target a
- * different task than the creator). Per guardrail #13 the real attach + reads are NOT
+ * different task than the creator). Per guardrail #12 the real attach + reads are NOT
  * guessed: this raw_tracepoint body compiles verifier-clean (no unrelocated reads) and
  * emits NOTHING until the attach point + field paths are confirmed. The structure
  * (game-tgid scoping, foreign-owner gate, census record) is in place so activation is a

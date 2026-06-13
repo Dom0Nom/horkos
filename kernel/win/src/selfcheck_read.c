@@ -62,7 +62,7 @@ NTSTATUS HkHandleSelfRead(WDFREQUEST Request,
      * against the AC image identity established at driver load, then range-checks
      * the request against the caller's VAD/image extent. The EXACT secure binding
      * (signed IOCTL, per-session token, image-hash check at \\.\Horkos open) is
-     * NOT settled. Per guardrail #13 we do NOT expose a foreign-read primitive on a
+     * NOT settled. Per guardrail #12 we do NOT expose a foreign-read primitive on a
      * guess — the handler refuses until the binding is confirmed on-box.
      *
      * HK-UNCERTAIN(selfcheck-read-path 145): once gated, the byte read uses the

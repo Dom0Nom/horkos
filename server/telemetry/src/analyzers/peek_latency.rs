@@ -13,8 +13,8 @@
 //!
 //! Guardrails: #8 — no `unwrap()` outside tests; `feed` is total over its input.
 //!
-//! HK-UNCERTAIN(rtt-source): the RTT source is not yet wired. Per the impl-plan's
-//! UNCERTAINTY flag, TCP sessions can read `getsockopt(TCP_INFO).tcpi_rtt` in
+//! HK-UNCERTAIN(rtt-source): the RTT source is not yet wired. TCP sessions can
+//! read `getsockopt(TCP_INFO).tcpi_rtt` in
 //! `snapshot/backends`, but most competitive shooters are UDP/QUIC where RTT must come
 //! from the engine ping EWMA delivered IN the snapshot frame — which the current
 //! `HkSnapshotRecord` does not carry. HK-TODO(schema): add a per-tick authoritative

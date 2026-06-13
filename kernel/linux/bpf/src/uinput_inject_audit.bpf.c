@@ -10,7 +10,7 @@
  *   TU; #6 -Wall -Wextra -Werror. #13: uinput_create_device / input_inject_event
  *   are INTERNAL symbols (kprobe-by-name, possibly inlined) — flagged uncertain
  *   below; this whole program is gated behind HORKOS_LINUX_EBPF_KPROBES (default
- *   OFF) per the impl-plan sequencing.
+ *   OFF) by build-flag gating.
  *
  * The create-device arm uses a STABLE handle: the /dev/uinput open path via the
  * uinput_open fop, which is non-inlined. The inject arm and the
@@ -70,12 +70,12 @@ int BPF_KPROBE(hk_kp_uinput_open, struct inode *inode, struct file *file)
 }
 
 /*
- * HK-UNCERTAIN(uinput-internal-symbols): the impl-plan's precise arms are kprobes
- * on uinput_create_device (the actual device-creation, post UI_DEV_CREATE ioctl)
+ * HK-UNCERTAIN(uinput-internal-symbols): kprobes on uinput_create_device (the
+ * actual device-creation, post UI_DEV_CREATE ioctl)
  * and input_inject_event (the per-event injection carrying EV type/code). Both
  * are INTERNAL kernel symbols: kprobe-attach-by-name is NOT ABI-stable and they
  * may be inlined on some kernel builds (input_inject_event in particular is a
- * small wrapper frequently inlined). Per guardrail #13 these arms are NOT
+ * small wrapper frequently inlined). Per guardrail #12 these arms are NOT
  * written — confirm kprobe-ability on the target Deck kernel (check
  * /sys/kernel/debug/tracing/available_filter_functions or BTF), then add:
  *   SEC("kprobe/uinput_create_device")

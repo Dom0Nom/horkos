@@ -11,7 +11,7 @@
  * Target platform: Linux eBPF iterator. REQUIRES kernel >= 5.13 AT RUNTIME for
  *                  the task_vma iterator; compile-time only needs BTF. The
  *                  Loader probes availability and disables signal 80 gracefully
- *                  on older kernels (Steam Deck / self-hosted) — see plan §8.
+ *                  on older kernels (Steam Deck / self-hosted) by design (graceful degradation).
  * Interface: SEC("iter/task_vma"); reads hk_protected; writes the iterator's
  *            seq_file output stream (read by the Loader via the iter fd), NOT
  *            hk_ringbuf — iterators stream through bpf_seq_write. Maps to server
@@ -23,7 +23,7 @@
  *   #4  Pure kernel eBPF TU — no userspace headers.
  *   #6  Compiled -Wall -Wextra -Werror (enforced in CMakeLists.txt).
  *
- * FP NOTE (impl-plan §7): JIT titles legitimately grow VM_EXEC VMAs; signal 80
+ * FP NOTE: JIT titles legitimately grow VM_EXEC VMAs; signal 80
  * is low-confidence evidence, NOT a fail-closed ban input until per-title
  * baselining exists. It emits state; the server treats it as low-confidence.
  */

@@ -148,7 +148,7 @@ void HkTimingFreqSkewProbe(PHK_DEVICE_CONTEXT Ctx)
      *     VM, and whether that duration stays within the DPC watchdog on all builds.
      *     This requires measurement on the Windows box. The MSR read itself is NOT
      *     the blocker.
-     * Per guardrail #13 the loop body remains UNIMPLEMENTED until loop duration and
+     * Per guardrail #12 the loop body remains UNIMPLEMENTED until loop duration and
      * IRQL/affinity strategy are validated on-box. The probe captures the
      * nominal/HV-present half (pure CPUID, fully safe) and emits eff_mhz=0 so the
      * record shape and emit path are exercised without the unverified loop window.

@@ -4,8 +4,7 @@
  *       entry is a 32-bit value encoding a signed 28-bit offset (entry >> 4) added
  *       to the table base; the low 4 bits are the argument-stack count. Decoding
  *       that to an absolute target is pure arithmetic, factored here so it is
- *       unit-testable on the host build (tests/unit/test_ssdt_decode.cpp) without
- *       a WDK — the plan's "SSDT decode tested host-side" requirement. Contains NO
+ *       host-buildable / pure decode logic, no WDK needed. Contains NO
  *       kernel/Win32 API: plain C99, includes only <stdint.h>, includable from a
  *       kernel C TU and a host C++ TU alike (never the same TU — guardrail #4).
  *       READ-ONLY: this header only decodes; it never writes a table entry.

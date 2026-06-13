@@ -7,8 +7,8 @@
  * Target platforms: macOS only (IOKit). Selected by CMake elseif(APPLE).
  * Implements: hk_dma_macos_fill_rom (consumed by ConfigSpaceForensics.mm).
  *
- * SIDE-EFFECT CAUTION (impl-plan Risk #4): on Linux enabling ROM decode is the one
- * non-pure-read probe; on macOS there is no userspace "enable ROM decode" knob —
+ * SIDE-EFFECT CAUTION: on Linux enabling ROM decode is the one non-pure-read
+ * probe; on macOS there is no userspace "enable ROM decode" knob —
  * IOKit either publishes a "rom-image" / "ROM" property (read-only, already
  * decoded by the firmware/driver) or it does not. We therefore read ONLY the
  * published property and never toggle decode, so this arm stays fully read-only on

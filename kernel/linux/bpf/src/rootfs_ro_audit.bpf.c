@@ -93,7 +93,7 @@ int BPF_PROG(hk_lsm_sb_mount,
  * SB_RDONLY->RW detection.
  * Confirms: lsm/sb_remount is BPF-attachable; signature is (struct super_block *,
  * void *mnt_opts, int ret). The sb_remount arm below is safe to implement.
- * Per guardrail #13 the arm is still left as a stub until tested on the target
+ * Per guardrail #12 the arm is still left as a stub until tested on the target
  * to confirm SB_RDONLY detection via s_flags CO-RE read. Intended shape:
  *   SEC("lsm/sb_remount")
  *   int BPF_PROG(hk_lsm_sb_remount, struct super_block *sb, void *mnt_opts, int ret) {
@@ -102,14 +102,13 @@ int BPF_PROG(hk_lsm_sb_mount,
  *       return ret;
  *   }
  *
- * HK-TODO(schema): the protected-subvol CREATE/WRITE file_open arm (impl-plan
- * §105) extends the existing lsm/file_open audit in lsm_file_open.bpf.c. It is
- * NOT added here to avoid a second lsm/file_open program racing the existing one;
- * the dentry-path hash + protected-subvol filter belongs alongside the canonical
- * file_open hook. Left for the file_open arm owner to wire (it needs the
- * protected-subvol path set, which is a userspace-populated map). Emitting the
- * REMOUNT arm above already covers the primary "steamos-readonly disable" vector
- * the bypass test drives.
+ * HK-TODO(schema): the protected-subvol CREATE/WRITE file_open arm extends the
+ * existing lsm/file_open audit in lsm_file_open.bpf.c. It is NOT added here to
+ * avoid a second lsm/file_open program racing the existing one; the dentry-path
+ * hash + protected-subvol filter belongs alongside the canonical file_open hook.
+ * Left for the file_open arm owner to wire (it needs the protected-subvol path
+ * set, which is a userspace-populated map). Emitting the REMOUNT arm above
+ * already covers the primary "steamos-readonly disable" vector.
  */
 
 char _license[] SEC("license") = "GPL";

@@ -16,7 +16,7 @@
  * entitlement; it is the same TCC grant the CGEventTap path needs (plan R5). The
  * not-granted path MUST leave the 163/165 features at default and never crash. The
  * grant-state check + the IOHIDManager open are SDK bring-up integration (the SDK
- * owns the run-loop the value callbacks post to); per guardrail #13 they are not
+ * owns the run-loop the value callbacks post to); per guardrail #12 they are not
  * assumed here — the live open is documented but no manager is created, so an
  * ungranted box simply drains nothing.
  * (docs: IOHIDManager is publicly documented (IOKit/hid/IOHIDManager.h). The TCC

@@ -82,7 +82,7 @@ extern "C" kern_return_t HKGameTaskGet(pid_t pid, HKGameTaskHandle *out) {
      *     OR the (Apple-gated) task_for_pid-allow / cs.debugger entitlement.
      *   - Under a System Extension the path may differ (the ES client does NOT
      *     itself grant task ports).
-     * Per guardrail #13 we do NOT guess the entitlement/IRQL-equivalent contract.
+     * Per guardrail #12 we do NOT guess the entitlement/IRQL-equivalent contract.
      * Until verified on a SIP-disabled dev box (and the production entitlement is
      * confirmed), acquisition is a no-op returning KERN_NOT_SUPPORTED so the
      * pollers run as designed but skip the privileged read.

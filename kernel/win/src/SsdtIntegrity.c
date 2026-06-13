@@ -77,7 +77,7 @@ void HkSsdtIntegrityScan(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
 
     /* Wrap the decode/range-check in __try: KiServiceTable is OS-owned and stable,
      * but a tampered descriptor could point Base at unmapped memory, and reading
-     * it must not bugcheck the box (guardrail #13 — a fault here is recoverable
+     * it must not bugcheck the box (guardrail #12 — a fault here is recoverable
      * only if guarded). */
     __try {
         for (i = 0; i < limit; ++i) {

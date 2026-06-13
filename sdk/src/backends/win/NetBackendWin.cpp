@@ -9,8 +9,7 @@
  * Interface: implements `net_backend.h` (`hk::net::backend_*`).
  *
  * NOTE: usermode only — runs at PASSIVE_LEVEL in the game process. No kernel TU,
- * no IRQL/IRP concern, no event_schema.h/ioctl.h impact (impl-plan Mechanism
- * notes). Cannot be compiled on the macOS dev host; written against the plan +
+ * no IRQL/IRP concern. Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 
@@ -106,11 +105,10 @@ bool backend_read_kernel_backlog(intptr_t fd, kernel_backlog* out)
 
 /* -- 187 probe socket ---------------------------------------------------------
  * HK-UNCERTAIN(probe-echo): the server-side UDP echo responder these RTTs need
- * does not exist yet (impl-plan Risks: Dependency 187). Compiled only under
- * HK_NET_PROBE_CHANNEL (default OFF). The full Winsock UDP socket + WSARecv
- * timeout + QPC-stamped round-trip is written under /tdd once the server echo wire
- * format is fixed; do NOT guess a round-trip against an unspecified responder.
- * Reports no-data today. */
+ * does not exist yet. Compiled only under HK_NET_PROBE_CHANNEL (default OFF).
+ * The full Winsock UDP socket + WSARecv timeout + QPC-stamped round-trip is
+ * written under /tdd once the server echo wire format is fixed; do NOT guess a
+ * round-trip against an unspecified responder. Reports no-data today. */
 probe_socket_t backend_probe_open(const char* server_ip, uint16_t server_port)
 {
     (void)server_ip;

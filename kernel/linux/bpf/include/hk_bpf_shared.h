@@ -8,7 +8,7 @@
  * Target platform: Linux eBPF (BPF_PROG_TYPE_{TRACEPOINT,LSM,KPROBE}).
  * Interface: included ONLY by .bpf.c files (never by a userspace TU — guardrail
  *            #4). The struct field layouts intentionally MIRROR the payload
- *            structs the impl-plan adds to sdk/include/horkos/event_schema.h
+ *            structs defined in sdk/include/horkos/event_schema.h
  *            (hk_event_proton_override .. hk_event_synth_input); the duplication
  *            is deliberate because event_schema.h pulls <stdint.h>, forbidden in
  *            eBPF C under -nostdinc (same rationale as lsm_file_open.bpf.c).
@@ -28,9 +28,8 @@
 #ifndef HK_BPF_SHARED_H
 #define HK_BPF_SHARED_H
 
-/* Mirrors HK_EVENT_SCHEMA_VERSION. The linux-proton-wine set is schema v3 (the
- * impl-plan bumps 2u -> 3u for the grown payload set). Loader.cpp validates this
- * against the version it expects before translating. */
+/* Mirrors HK_EVENT_SCHEMA_VERSION. The linux-proton-wine set is schema v3.
+ * Loader.cpp validates this against the version it expects before translating. */
 #define HK_PW_SCHEMA_VERSION 3u
 
 /* ---- BPF-internal event tags (0x30..0x38) --------------------------------

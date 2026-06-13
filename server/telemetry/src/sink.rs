@@ -27,7 +27,7 @@ use crate::error::TelemetryError;
 use crate::schema::TickPayload;
 
 /// Token-bucket refill rate (ticks/second) per player. Generous vs. any real
-/// game tick rate (placeholder, guardrail #14: the live value is a signed-rule
+/// game tick rate (placeholder, guardrail #13: the live value is a signed-rule
 /// parameter); the bucket exists to stop floods, not to meter honest play.
 pub const BUCKET_RATE_PER_S: f64 = 256.0;
 

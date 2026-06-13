@@ -21,7 +21,7 @@
  *   #4  Pure kernel eBPF TU — no userspace headers.
  *   #6  Compiled -Wall -Wextra -Werror (enforced in CMakeLists.txt).
  *
- * FP NOTE (impl-plan §7): JIT/IL2CPP/LuaJIT/V8/Proton legitimately create
+ * FP NOTE: JIT/IL2CPP/LuaJIT/V8/Proton legitimately create
  * RWX and W->X->W and grow VM_EXEC VMAs. Signals 76/79 are LOW-CONFIDENCE
  * evidence only and must NOT be wired to the fail-closed ban path until per-
  * title baselining + the signed allow-list (server side) exists. They emit;
@@ -154,7 +154,7 @@ int BPF_PROG(hk_lsm_mmap_file,
      * tgid only. ProtectedSet.cpp owns populating it. Until that reverse index
      * exists, signal 79 is GATED OFF in-kernel (emits nothing) rather than doing
      * an unbounded scan that would blow the verifier instruction budget. This is
-     * the conservative choice flagged in the plan's FP section. */
+     * the conservative choice (FP-gated by design). */
     if (file == (void *)0)
         return ret;   /* anonymous map by a non-protected task — never 79 */
 

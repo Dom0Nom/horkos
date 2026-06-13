@@ -102,11 +102,11 @@ bool backend_read_kernel_backlog(intptr_t fd, kernel_backlog* out)
 
 /* -- 187 probe socket ---------------------------------------------------------
  * HK-UNCERTAIN(probe-echo): the server-side UDP echo responder these RTTs need
- * does not exist yet (impl-plan Risks: Dependency 187). The probe channel is
- * compiled only under HK_NET_PROBE_CHANNEL (default OFF). Even under the flag,
- * these report no-data until the paired server milestone lands and the exact echo
- * wire format + Linux SO_TIMESTAMPING RX-time path are verified on-box. Do NOT
- * implement a live round-trip against an unspecified responder. */
+ * does not exist yet. The probe channel is compiled only under HK_NET_PROBE_CHANNEL
+ * (default OFF). Even under the flag, these report no-data until the paired server
+ * milestone lands and the exact echo wire format + Linux SO_TIMESTAMPING RX-time
+ * path are verified on-box. Do NOT implement a live round-trip against an
+ * unspecified responder. */
 probe_socket_t backend_probe_open(const char* server_ip, uint16_t server_port)
 {
     (void)server_ip;

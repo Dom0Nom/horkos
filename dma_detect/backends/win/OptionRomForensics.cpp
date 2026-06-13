@@ -13,7 +13,7 @@
  * PCI config space) requires a config-read primitive; HalGetBusDataByOffset is
  * kernel-only. There is no documented userspace Win32 API for reading raw PCI
  * config registers. The Linux arm enables ROM decode via sysfs (no Windows
- * equivalent confirmed read-only and non-perturbing). Per guardrail #13 this TU
+ * equivalent confirmed read-only and non-perturbing). Per guardrail #12 this TU
  * does NOT guess: rom_present and rom_pcir_id_mismatch stay unknown (0) with the
  * needs-kernel sentinel. PCIR header layout: PCIe Base Spec §6.3.10 (0xAA55
  * signature at offset 0, PCIR struct at PCI Data Structure pointer).

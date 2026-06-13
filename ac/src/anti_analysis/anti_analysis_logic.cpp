@@ -2,12 +2,11 @@
  * Role: Pure, platform-free decision cores for the anti-analysis sensors (catalog
  *       signals 194 + 197). These take already-sampled inputs (observable counts
  *       and flags) and return the raw tier the sensor ships as evidence. NO
- *       platform API, NO I/O — so they are unit-tested host-side
- *       (tests/unit/test_anti_analysis_logic.cpp), the plan's "factor the decision
- *       logic out of the sensor TUs into pure functions" requirement (guardrail
- *       #14). Neither core decides a ban: the client emits, the server decides and
- *       may override the tier with its allowlists.
- * Target platforms: all (compiled into hk_ac and the host unit-test target).
+ *       platform API, NO I/O — so they are host-testable, satisfying the
+ *       "factor the decision logic out of the sensor TUs into pure functions"
+ *       requirement (guardrail #14). Neither core decides a ban: the client
+ *       emits, the server decides and may override the tier with its allowlists.
+ * Target platforms: all (compiled into hk_ac).
  * Interface: implements the pure cores declared in
  *       horkos/anti_analysis/instrumentation.h and horkos/anti_analysis/host_tools.h.
  */

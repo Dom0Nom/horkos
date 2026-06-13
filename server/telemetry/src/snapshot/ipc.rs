@@ -135,8 +135,8 @@ pub const SLOT_HEADER_BYTES: usize = core::mem::size_of::<HkSnapshotSlotHeader>(
 /// HK-UNCERTAIN(ipc-contract): the live shm ring protocol (slot count, the
 /// publish/sequence handshake the game server uses, and whether a given engine
 /// publishes server-side visibility/audio/RNG at all vs. requiring telemetry to
-/// re-derive them) is NOT yet specified — see the impl-plan's first UNCERTAINTY
-/// flag. The trait and parse below are the stable surface; the backends ship behind
+/// re-derive them) is NOT yet specified. The trait and parse below are the
+/// stable surface; the backends ship behind
 /// the `gamestate-ipc-shm` feature and remain stubbed until the per-title integration
 /// contract is fixed with the user. Do NOT wire a live ring to production without that.
 pub trait SnapshotRingAttach: Send + Sized {

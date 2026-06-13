@@ -2,7 +2,7 @@
  * Role: Implementation of the platform-free per-tick TickPayload serializer
  *       (TelemetrySerialize.h). Hand-rolls minimal JSON (no allocation, no JSON
  *       library) into a caller buffer, echoing the server simulation tick into
- *       the `tick` field. Pure; host-tested (tests/unit/test_telemetry_serialize.cpp).
+ *       the `tick` field. Pure host logic.
  * Target platforms: all. Platform-free (guardrail #4) — no OS API.
  */
 

@@ -78,7 +78,7 @@ static uint32_t read_le32(const uint8_t *buf, uint32_t len, uint32_t off) {
  * Returns the number of bytes read (0 on open/read failure). On a host without
  * CAP_SYS_ADMIN the kernel exposes only the first 256 bytes of config; ext
  * space reads short. We treat a short read as "ext space unavailable" (degrade,
- * do not error) per the impl-plan's graceful-degradation requirement.
+ * do not error) by design (graceful degradation).
  * ------------------------------------------------------------------------- */
 static uint32_t pread_config(const char *dev_dir, uint8_t *buf, uint32_t want,
                              int *out_errno) {

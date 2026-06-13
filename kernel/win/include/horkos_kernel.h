@@ -28,8 +28,7 @@
 /* -------------------------------------------------------------------------
  * HK-TODO(schema): self-integrity wire types are NOT YET in the frozen schema
  * headers (sdk/include/horkos/event_schema.h, sdk/include/horkos/ioctl.h). The
- * plan (docs/impl-plans/win-kernel-object-callbacks.md §"Wire-schema additions")
- * specifies bumping HK_EVENT_SCHEMA_VERSION 2->3 and appending:
+ * Schema phase specifies bumping HK_EVENT_SCHEMA_VERSION 2->3 and appending:
  *     HK_EVENT_CALLBACK_INTEGRITY = 5, HK_EVENT_CALLBACK_CENSUS = 6,
  *     HK_EVENT_REG_TAMPER = 7
  * plus the three 16-byte payload structs and two hk_status flags. That edit is
@@ -77,9 +76,9 @@ HK_STATIC_ASSERT(sizeof(hk_event_reg_tamper) == 16,
     "hk_event_reg_tamper size mismatch (HK-TODO schema mirror)");
 #endif /* HK_EVENT_CALLBACK_INTEGRITY */
 
-/* HK-TODO(schema): the plan adds these two hk_status flags to ioctl.h. Defined
- * kernel-private until then; the IrpDispatch status handler is NOT edited here
- * (schema-frozen), so these are reserved for the Schema-phase wiring. */
+/* HK-TODO(schema): the Schema phase adds these two hk_status flags to ioctl.h.
+ * Defined kernel-private until then; the IrpDispatch status handler is NOT edited
+ * here (schema-frozen), so these are reserved for the Schema-phase wiring. */
 #ifndef HK_STATUS_FLAG_SELFCHECK_OK
 #  define HK_STATUS_FLAG_SELFCHECK_OK   0x00000008u
 #  define HK_STATUS_FLAG_CB_TAMPER_SEEN 0x00000010u
@@ -87,9 +86,8 @@ HK_STATIC_ASSERT(sizeof(hk_event_reg_tamper) == 16,
 
 /* -------------------------------------------------------------------------
  * HK-TODO(schema): thread-origin wire types (win-kernel-thread-injection) are
- * NOT YET in the frozen schema headers (event_schema.h / ioctl.h). The plan
- * (docs/impl-plans/win-kernel-thread-injection.md §"Wire-schema additions")
- * specifies bumping HK_EVENT_SCHEMA_VERSION 2->3, appending:
+ * NOT YET in the frozen schema headers (event_schema.h / ioctl.h). The
+ * Schema phase specifies bumping HK_EVENT_SCHEMA_VERSION 2->3, appending:
  *     HK_EVENT_THREAD_CREATE = 5, HK_EVENT_THREAD_INJECT = 6,
  *     HK_EVENT_APC_INJECT = 7, HK_EVENT_THREAD_PROVENANCE = 8
  * and — critically — growing HK_EVENT_PAYLOAD_MAX 16 -> 56 (re-pinning
@@ -198,8 +196,7 @@ HK_STATIC_ASSERT(sizeof(hk_event_thread_provenance) == 48,
 /* -------------------------------------------------------------------------
  * HK-TODO(schema): driver/module-integrity wire types (win-kernel-driver-
  * integrity) are NOT YET in the frozen schema headers (event_schema.h /
- * ioctl.h). The plan (docs/impl-plans/win-kernel-driver-integrity.md
- * §"New event type") specifies bumping HK_EVENT_SCHEMA_VERSION 2->3 and
+ * ioctl.h). The Schema phase specifies bumping HK_EVENT_SCHEMA_VERSION 2->3 and
  * appending:
  *     HK_EVENT_INTEGRITY_FINDING = 5,
  * plus one 16-byte payload struct, the HK_INTEGRITY_* finding codes, two
@@ -233,7 +230,7 @@ typedef struct hk_event_integrity_finding {
     uint64_t detail;      /* Signal-specific: image-relative offset, altitude,
                              CodeIntegrityOptions bitfield, or a MASKED handler
                              address. NEVER a raw kernel pointer — KASLR-leak
-                             hygiene (plan Risk 7): detail is image-relative or
+                             hygiene: detail is image-relative or
                              base-subtracted before emit. */
 } hk_event_integrity_finding;
 HK_STATIC_ASSERT(sizeof(hk_event_integrity_finding) == 16,
@@ -276,16 +273,16 @@ HK_STATIC_ASSERT(sizeof(hk_event_integrity_finding) == 16,
 #  define HK_INTEGRITY_UNVERIFIABLE       0x2Fu
 #endif /* HK_EVENT_INTEGRITY_FINDING */
 
-/* HK-TODO(schema): the plan adds these two hk_status flags to ioctl.h. Defined
- * kernel-private until then; the IrpDispatch status handler reflects them through
- * the integrity scan state below (schema-frozen flag field is not re-edited). */
+/* HK-TODO(schema): the Schema phase adds these two hk_status flags to ioctl.h.
+ * Defined kernel-private until then; the IrpDispatch status handler reflects them
+ * through the integrity scan state below (schema-frozen flag field is not re-edited). */
 #ifndef HK_STATUS_FLAG_INTEGRITY_SCAN_ACTIVE
 #  define HK_STATUS_FLAG_INTEGRITY_SCAN_ACTIVE  0x00000020u
 #  define HK_STATUS_FLAG_INTEGRITY_SCAN_FAULTED 0x00000040u
 #endif
 
-/* HK-TODO(schema): the plan adds HK_IOCTL_INTEGRITY_RESCAN (function 0x803) to
- * ioctl.h. Defined kernel-private until then so IrpDispatch can route it; the
+/* HK-TODO(schema): the Schema phase adds HK_IOCTL_INTEGRITY_RESCAN (function
+ * 0x803) to ioctl.h. Defined kernel-private until then so IrpDispatch can route it; the
  * value reproduces HK_CTL_CODE(FILE_DEVICE_UNKNOWN, 0x803, BUFFERED, ANY). */
 #ifndef HK_IOCTL_INTEGRITY_RESCAN
 #  define HK_IOCTL_INTEGRITY_RESCAN \
@@ -295,10 +292,10 @@ HK_STATIC_ASSERT(sizeof(hk_event_integrity_finding) == 16,
 /* -------------------------------------------------------------------------
  * HK-TODO(schema): client self-integrity self-read IOCTL (memory-integrity-
  * selfcheck, signals 145/146/148/151/152) is NOT YET in the frozen ioctl.h. The
- * plan (docs/impl-plans/memory-integrity-selfcheck.md §3.1) specifies appending
- * HK_IOCTL_SELF_READ_VA (function 0x805) + hk_self_read_request to ioctl.h and the
- * hk_event_self_* payloads + the large-record drain plane (HK_EVENT_MEM_PAYLOAD_MAX
- * / HK_IOCTL_DRAIN_MEM_EVENTS) to event_schema.h. Those edits are owned by the
+ * Schema phase specifies appending HK_IOCTL_SELF_READ_VA (function 0x805) +
+ * hk_self_read_request to ioctl.h and the hk_event_self_* payloads + the
+ * large-record drain plane (HK_EVENT_MEM_PAYLOAD_MAX / HK_IOCTL_DRAIN_MEM_EVENTS)
+ * to event_schema.h. Those edits are owned by the
  * Schema phase and MUST NOT be made from this domain TU. Defined kernel-private
  * here so IrpDispatch can route the IOCTL and selfcheck_read.c can compile. The
  * value reproduces HK_CTL_CODE(FILE_DEVICE_UNKNOWN, 0x805, BUFFERED, ANY) — distinct
@@ -306,7 +303,7 @@ HK_STATIC_ASSERT(sizeof(hk_event_integrity_finding) == 16,
  *
  * FLAGGED GAP: even when routed, the reply payloads (hk_event_self_crossview is 120
  * bytes) EXCEED the frozen HK_EVENT_PAYLOAD_MAX (16) and require the large-record
- * drain plane the plan reuses, which is itself pre-Schema. So HK_IOCTL_SELF_READ_VA
+ * drain plane, which is itself pre-Schema. So HK_IOCTL_SELF_READ_VA
  * is wired but its replies cannot cross the existing 40-byte envelope as distinct
  * records until the Schema phase lands that plane. The handler is therefore a
  * documented, default-refused stub (see the caller-identity uncertainty in
@@ -349,8 +346,7 @@ NTSTATUS HkHandleSelfRead(_In_ WDFREQUEST Request,
 /* -------------------------------------------------------------------------
  * HK-TODO(schema): external-memory-access wire types (win-handle-memory-access,
  * signals 64-72) are NOT YET in the frozen schema headers (event_schema.h /
- * ioctl.h). The plan (docs/impl-plans/win-handle-memory-access.md
- * §"Interfaces & data structures") specifies bumping HK_EVENT_SCHEMA_VERSION
+ * ioctl.h). The Schema phase specifies bumping HK_EVENT_SCHEMA_VERSION
  * 2->3 and appending:
  *     HK_EVENT_VM_ACCESS = 5, HK_EVENT_HANDLE_PROVENANCE = 6,
  *     HK_EVENT_FOREIGN_HOLDER = 7, HK_EVENT_PROTECT_DRIFT = 8
@@ -388,7 +384,7 @@ NTSTATUS HkHandleSelfRead(_In_ WDFREQUEST Request,
 
 /* HK_EVENT_VM_ACCESS — 32 bytes. ETW-TI ReadVm/WriteVm/AllocVm/ProtectVm against
  * the protected pid (#64, #69, #72). EXCEEDS HK_EVENT_PAYLOAD_MAX (16) — see the
- * HK_VMWATCH_SCHEMA_READY gate above. The plan's field list (source/target pid,
+ * HK_VMWATCH_SCHEMA_READY gate above. The field list (source/target pid,
  * target_va, access_kind, section_flags, flags) sums to 28, but the u64 target_va
  * forces 8-byte struct alignment, so a trailing 'reserved' u32 is made EXPLICIT to
  * pin the real on-wire size at 32 rather than relying on silent tail padding (which
@@ -429,7 +425,7 @@ HK_STATIC_ASSERT(sizeof(hk_event_foreign_holder) == 12,
     "hk_event_foreign_holder size mismatch (HK-TODO schema mirror)");
 
 /* HK_EVENT_PROTECT_DRIFT — 24 bytes. Userspace page-protection drift on shipped
- * code (#71). EXCEEDS HK_EVENT_PAYLOAD_MAX (16). The plan's field list sums to 20,
+ * code (#71). EXCEEDS HK_EVENT_PAYLOAD_MAX (16). The field list sums to 20,
  * but the leading u64 region_base forces 8-byte alignment, so a trailing 'reserved'
  * u32 is EXPLICIT to pin the on-wire size at 24 rather than relying on tail padding. */
 typedef struct hk_event_protect_drift {
@@ -475,7 +471,7 @@ HK_STATIC_ASSERT(sizeof(hk_event_protect_drift) == 24,
  * logic is hk::sdk::vmaccess::classify_target_section (host-tested).
  *
  * HK-UNCERTAIN(section-cache-lifetime): the cache must survive image unload/reload
- * races (plan Risk "Section-flag cache lifetime"). The fill/evict hooks below are
+ * races. The fill/evict hooks below are
  * declared but the actual PsSetLoadImageNotifyRoutine wiring into Notify.c's
  * load-image handler is left for on-box verification — a stale range that outlives an
  * unloaded module would mis-classify a later allocation at the same VA. Do NOT wire
@@ -877,7 +873,7 @@ uint32_t HkVmSectionResolve(_Inout_ PHK_VM_SECTION_CACHE Cache, _In_ uint64_t ta
  * driver spawning a usermode guard process (RtlCreateUserProcess/ZwCreateUserProcess
  * arguments, session/desktop placement, and cleanup on uninstall) is not verified
  * blind; HkCanaryStart therefore installs NOTHING today and returns
- * STATUS_NOT_SUPPORTED (plan marks the canary optional/experimental). Do NOT spawn
+ * STATUS_NOT_SUPPORTED (canary is optional/experimental). Do NOT spawn
  * a process from the driver without on-box validation of the create path + teardown. */
 _IRQL_requires_max_(PASSIVE_LEVEL) NTSTATUS HkCanaryStart(_In_ PHK_DEVICE_CONTEXT Ctx);
 _IRQL_requires_max_(PASSIVE_LEVEL) void     HkCanaryStop(_In_ PHK_DEVICE_CONTEXT Ctx);

@@ -10,7 +10,7 @@
  * config space requires a live config read via the IOPCIFamily user client
  * (IOPCIDevice config read selectors), which is NOT a confirmed entitlement-free
  * userspace path on macOS (same open question as the ext-config sweep in
- * ConfigSpaceForensics.mm). Per guardrail #13 this TU does NOT guess that selector
+ * ConfigSpaceForensics.mm). Per guardrail #12 this TU does NOT guess that selector
  * surface: it leaves the MSI-X fields unknown (0). The 64-bit-correct containment
  * math is fully implemented + unit-tested in forensics_report.cpp; only the macOS
  * config SOURCE is deferred. CONFIRM on a real box whether the config-read user

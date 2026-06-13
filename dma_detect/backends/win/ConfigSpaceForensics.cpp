@@ -18,7 +18,7 @@
  * kernel driver (the Horkos KMDF driver via a DeviceIoControl IOCTL).
  * (docs: kernel API restriction confirmed — still needs KMDF IOCTL design + on-box
  * test to verify the IOCTL path for ext-config reads)
- * Per guardrail #13 the extended-config-dependent arms (DSN walk 127, ext-cfg
+ * Per guardrail #12 the extended-config-dependent arms (DSN walk 127, ext-cfg
  * aliasing/stability 128, ACS 133) are left UNIMPLEMENTED here — the structural
  * gates + legacy-config facts that DO have a documented userspace path are filled,
  * and the ext-config arms set scan_error to signal "needs kernel routing". ***

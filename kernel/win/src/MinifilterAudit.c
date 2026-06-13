@@ -37,7 +37,7 @@ void HkMinifilterAudit(PHK_DEVICE_CONTEXT Ctx)
      * FltEnumerateFilters requires our OWN FltRegisterFilter handle (i.e. the driver
      * must itself be a registered minifilter to call it) is not clearly stated and
      * must be confirmed on-box. A missed FltObjectDereference leaks; a double-deref
-     * is a UAF/bugcheck. Per guardrail #13 the live enumeration is left UNIMPLEMENTED.
+     * is a UAF/bugcheck. Per guardrail #12 the live enumeration is left UNIMPLEMENTED.
      * The intended body, ready once the lifetime + registration requirement are
      * confirmed against the WDK docs on-box:
      * (docs: FltEnumerateFilters + FltObjectDereference documented; still needs on-box:

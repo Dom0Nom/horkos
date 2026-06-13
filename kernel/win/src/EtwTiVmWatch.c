@@ -119,7 +119,7 @@ uint32_t HkVmSectionResolve(PHK_VM_SECTION_CACHE Cache, uint64_t target_va)
  * certificate today, so there is NO valid in-kernel path to subscribe to ReadVm/
  * WriteVm/AllocVm/ProtectVm keywords here.
  *
- * Therefore, per guardrail #13, this arm installs NOTHING. The full consumer
+ * Therefore, per guardrail #12, this arm installs NOTHING. The full consumer
  * (keyword set KERNEL_THREATINT_KEYWORD_{READVM,WRITEVM,ALLOCVM,PROTECTVM}_
  * {LOCAL,REMOTE}, the TargetProcessId==protected-pid filter, the per-event
  * classify->staging->emit pipeline) belongs in a PPL user-mode session that bumps

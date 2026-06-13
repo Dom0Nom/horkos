@@ -81,7 +81,7 @@ void HkDriverObjectAudit(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
      * where it avoids the unexported IoDriverObjectType dependency. Because there
      * is NO documented, version-stable way to obtain the full \Driver\* set from a
      * KMDF driver without one of those unverified surfaces, the driver-object
-     * ENUMERATION is left UNIMPLEMENTED here per guardrail #13. The per-pointer
+     * ENUMERATION is left UNIMPLEMENTED here per guardrail #12. The per-pointer
      * audit logic above (HkDrvObjCheckPtr) is complete and unit-shaped so it is
      * ready the moment a documented enumerator is wired:
      *

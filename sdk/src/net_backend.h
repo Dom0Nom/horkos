@@ -54,10 +54,10 @@ bool backend_read_kernel_backlog(intptr_t fd, kernel_backlog* out);
  * round-trip; they are bounded by `timeout_us` and never block indefinitely.
  *
  * HK-UNCERTAIN(probe-echo): the server-side UDP echo responder these RTTs require
- * does not yet exist (impl-plan Sequencing §6 / Risks: Dependency 187). Until it
- * ships, the whole probe channel is built only under HK_NET_PROBE_CHANNEL (default
- * OFF) and these functions are documented stubs that report "no data". Do NOT flip
- * the flag ON until the paired server echo milestone lands. */
+ * does not yet exist. Until it ships, the whole probe channel is built only under
+ * HK_NET_PROBE_CHANNEL (default OFF) and these functions are documented stubs that
+ * report "no data". Do NOT flip the flag ON until the paired server echo milestone
+ * lands. */
 typedef void* probe_socket_t;
 probe_socket_t backend_probe_open(const char* server_ip, uint16_t server_port);
 bool           backend_probe_rtt(probe_socket_t sock, uint32_t timeout_us,

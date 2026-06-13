@@ -84,13 +84,13 @@ int hk_tp_setns(struct trace_event_raw_sys_enter *ctx)
 }
 
 /*
- * HK-UNCERTAIN(ns-install-symbol): the impl-plan names commit_nsset /
- * install_nsproxy / validate_nsset as candidate kprobe targets to read the
+ * HK-UNCERTAIN(ns-install-symbol): commit_nsset /
+ * install_nsproxy / validate_nsset are candidate kprobe targets to read the
  * JOINED ns inode directly (avoiding the post-hoc /proc resolution above). I am
  * NOT certain which symbol is the stable kprobe target on the target Deck kernel,
  * nor its exact arg layout (struct nsset* vs struct nsproxy*; field offsets to
  * ns_common.inum). On a wrong target this either fails to attach or reads garbage
- * offsets. Per guardrail #13 the kprobe is NOT written — confirm the symbol +
+ * offsets. Per guardrail #12 the kprobe is NOT written — confirm the symbol +
  * arg layout against the target kernel BTF, then implement this arm to populate
  * target_ns_inode in-kernel. Until then the sys_enter_setns arm above carries the
  * signal and the loader fills the inode from /proc.

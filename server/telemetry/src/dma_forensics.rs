@@ -7,8 +7,7 @@
 //! subscription; this module turns those raw facts into features and applies the
 //! catalog's server-side FP GATES — it never produces a standalone client verdict
 //! and the low-weight TLP-latency signal (132) can NEVER by itself produce a
-//! positive verdict (enforced by `score` + the tests and the cross-platform
-//! `bypass_latency_only` gate).
+//! positive verdict (enforced by `score` + this module).
 //!
 //! Target platforms: server.
 //!
@@ -16,7 +15,7 @@
 //! `thiserror` error type, NO `unwrap()`/`expect()` outside `#[cfg(test)]`. A
 //! malformed/short wire record yields a typed `DmaForensicsError`, never a panic. A
 //! missing VID in the OUI reference table returns `OuiVerdict::Unknown`, never a
-//! panic (impl-plan §server: "missing-VID lookups return Unknown, never panic").
+//! panic ("missing-VID lookups return Unknown, never panic").
 //!
 //! Guardrail #11: the telemetry fields decoded here are declared in
 //! `server/api/data-categories.md` §5 (owned by the Schema phase). This module does
@@ -43,7 +42,7 @@ pub const DEVICE_WIRE_BYTES: usize = 100;
 /// Size of the compact hot-plug arrival record (`hk_event_dma_hotplug`, 16 bytes).
 pub const HOTPLUG_WIRE_BYTES: usize = 16;
 
-/// `hk_event_dma_hotplug.flags` bits (mirror of the impl-plan compact form).
+/// `hk_event_dma_hotplug.flags` bits (mirror of the compact form).
 pub const HK_DMA_HOTPLUG_BUS_MASTER: u32 = 0x1;
 pub const HK_DMA_HOTPLUG_UNBOUND: u32 = 0x2;
 pub const HK_DMA_HOTPLUG_ID_ANOMALY: u32 = 0x4;
@@ -301,7 +300,7 @@ impl DmaHotplug {
     /// Post-AC-start arrival of an unbound bus-master device with an ID anomaly is
     /// the catch (sig 134). A Thunderbolt/USB4-domain dock arrival sets none of
     /// these bits (the client/loader recognises the benign domain), so this stays
-    /// false — the FP gate proven by `bypass_hotplug_after_start`.
+    /// false — the Thunderbolt/USB4-domain FP gate.
     pub fn is_suspect_arrival(&self) -> bool {
         let bus_master = (self.flags & HK_DMA_HOTPLUG_BUS_MASTER) != 0;
         let unbound = (self.flags & HK_DMA_HOTPLUG_UNBOUND) != 0;
@@ -313,7 +312,7 @@ impl DmaHotplug {
 // ---------------------------------------------------------------------------
 // Reference-table lookups (loaded async at startup in the real server; modeled
 // here as a trait so the decode path stays pure). A missing VID returns
-// `OuiVerdict::Unknown`, NEVER a panic (impl-plan §server requirement).
+// `OuiVerdict::Unknown`, NEVER a panic (no-panic requirement).
 // ---------------------------------------------------------------------------
 
 /// Verdict of the VID -> registered-OUI reference lookup (sig 127).
@@ -326,7 +325,7 @@ pub enum OuiVerdict {
     Mismatch,
     /// The VID is not in the reference table, OR the device presented no DSN. The
     /// server treats this as "unknown", never as evidence either way — DSN absence
-    /// on a whitelisted DSN-less VID must NOT flag (impl-plan FP gate).
+    /// on a whitelisted DSN-less VID must NOT flag.
     Unknown,
 }
 
@@ -403,8 +402,8 @@ pub struct DmaFeatures {
 pub struct DmaScore {
     pub features: DmaFeatures,
     /// True when the structural gate is met AND at least one NON-low-weight
-    /// structural signal fired. sig 132 alone never sets this (impl-plan gate;
-    /// `bypass_latency_only`).
+    /// structural signal fired. sig 132 alone never sets this (the low-weight
+    /// signal can never alone produce a verdict).
     pub positive: bool,
 }
 

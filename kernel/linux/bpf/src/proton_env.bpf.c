@@ -19,7 +19,7 @@
  *   - sched_process_exec:  https://docs.ebpf.io/linux/tracepoints/sched/sched_process_exec/
  *   - bpf_probe_read_user: https://docs.ebpf.io/linux/helper-function/bpf_probe_read_user/
  *
- * VERIFIER NOTE (impl-plan §100): the env region (mm->env_start..env_end) is
+ * VERIFIER NOTE: the env region (mm->env_start..env_end) is
  * variable length user memory; a bounded fixed loop is required. We scan a capped
  * window (HK_PW_HASH_MAX bytes per token, kProtonEnvScanBudget tokens) so the loop
  * is verifier-provable. Truncation is acceptable: the token is only hashed and

@@ -1,10 +1,9 @@
 /*
  * Role: Pure, platform-free false-positive-gate decision logic for the Windows
  *       object/notify self-integrity sensors (CallbackSelfCheck.c / Registry-
- *       Callback.c). Factored out of the kernel TUs so the gate decisions can be
- *       unit-tested on the host build (tests/unit/test_selfcheck_fpgate.cpp)
- *       without a WDK — the plan's "FP-gate logic unit-tested where extractable"
- *       requirement. Contains NO kernel/Win32 API: plain C99, includes only
+ *       Callback.c). Factored out of the kernel TUs so the gate decisions are
+ *       pure host-buildable without a WDK. Contains NO kernel/Win32 API: plain
+ *       C99, includes only
  *       <stdint.h>, so it is includable from a kernel C TU and a host C++ TU
  *       alike (never the same TU — guardrail #4; these are header-only inline
  *       helpers, not a shared object file).

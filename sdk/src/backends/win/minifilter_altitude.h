@@ -3,7 +3,7 @@
  *       (signal 6). Decides whether a neighboring minifilter is SUSPECT given
  *       its altitude, Authenticode result, and position relative to Horkos —
  *       WITHOUT any FltMgr / Win32 dependency, so the decision is unit-testable
- *       on the host build (tests/unit/test_minifilter_altitude.cpp). The live
+ *       on the host build. The live
  *       FilterFindFirst/FilterInstanceFindFirst enumeration lives in
  *       MinifilterCensusWin.cpp and feeds rows into this classifier.
  *       FP discipline: altitude-occupancy alone is NEVER a verdict — only an

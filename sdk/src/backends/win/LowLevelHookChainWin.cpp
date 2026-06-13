@@ -28,7 +28,7 @@ int sense_llhook_chain(std::vector<hk_input_finding>& out)
      * timeout (HKLM\Control Panel\Desktop\LowLevelHooksTimeout, commonly cited
      * default ~300 ms) after which Windows silently removes the hook and may stop
      * calling it. Two things are NOT verified on-box and must NOT be guessed
-     * (guardrail #13):
+     * (guardrail #12):
      *   1. The exact current-OS timeout semantics and whether a removed hook is
      *      re-armed or simply dropped — the re-arm strategy (re-Set on WM input or on
      *      a watchdog) depends on this.

@@ -10,7 +10,7 @@
  *       `net_probes.h`. The POSIX half is backends/posix/TcpInfoProbePosix.cpp;
  *       exactly one is compiled per platform.
  *
- * Cannot be compiled on the macOS dev host; written against the impl-plan +
+ * Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 

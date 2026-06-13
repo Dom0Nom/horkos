@@ -155,9 +155,9 @@ private:
  * Pure per-signal decision cores. These take already-sampled inputs (hashes,
  * resolved targets, table snapshots) and return the raw classification the
  * sensor ships. They contain NO platform API and NO I/O, so they are unit-
- * tested host-side (tests/unit/test_selfcheck_logic.cpp) — the plan's "factor
- * the divergence/attribution decision logic out of the sensor TUs into pure
- * functions" requirement. None of them decides a ban.
+ * tested host-side — the "factor the divergence/attribution decision logic out
+ * of the sensor TUs into pure functions" requirement. None of them decides a
+ * ban.
  * ========================================================================= */
 
 /* 145: given the three SHA-256s, compute the agreement matrix. A null pointer

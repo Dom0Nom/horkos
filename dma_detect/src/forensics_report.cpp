@@ -10,8 +10,8 @@
  *       (serialization + gate helpers; the scan/subscribe entry points live in
  *       the per-OS backends).
  *
- * Wire decision (per impl-plan): DMA forensics ride the per-tick JSON telemetry
- * plane, NOT the fixed 40-byte hk_event_record kernel ring. This file therefore
+ * Wire decision: DMA forensics ride the per-tick JSON telemetry plane, NOT the
+ * fixed 40-byte hk_event_record kernel ring. This file therefore
  * produces a little-endian flat byte image of each record (stable field order)
  * that the client's telemetry uploader hands to the server's serde mirror
  * (server/telemetry/src/dma_forensics.rs). The byte layout here is the contract

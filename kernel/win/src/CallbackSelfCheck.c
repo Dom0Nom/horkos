@@ -195,7 +195,7 @@ static void HkSelfCheckEnabledDrift(PHK_DEVICE_CONTEXT Ctx)
  * arm/disarm lock — it uses file-scope BOOLEANs guarded only by the single-
  * instance assumption and the Interlocked count. Re-registering here from a
  * different thread than DriverEntry/unload introduces a real race the existing
- * code was not designed for. Per guardrail #13 the actual re-register call is
+ * code was not designed for. Per guardrail #12 the actual re-register call is
  * left UNIMPLEMENTED until Notify.c grows an explicit arm lock; we only read the
  * steady-state count and, if it is wrong, emit drift. DO NOT enable the live
  * PsSetCreateProcessNotifyRoutineEx re-register without that lock — getting it
@@ -306,7 +306,7 @@ static void HkSelfCheckCensusDriftOnly(PHK_DEVICE_CONTEXT Ctx)
  * for HkObPreCallbackAddress() requires either a documented base-resolution path
  * or a PsLoadedModuleList walk. The loaded-module walk relies on partly-
  * undocumented offsets that can fault if they drift; hashing the wrong range
- * yields false positives. Per guardrail #13 the base/extent resolution and the
+ * yields false positives. Per guardrail #12 the base/extent resolution and the
  * actual hashing are left UNIMPLEMENTED. The baseline capture below records that
  * signal 8 is not yet active (TextHashValid stays FALSE) rather than hashing a
  * guessed range. Provide a documented base resolver (e.g. an exported anchor +

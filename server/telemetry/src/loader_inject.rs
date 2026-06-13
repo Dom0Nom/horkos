@@ -21,7 +21,7 @@
 //! three 16-byte payload structs are owned by the Schema phase and are NOT yet in
 //! the frozen `sdk/include/horkos/event_schema.h` (still
 //! `HK_EVENT_SCHEMA_VERSION` = 2, enum tops at `HK_EVENT_HANDLE_OPEN` = 4). The
-//! decoders below are written against the impl-plan's pinned field layout/sizes so
+//! decoders below are written against the pinned field layout/sizes so
 //! they are ready when the schema lands; the discriminants are mirrored here as
 //! local consts until then. The values 5..12 collide pre-Schema with the Windows
 //! vm_access / thread-origin provisional discriminants — the Schema phase assigns
@@ -34,8 +34,8 @@ use thiserror::Error;
 use crate::error::TelemetryError;
 
 /// Version of the loader-finding JSON plane. Mirrors the bumped
-/// `HK_EVENT_SCHEMA_VERSION` (2 -> 3) the impl-plan specifies. Bump in lockstep
-/// with the C schema on any additive change.
+/// `HK_EVENT_SCHEMA_VERSION` (2 -> 3). Bump in lockstep with the C schema on
+/// any additive change.
 pub const LOADER_SCHEMA_VERSION: u32 = 3;
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ fn read_u64(buf: &[u8], off: usize, what: &'static str) -> Result<u64, LoaderInj
 }
 
 // ---------------------------------------------------------------------------
-// `#[repr(C)]` mirrors of the three 16-byte fixed payloads (impl-plan §3.1).
+// `#[repr(C)]` mirrors of the three 16-byte fixed payloads.
 // ---------------------------------------------------------------------------
 
 /// Mirror of `hk_event_dso_anomaly` (16 bytes) — signals 82/87.
@@ -205,7 +205,8 @@ pub fn decode_event(
 }
 
 // ---------------------------------------------------------------------------
-// JSON ingest plane (the variable-length side-channel, impl-plan §3.1 option B).
+// JSON ingest plane (the variable-length side-channel, option B: full strings
+// out-of-band so the fixed C record stays 16 bytes).
 // ---------------------------------------------------------------------------
 
 /// One loader-injection finding on the HTTP/JSON plane. The numeric core mirrors

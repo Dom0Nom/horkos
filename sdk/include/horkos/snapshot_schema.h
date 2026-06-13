@@ -66,11 +66,11 @@ typedef struct HkEntityState {
 } HkEntityState;
 /* Layout: entity_id(8) at 0; position(12) at 8; velocity(12) at 20; flags(4) at 32;
  * _pad(4) at 36 = 40. Max align is 8 (entity_id), 40 % 8 == 0, no tail pad.
- * NOTE: the impl-plan draft asserted == 48; that overcounted. The frozen size is 40.
- * The Rust mirror and any fixture MUST use 40. */
+ * NOTE: an earlier draft asserted == 48; that overcounted. The frozen size is 40.
+ * The Rust mirror MUST use 40. */
 HK_STATIC_ASSERT(sizeof(HkEntityState) == 40,
     "HkEntityState size mismatch — update snapshot/ipc.rs HkEntityState in lockstep "
-    "(correct size is 40, not the plan draft's 48)");
+    "(correct size is 40)");
 
 /* -------------------------------------------------------------------------
  * One authoritative snapshot frame. Fixed-size head; the variable-length dynamic

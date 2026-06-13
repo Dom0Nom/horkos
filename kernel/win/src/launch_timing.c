@@ -6,7 +6,7 @@
  *       suspend->resume gap is computed server-side from those plus a userspace
  *       thread-state sample. There is NO documented kernel notify for
  *       NtResumeThread and inspecting KTHREAD state at IRQL is unsafe — so this
- *       sensor never attempts a kernel resume hook (guardrail #13).
+ *       sensor never attempts a kernel resume hook (guardrail #12).
  *       READ-ONLY.
  * Target platforms: Windows kernel (KMDF). Builds only with the WDK.
  *
@@ -51,5 +51,5 @@ void HkLaunchTimingOnImage(HANDLE ProcessId, PVOID ImageBase)
         return;
     }
     /* Timestamps are already on each event's header; the server correlates. No
-     * kernel resume hook, no KTHREAD-state probe (guardrail #13). */
+     * kernel resume hook, no KTHREAD-state probe (guardrail #12). */
 }

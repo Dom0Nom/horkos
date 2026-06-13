@@ -15,8 +15,7 @@
  *
  * ============================================================================
  * HK-VERIFIED(ex-thread-notify-startaddress): VERIFIED-FALSE PLAN ASSUMPTION.
- * The plan (docs/impl-plans/win-kernel-thread-injection.md ss"Kernel plane") is
- * built on PsSetCreateThreadNotifyRoutineEx delivering a
+ * The implementation assumption is that PsSetCreateThreadNotifyRoutineEx delivers a
  * PPS_CREATE_THREAD_NOTIFY_INFO whose StartAddress is the spoof-resistant kernel
  * ETHREAD start (the load-bearing source for signal 23). That is INCORRECT per
  * the WDK DDI:
@@ -40,7 +39,7 @@
  * come from a different mechanism (e.g. ZwQueryInformationThread under the
  * userspace enrichment plane, with its known spoofability, or an undocumented
  * ETHREAD->StartAddress / Win32StartAddress field read which is exactly the kind
- * of version-gated internals the guardrails forbid guessing). Per guardrail #13
+ * of version-gated internals the guardrails forbid guessing). Per guardrail #12
  * this file does NOT fabricate a start-address source: it captures
  * kernel_start_address = 0 and sets it to be resolved by the userspace plane.
  * Design owner must revisit signal 23 before this ships. STOP/confirm.
@@ -113,8 +112,8 @@ NTKERNELAPI PVOID    PsGetProcessWow64Process(_In_ PEPROCESS Process);
  *   - Create    : TRUE on create, FALSE on delete.
  *   - PsGetCurrentThreadId() == the NEW thread (Ex runs on the new thread), so
  *     it is NOT a creator-TID source. Creator lineage (signal 19) therefore has
- *     no kernel-callback source either and is left to the userspace plane, which
- *     the plan already routes there for the region/VAD work.
+ *     no kernel-callback source either and is left to the userspace plane for the
+ *     region/VAD work.
  */
 _Function_class_(PCREATE_THREAD_NOTIFY_ROUTINE)
 static VOID NTAPI HkThreadNotifyEx(_In_ HANDLE ProcessId,

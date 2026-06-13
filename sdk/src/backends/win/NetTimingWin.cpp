@@ -9,7 +9,7 @@
  * Target platforms: Windows.
  * Interface: implements `hk::net::probe_tx_cadence` (181) from `net_probes.h`.
  *
- * Cannot be compiled on the macOS dev host; written against the impl-plan + the
+ * Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 

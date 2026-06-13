@@ -126,7 +126,7 @@ extern "C" bool HkCsInvalidationConsume(const HkEsObservation *obs, HkCsFinding 
      * CS_OPS_STATUS on the exact audit_token verifying CS_VALID actually cleared,
      * plus the gate that the invalidated image is the game's OWN signed binary
      * (not a helper) — is unverified (Risk 1 + Risk 4: whether NOTIFY_CS_INVALIDATED
-     * carries enough context to attribute the image). Per guardrail #13 the
+     * carries enough context to attribute the image). Per guardrail #12 the
      * confirming csops read is NOT guessed here; when wired, gate the emit on it.
      * The in-window join below is sound and host-tested; it produces the finding
      * pending the confirmation gate. */

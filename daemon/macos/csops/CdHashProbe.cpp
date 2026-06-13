@@ -106,7 +106,7 @@ extern "C" bool HkCdHashProbeSample(const HkCsProbeTarget *target, HkCsFinding *
      * read is routed through hk_csops_pidcdhash_read() which is stubbed until
      * verified; and the DISK-side comparand requires SecCodeCopySigningInformation
      * + translocation/fat-slice resolution (plan Risk 6) which is ALSO unverified.
-     * Per guardrail #13 neither is guessed; the probe emits nothing until both are
+     * Per guardrail #12 neither is guessed; the probe emits nothing until both are
      * verified on real macOS 12/13/14/15 boxes.
      * (docs: SecCodeCopySigningInformation + kSecCodeInfoUnique/kSecCodeInfoCdHashes
      * ARE in the public SDK (Security/SecCode.h lines 332,455,461-463,501-502) —

@@ -36,7 +36,7 @@ uint32_t loader_consistency_run(uint64_t image_base, uint32_t size_of_image,
      * virtualization layers — path cosmetics are NOT the signal. The kernel
      * section-object half routes through the self-read seam, which is unavailable
      * today (platform_*.cpp), so this emits nothing rather than reporting a
-     * one-sided, spoofable PEB view. Left unimplemented per guardrail #13 until the
+     * one-sided, spoofable PEB view. Left unimplemented per guardrail #12 until the
      * per-OS loader walk + the kernel cross-check land. */
     return HK_SELF_FLAG_NONE;
 }

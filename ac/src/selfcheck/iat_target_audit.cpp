@@ -37,7 +37,7 @@ uint32_t iat_target_audit_run(uint64_t image_base, uint32_t import_dir_rva) {
      *                                 in_image, signed_, forwarder);
      *   if (f && f != HK_SELF_TGT_FORWARDER) emit hk_event_self_iat_target;
      * Scope the walk to HK_SELF_IMPCLASS_{NT,CRYPTO,FILE,ATTESTATION} only. Left
-     * unimplemented per guardrail #13 until the WinVerifyTrust signing backend +
+     * unimplemented per guardrail #12 until the WinVerifyTrust signing backend +
      * EAT-recompute path are confirmed; the server allow-lists overlay redirects. */
     return HK_SELF_FLAG_NONE;
 #else

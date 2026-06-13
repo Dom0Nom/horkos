@@ -16,7 +16,7 @@
  * CGEventGetIntegerValueField(kCGMouseEventSubtype) and kCGEventSourceStateID
  * RELIABLY distinguish hardware vs. CGEventPost-synthesized mouse motion across
  * macOS versions — and whether all synthetic paths set a stable, queryable source
- * state — is NOT something I am certain of (plan R4). Per guardrail #13 the bit is
+ * state — is NOT something I am certain of (plan R4). Per guardrail #12 the bit is
  * not relied upon here: the field-read shape is documented but no tap is wired, and
  * the macOS injected fraction is treated as best-effort, leaving the cross-platform
  * Windows/Linux 171 signals to carry the weight. Also gated by the same TCC grant

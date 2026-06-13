@@ -54,7 +54,7 @@ uint32_t retaddr_provenance_classify(uint32_t guarded_fn_id,
      * active (absence of CET MUST degrade to "shadow-stack check skipped", never a
      * fault — confirm the documented RDSSP availability path). Linux:
      * _Unwind_Backtrace + dl_iterate_phdr. macOS: backtrace()/__builtin_return_address
-     * + dladdr. Left unimplemented per guardrail #13 until the per-OS unwind +
+     * + dladdr. Left unimplemented per guardrail #12 until the per-OS unwind +
      * CET-availability contract is confirmed. */
     return HK_SELF_FLAG_RETADDR;
 }

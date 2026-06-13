@@ -104,7 +104,7 @@ extern "C" size_t HKTextScan(const HKGameTaskHandle *game,
      *      inside __TEXT and produces false positives (plan uncertainty #4),
      *   3. mach_vm_region_recurse's exact info struct / depth semantics for a
      *      foreign task.
-     * Per guardrail #13 the mach_vm_region_recurse loop and the csops(CS_OPS_
+     * Per guardrail #12 the mach_vm_region_recurse loop and the csops(CS_OPS_
      * STATUS) cross-check are NOT guessed. When un-stubbed, walk
      * [slid, slid+vmsize), and for any page with (info.protection & VM_PROT_WRITE)
      * or share_mode == SM_COW, emit hk_es_text_wx with the csops_valid result. */

@@ -3,7 +3,7 @@
  *       the userspace classifier (PrefixMapAudit.cpp) can decide off-tree /
  *       off-allowlist. Anonymous|memfd PROT_EXEC maps are tagged HK_PW_MAP_MEMFD
  *       in-kernel (cheap to know); the dist-tree/overlay-SO allowlist decision is
- *       userspace. The kernel stays allowlist-free (impl-plan §101).
+ *       userspace. The kernel stays allowlist-free by design.
  * Target platform: Linux eBPF (BPF_PROG_TYPE_LSM, lsm/mmap_file, kernel >= 5.7).
  * Interface: shares hk_ringbuf; emits HK_BPF_PW_FOREIGN_MAP -> HK_EVENT_FOREIGN_MAP.
  *            Audit-only: returns the inbound `ret` on every path.

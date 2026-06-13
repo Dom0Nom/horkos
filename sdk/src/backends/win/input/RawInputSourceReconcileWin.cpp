@@ -58,7 +58,7 @@ int sense_rawinput_reconcile(std::vector<hk_input_finding> &out)
      * which is integrated by the sibling win-input-automation SDK tick, not present in
      * this scaffolding TU. Until that stream is wired, this sensor classifies the
      * window-level facts it CAN resolve (remote-session gate) and leaves the per-event
-     * NULL/unknown-hDevice ratio to the join. Per guardrail #13 the live message-pump
+     * NULL/unknown-hDevice ratio to the join. Per guardrail #12 the live message-pump
      * join is left a stub; the on-box implementer feeds the WM_INPUT headers here.
      *
      * The classifier below is the testable decision core; the host unit test drives it

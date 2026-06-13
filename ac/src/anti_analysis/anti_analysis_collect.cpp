@@ -7,7 +7,7 @@
  *       sampler (HostToolFingerprint.cpp is compiled only on Windows), so
  *       `anti_analysis_sample_host_tools()` resolves on every target. SCAFFOLD:
  *       no live correlation logic (kernel handle-open / whitelist folding) yet —
- *       that lands under /tdd (guardrail #14).
+ *       that lands under /tdd (guardrail #13).
  * Target platforms: cross. The Windows-only host-tool fallback is HK_PLATFORM_*-
  *       gated (guardrail #1).
  * Interface: implements anti_analysis_collect_all() declared in

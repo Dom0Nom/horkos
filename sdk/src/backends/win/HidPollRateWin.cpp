@@ -31,7 +31,7 @@ int sense_hid_pollrate(const RawInputInventory& inv,
      * port/connection index, and the exact request layout is semi-documented and easy
      * to get subtly wrong across hub topologies (root hub vs external hub, composite
      * parents), and it does NOT apply to Bluetooth/virtual/composite devices. This is
-     * NOT verified on-box and must not be guessed (guardrail #13). Until the
+     * NOT verified on-box and must not be guessed (guardrail #12). Until the
      * topology-walk + IOCTL request shape are confirmed on a real box, declared_hz
      * stays 0 (unknown) and the server simply gets no contradiction feature — never a
      * false positive (plan R4).

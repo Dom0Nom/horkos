@@ -12,8 +12,8 @@
  *       in win/ConfigSpaceForensics.cpp, which may call into this arm).
  *
  * *** HK-UNCERTAIN(win-dmar-etw): the exact ETW PROVIDER GUID and EVENT ID for
- * DMA-remapping (IOMMU/DMAR) faults on Windows are NOT verified (impl-plan Risk #2),
- * and these events may not be surfaced at all on consumer SKUs. Per guardrail #13
+ * DMA-remapping (IOMMU/DMAR) faults on Windows are NOT verified, and these
+ * events may not be surfaced at all on consumer SKUs. Per guardrail #12
  * this arm is therefore left UNIMPLEMENTED: it does NOT open a real-time ETW session
  * against a guessed provider GUID. The functions below are the consumer surface
  * (start/stop + per-BDF count merge) that the real session plugs into once the

@@ -8,7 +8,7 @@
  *       keyed by OS build, and a lookup that returns NULL for any build NOT in
  *       the allow-list. The scan worker MUST treat a NULL table as "refuse to
  *       dereference layout-dependent fields" — i.e. it FAILS CLOSED on an unknown
- *       build rather than dereferencing a wrong offset (guardrail #13).
+ *       build rather than dereferencing a wrong offset (guardrail #12).
  *
  *       HK-VERIFIED (offsets): the allow-list now carries four builds (26100,
  *       26200, 22631, 19045) sourced from the Vergilius Project public PDB

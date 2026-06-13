@@ -1,7 +1,7 @@
 /*
  * Role: Implementation of the signal-101 foreign-SO map classifier declared in
  *       PrefixMapAudit.h. The off-tree / overlay-allowlist decision lives here
- *       (userspace), per the impl-plan split — the kernel stays allowlist-free.
+ *       (userspace) by design — the kernel stays allowlist-free.
  * Target platform: Linux userspace.
  * Interface: implements horkos::prefixmap.
  *

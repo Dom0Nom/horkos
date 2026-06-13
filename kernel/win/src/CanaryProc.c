@@ -15,7 +15,7 @@
  * interactive-session placement, and — critically — guaranteed teardown on driver
  * unload and on uninstall so no orphan guard process survives) all need on-box
  * verification. The plan itself marks the canary optional/experimental with "its own
- * attack surface and cleanup/uninstall implications". Per guardrail #13 this start
+ * attack surface and cleanup/uninstall implications". Per guardrail #12 this start
  * installs NOTHING and returns STATUS_NOT_SUPPORTED; the Ob-filter-on-the-guard-object
  * half is trivial once a real guard PEPROCESS exists, but a half-built spawn that
  * leaks a process is worse than an unimplemented feature. Do NOT spawn from the

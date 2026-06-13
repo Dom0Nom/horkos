@@ -4,10 +4,10 @@
  *       anti_analysis_signals.h) and the PURE, platform-free decision core that
  *       combines the three sampled observables into a confidence tier. The core
  *       takes already-sampled facts and returns the raw tier the sensor ships;
- *       it has NO platform API and NO I/O, so it is host-unit-tested
- *       (tests/unit/test_anti_analysis_logic.cpp) — the "factor the decision
- *       logic out of the sensor TU into a pure function" requirement (guardrail
- *       #14). The core does not decide a ban: client emits, server decides (and
+ *       it has NO platform API and NO I/O, so it is host-testable — the
+ *       "factor the decision logic out of the sensor TU into a pure function"
+ *       requirement (guardrail #14). The core does not decide a ban: client
+ *       emits, server decides (and
  *       may override the tier with its allowlists).
  * Target platforms: cross. The pure core compiles everywhere; the sampler body
  *       in InstrumentationResidency.cpp is HK_PLATFORM_*-gated internally

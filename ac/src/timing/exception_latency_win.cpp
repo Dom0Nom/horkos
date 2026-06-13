@@ -60,7 +60,7 @@ uint32_t bucket_of(uint64_t qpc_delta) {
  * the VEH must distinguish THIS decoy 0xCC from a real breakpoint, advance RIP past the
  * byte (or restore it), and continue — and the exact safe sequence (restore byte vs.
  * RIP+1, interaction with a present debugger that swallows the 0xCC) must be validated
- * on-box. Per guardrail #13 the actual execute-and-recover is NOT performed here; this
+ * on-box. Per guardrail #12 the actual execute-and-recover is NOT performed here; this
  * sampler measures the dispatch latency of the GUARD-PAGE decoy path (already armed and
  * proven by signal 154) as the round-trip proxy, and leaves the literal-0xCC variant as
  * a documented stub. The histogram it builds is real dispatch-latency data; the 0xCC

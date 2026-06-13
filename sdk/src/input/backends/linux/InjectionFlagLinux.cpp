@@ -18,7 +18,7 @@
  * uinput-created virtual device (ID_INPUT vs the absence of a USB/PCI parent vs a
  * BUS_VIRTUAL bustype) varies by distro / udev version (Steam Deck included). I am
  * NOT certain which single property reliably flags a virtual device across the
- * target distros. Per guardrail #13 (plan R6) the property is not guessed: the
+ * target distros. Per guardrail #12 (plan R6) the property is not guessed: the
  * live udev query shape is documented below but no enumeration is performed here,
  * and virtual_device_present is left at its 0 default until the property is
  * confirmed on-box. (Userspace, no BSOD/kernel risk — a detection-validity flag.)

@@ -43,7 +43,7 @@ struct hk_bpf_hwbp_event {
  * arch_install_hw_breakpoint vs a kprobe/fexit on perf_event_open with the
  * HW_BREAKPOINT_X bit set — and the CO-RE field path to bp_addr (struct
  * perf_event_attr.bp_addr) are version-sensitive and must be confirmed against the
- * target kernel BTF (Deck-class) before relying on them. Per guardrail #13 the real
+ * target kernel BTF (Deck-class) before relying on them. Per guardrail #12 the real
  * attach + bp_addr read are left as a documented stub; this raw_tracepoint body
  * compiles verifier-clean (no unrelocated reads) so -Werror still passes. The actual
  * install observation activates once the attach point + field path are confirmed.

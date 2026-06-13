@@ -29,7 +29,7 @@ namespace hk { namespace sdk { namespace vmaccess {
  * HandleValue, GrantedAccess, ObjectTypeIndex — has shifted across Windows
  * versions, and the call requires a grow-the-buffer retry loop on
  * STATUS_INFO_LENGTH_MISMATCH). Resolving Process-type entries also needs the live
- * Process ObjectTypeIndex, which is itself version-dependent. Per guardrail #13 this
+ * Process ObjectTypeIndex, which is itself version-dependent. Per guardrail #12 this
  * sampler is SCAFFOLD ONLY: the read + classify sequence is laid out and routed
  * through the pure holder_is_dangerous core, but the NtQuerySystemInformation call is
  * a documented stub rather than coded against unverified class numbers / struct

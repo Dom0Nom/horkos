@@ -1,7 +1,7 @@
 /*
  * Role: Implementation of the signal-100 WINEDLLOVERRIDES classifier declared in
  *       ProtonOverrideCheck.h. The manifest diff is here (userspace), per the
- *       impl-plan's split: the BPF side only hashes the offending token; this
+ *       by design: the BPF side only hashes the offending token; this
  *       holds the per-Proton override allowlist + builtin-only set and turns one
  *       override into the HK_PW_PROTON_* flag bitmask.
  * Target platform: Linux userspace.

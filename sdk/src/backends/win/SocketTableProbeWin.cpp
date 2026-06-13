@@ -11,7 +11,7 @@
  * Interface: implements `hk::net::probe_flow_owner` (Windows half) from
  *       `net_probes.h`. POSIX half: backends/posix/SocketTableProbePosix.cpp.
  *
- * Cannot be compiled on the macOS dev host; written against the impl-plan +
+ * Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 

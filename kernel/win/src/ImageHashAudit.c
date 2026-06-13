@@ -36,7 +36,7 @@ void HkImageHashAudit(PHK_DEVICE_CONTEXT Ctx, const HK_MODULE_MAP* Map)
      * CFG/retpoline rewrites BEFORE hashing is error-prone — a wrong normalization
      * produces a false TEXT_HASH_DELTA on a clean machine. The catalog says this
      * signal must NEVER auto-ban and must be validated against a clean-machine
-     * corpus first. Per guardrail #13 the normalization + hashing is left
+     * corpus first. Per guardrail #12 the normalization + hashing is left
      * UNIMPLEMENTED; this sensor ships DEFAULT OFF and report-only.
      *
      * The intended PASSIVE-only body (each step PASSIVE; file I/O is illegal at

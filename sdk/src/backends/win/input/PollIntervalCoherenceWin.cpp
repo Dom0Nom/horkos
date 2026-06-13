@@ -32,7 +32,7 @@ namespace {
  * snapshot uses. The token-correlation seam (hDevice <-> ContainerID) is not yet wired
  * (it needs the on-box raw-input <-> SetupAPI device-path join). Until that join lands,
  * this returns 0 (no observed rate), so compute_cadence_ceiling emits an inconclusive
- * feature rather than a fabricated ratio. Per guardrail #13 the join is left a stub;
+ * feature rather than a fabricated ratio. Per guardrail #12 the join is left a stub;
  * the on-box implementer connects the sibling cadence store here. */
 float ObservedRateHzForNode(const UsbNode &node)
 {

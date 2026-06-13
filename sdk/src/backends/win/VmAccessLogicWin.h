@@ -15,7 +15,7 @@
  * Target platforms: Windows (userspace) for the callers; the logic itself is
  *       platform-free and host-testable (mirrors RenderSensorWin.h / InputSensorWin.h).
  * Interface: consumed by PageProtectAuditWin.cpp and the kernel-side staging notes;
- *       the pure cores are exercised by tests/unit/test_vm_access_logic.cpp.
+ *       the pure cores are platform-free host logic.
  *
  * NOTE on the wire types: hk_event_vm_access / hk_event_protect_drift etc. are NOT
  * referenced here. This header is pure logic over plain integers, so it carries no
@@ -106,8 +106,8 @@ class StagingAssembler {
 public:
     /* window_ns: the tumbling-window span. A stage arriving past
      * window_start_ns + window_ns resets the per-PID progress (and, if it is an
-     * Alloc, opens a fresh window). Default 250ms per the plan's "short tumbling
-     * window"; the exact value is tuned with real captures. */
+     * Alloc, opens a fresh window). Default 250ms (short tumbling window);
+     * the exact value is tuned with real captures. */
     explicit StagingAssembler(uint64_t window_ns = 250ull * 1000ull * 1000ull)
         : window_ns_(window_ns) {}
 

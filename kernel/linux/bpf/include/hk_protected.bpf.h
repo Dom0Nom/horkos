@@ -3,8 +3,8 @@
  *       memory-access sensor (.bpf.c) includes this to read the pinned
  *       `hk_protected` BPF_MAP_TYPE_HASH and decide, in-kernel and as early
  *       as possible, whether the subject task is one of the protected game
- *       processes. This is the single structural gate (impl-plan §"protected-
- *       target gating") that keeps signals 74/75/76/79/80 from becoming
+ *       processes. This is the single structural gate (protected-target gating)
+ *       that keeps signals 74/75/76/79/80 from becoming
  *       unfilterable firehoses; without a populated map nothing fires.
  * Target platform: Linux eBPF only (BPF LSM / fentry / fexit / iterator
  *                  programs; included into kernel BPF TUs, never userspace).

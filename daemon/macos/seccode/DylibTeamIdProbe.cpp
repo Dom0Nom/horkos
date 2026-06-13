@@ -97,7 +97,7 @@ extern "C" bool HkDylibTeamIdProbeConsume(const HkEsObservation *obs, HkCsFindin
      *     dylibs) — a corpus dependency,
      *   - that the host is the GAME itself, not its launcher.
      * The es_event_mmap_t field availability of source-FD signing_id across ES
-     * message versions is also unverified. Per guardrail #13 these are not
+     * message versions is also unverified. Per guardrail #12 these are not
      * guessed; the pure classifier above is ready, but the orchestrator must
      * supply the verified host team-id + LV bit + allowlist hit before this
      * emits. Until then, classify and log only — emit nothing. */

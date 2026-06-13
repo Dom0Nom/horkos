@@ -18,7 +18,7 @@
  * aim device (the game's grabbed pointer) before draining it. That node-selection
  * + permission path is SDK/loader integration owned elsewhere and is not wired
  * here; the live read shape is documented below but no fd is opened. Per
- * guardrail #13 the access path is not guessed (plan R6); with no resolved node
+ * guardrail #12 the access path is not guessed (plan R6); with no resolved node
  * this drains nothing rather than fabricating reports.
  */
 

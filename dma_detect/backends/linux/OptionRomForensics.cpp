@@ -7,12 +7,12 @@
  * Target platforms: Linux only. Selected by CMake elseif(UNIX).
  * Implements: hk_dma_linux_fill_rom (consumed by ConfigSpaceForensics.cpp).
  *
- * SIDE-EFFECT CAUTION (impl-plan Risk #4): enabling ROM decode to read it is the
- * ONE non-pure-read probe in this domain. Mitigation enforced here: we only
- * enable+read+restore when NO driver owns the device (driver_bound == 0). If a
- * driver is bound, the ROM region may be in active use — we SKIP rather than
- * perturb it. The sysfs `rom` node also returns -EINVAL when the kernel has the
- * ROM shadowed/owned, which we treat as "skip", not "error".
+ * SIDE-EFFECT CAUTION: enabling ROM decode to read it is the ONE non-pure-read
+ * probe in this domain. Mitigation enforced here: we only enable+read+restore
+ * when NO driver owns the device (driver_bound == 0). If a driver is bound, the
+ * ROM region may be in active use — we SKIP rather than perturb it. The sysfs
+ * `rom` node also returns -EINVAL when the kernel has the ROM shadowed/owned,
+ * which we treat as "skip", not "error".
  */
 
 #include <cstdio>

@@ -53,7 +53,7 @@ extern "C" bool HkGatekeeperProbeSample(const HkCsProbeTarget *target, HkCsFindi
      * (SecAssessmentCopyResult with kSecAssessmentOperationTypeExecute, and
      * SecAssessmentTicketLookup for the stapled ticket) is a partially-SPI surface
      * whose linkable/entitled subset is unconfirmed across macOS versions (plan
-     * Risk 3). Per guardrail #13 those calls are NOT made here. A missing
+     * Risk 3). Per guardrail #12 those calls are NOT made here. A missing
      * quarantine xattr is FAR too weak to assert a bypass on its own (self-built /
      * Steam-managed / App-Store binaries legitimately lack it). Therefore this
      * probe does NOT emit on the xattr alone; the corroborating-only gate

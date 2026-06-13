@@ -157,9 +157,8 @@ bool timing_collect_kernel(timing_kernel_summary* out) noexcept;
 
 /* =========================================================================
  * Pure per-signal classifier cores. Inputs are already-sampled scalars/vectors;
- * NO platform API, NO I/O, so they are unit-tested host-side
- * (tests/unit/test_timing_logic.cpp). None decides a ban — they shape the raw
- * evidence the server FP-gates.
+ * NO platform API, NO I/O, so they are host-testable. None decides a ban —
+ * they shape the raw evidence the server FP-gates.
  * ========================================================================= */
 
 /* 156: clamp the watchdog/in-section divergence to a percent (0..1000). Returns

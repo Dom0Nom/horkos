@@ -50,7 +50,7 @@ bool csr_active_config(uint32_t *out_config) {
      * are PRIVATE SPI (plan Risk 2). Their availability, exact signature, and the
      * CSR flag bit layout are not in a public header and have changed across
      * macOS versions (notably on Apple Silicon, where SIP is expressed
-     * differently). Per guardrail #13 we do NOT declare the SPI symbol and call it
+     * differently). Per guardrail #12 we do NOT declare the SPI symbol and call it
      * on a guessed signature, and we do NOT hardcode a guessed CSR bit layout.
      * This returns "unavailable" until the SPI contract is confirmed against the
      * target SDK on each OS version; signal 124 therefore ships report-only and

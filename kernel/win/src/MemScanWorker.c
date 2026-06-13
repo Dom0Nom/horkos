@@ -159,7 +159,7 @@ static void HkScanOneTarget(const HK_MEM_SCAN_TARGET* target)
     if (!NT_SUCCESS(status) || proc == NULL) {
         return;
     }
-    /* Skip processes that are exiting — VAD/loader teardown races (guardrail #13,
+    /* Skip processes that are exiting — VAD/loader teardown races (guardrail #12,
      * the plan's mandate). PsGetProcessExitProcessCalled is documented. */
     if (PsGetProcessExitProcessCalled(proc)) {
         ObDereferenceObject(proc);

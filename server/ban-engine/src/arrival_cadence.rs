@@ -133,7 +133,7 @@ pub struct CadenceParams {
 
 impl Default for CadenceParams {
     fn default() -> Self {
-        // Placeholders only (guardrail #14): the live values are signed-rule
+        // Placeholders only (guardrail #13): the live values are signed-rule
         // parameters. Chosen conservatively so the scaffold's own tests exercise
         // the structural math, NOT to convict in production.
         CadenceParams {
@@ -169,7 +169,7 @@ impl CadenceParams {
 }
 
 /// Typed observation emitted by the detector. A FEATURE for the server scoring
-/// path, NOT a ban verdict (guardrail #14 — verdicts ride the signed enforcement
+/// path, NOT a ban verdict (guardrail #13 — verdicts ride the signed enforcement
 /// path). `conserved_repeats` is how many gap-then-burst pairs in the window
 /// conserved their gap within tolerance; `worst_conservation` is the closest
 /// observed ratio to the ideal 1.0 (informational).

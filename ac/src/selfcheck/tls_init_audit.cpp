@@ -32,7 +32,7 @@ uint32_t tls_init_audit_run(uint64_t image_base, uint32_t tls_dir_rva) {
      * (tls_table_tampered) is wired and tested: given {live_count, disk_count, the
      * rebased pointer arrays, and a per-entry in-text flag} it returns whether the
      * table was tampered. FP gate: suppress on instrumented/sanitizer build flavors
-     * reported via attestation (server-side). Left unimplemented per guardrail #13
+     * reported via attestation (server-side). Left unimplemented per guardrail #12
      * until the per-OS table walk + rebase math are confirmed; the disk baseline it
      * compares against is itself pending (image_baseline.cpp). */
     return HK_SELF_FLAG_NONE;

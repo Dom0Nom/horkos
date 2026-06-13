@@ -3,9 +3,8 @@
  *       (ModuleMap.c, shared by integrity signals 29/31/32/34/35). The kernel TU
  *       builds the map from ZwQuerySystemInformation(SystemModuleInformation);
  *       the *lookup* (is address A inside any [base,base+size) range, and which
- *       one) is pure arithmetic factored here so it is unit-testable on the host
- *       build (tests/unit/test_module_map_resolve.cpp) without a WDK — the plan's
- *       "ModuleMap resolve logic unit-tested host-side" requirement. Contains NO
+ *       one) is pure arithmetic factored here so it is host-buildable without a
+ *       WDK. Contains NO
  *       kernel/Win32 API: plain C99, includes only <stdint.h>/<stddef.h>, so it
  *       is includable from a kernel C TU and a host C++ TU alike (never the same
  *       TU — guardrail #4; header-only inline helpers, not a shared object file).

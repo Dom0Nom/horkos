@@ -16,8 +16,8 @@
  *   #4  Pure kernel TU — no userspace headers.
  *   #5  Only safe string helpers (scnprintf); every kernel return is checked.
  *   #6  -Wall -Wextra -Werror via the Makefile ccflags-y.
- *   #13 The struct-module field reads + list locking are FLAGGED UNCERTAIN (§7-B)
- *       and are NOT guessed — see the HK-UNCERTAIN block in the seq show().
+ *   #13 The struct-module field reads + list locking are FLAGGED UNCERTAIN
+ *       (kernel-version-dependent) and are NOT guessed — see the HK-UNCERTAIN block in the seq show().
  */
 
 #include <linux/module.h>
@@ -37,7 +37,7 @@ static struct dentry *g_crc_file;
  * The seq_file iterator over the module list.
  *
  * HK-UNCERTAIN(module-list-walk-95): walking the kernel module list and reading
- * per-module identity fields is the FLAGGED §7-B item. Specifically UNVERIFIED on
+ * per-module identity fields. Specifically UNVERIFIED on
  * the target kernel(s):
  *   1. LOCKING. The module list must be walked under the correct discipline.
  *      `module_mutex` is NOT exported to out-of-tree modules on modern kernels,
@@ -54,14 +54,14 @@ static struct dentry *g_crc_file;
  *      /sys/module/<m>/notes (which ModuleDiskDrift.cpp already reads) but not
  *      cleanly to in-kernel module code.
  *
- * Per guardrail #13 (a BSOD/oops is worse than an unfinished function) this show()
+ * Per guardrail #12 (a BSOD/oops is worse than an unfinished function) this show()
  * does NOT guess any of the above. It emits a single honest header line so the
  * debugfs surface, the seq_file plumbing, the registration/teardown, and the
  * userspace reader path are all real and testable, while the actual per-module
  * field reads remain unimplemented pending on-box verification of the locking +
  * field layout for the target kernel. ModuleDiskDrift.cpp's build-id half (via
- * sysfs) fully covers substitution detection in the meantime (§7-B fallback:
- * "ship build-id-only").
+ * sysfs) fully covers substitution detection in the meantime (build-id-only
+ * fallback by design).
  */
 static int horkos_module_crcs_show(struct seq_file *m, void *v)
 {
@@ -70,7 +70,7 @@ static int horkos_module_crcs_show(struct seq_file *m, void *v)
 	seq_puts(m,
 		 "# horkos module_crcs (read-only). Per-module in-memory CRC export is\n"
 		 "# UNIMPLEMENTED pending on-box verification of struct module layout +\n"
-		 "# module-list locking (impl-plan 7-B). Build-id substitution detection\n"
+		 "# module-list locking. Build-id substitution detection\n"
 		 "# is provided by the userspace sysfs/.ko half (ModuleDiskDrift).\n");
 	return 0;
 }

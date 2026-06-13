@@ -2,8 +2,8 @@
  * Role: Pure, platform-free decision helpers for the process-genealogy client
  *       sensors (signals 199, 203). The reparent test (true creator vs inherited
  *       parent) and the token-integrity delta are structural comparisons with no
- *       OS dependency, factored here so they are host-unit-tested
- *       (tests/unit/test_genealogy_logic.cpp) and shared identically by the kernel
+ *       OS dependency, factored here so they are host-testable and shared
+ *       identically by the kernel
  *       sensor (proc_genealogy.c, signal 199) and the userspace token sensor
  *       (token_check.cpp, signal 203). These produce RAW observations; all FP
  *       gating (signed-launcher pairs, per-launcher baseline integrity) is

@@ -7,7 +7,7 @@
  *       expected-difference bytes, then reports the first remaining mismatch RVA
  *       (or "clean") — so a benign relocated+bound module diffs clean while a
  *       single stomped code byte is caught. Pure byte math, no kernel/Win32 API,
- *       unit-tested host-side (tests/unit/test_mem_stomp_logic.cpp) without a WDK.
+ *       pure host logic, no WDK needed.
  *       The kernel sampler (ModuleStomp.c) maps the on-disk backing read-only and
  *       reads the live mapping read-only; it ships the RAW first-diff RVA + both
  *       section hashes — NEVER a verdict (FP risk is high: hotpatch, Detours,

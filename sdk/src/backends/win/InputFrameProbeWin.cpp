@@ -10,7 +10,7 @@
  * Target platforms: Windows.
  * Interface: implements `hk::net::probe_input_frames` (185) from `net_probes.h`.
  *
- * Cannot be compiled on the macOS dev host; written against the impl-plan +
+ * Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 

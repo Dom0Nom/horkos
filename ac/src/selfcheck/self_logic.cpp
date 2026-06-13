@@ -3,12 +3,11 @@
  *       (memory-integrity-selfcheck, catalog signals 145-153). These take already-
  *       sampled inputs (the three cross-view hashes, resolved IAT/GOT slots, DR
  *       reads, VEH ordering, TLS/init tables) and return the raw classification the
- *       sensor ships as evidence. NO platform API, NO I/O — so they are unit-tested
- *       host-side (tests/unit/test_selfcheck_logic.cpp), which is the plan's "factor
- *       the divergence/attribution logic out of the sensor TUs into pure functions"
- *       requirement (guardrail #14). None of these decides a ban: the client emits,
- *       the server decides.
- * Target platforms: all (compiled into hk_ac and the host unit-test target).
+ *       sensor ships as evidence. NO platform API, NO I/O — so they are
+ *       host-testable, satisfying the "factor the divergence/attribution logic out
+ *       of the sensor TUs into pure functions" requirement (guardrail #13). None of
+ *       these decides a ban: the client emits, the server decides.
+ * Target platforms: all (compiled into hk_ac).
  * Interface: implements the pure cores declared in ac/include/horkos/selfcheck.h.
  */
 

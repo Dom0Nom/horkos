@@ -11,10 +11,9 @@
  *
  * Build gating: the whole probe channel is compiled only under HK_NET_PROBE_CHANNEL
  * (default OFF in sdk/CMakeLists.txt). It opens an EXTRA socket and REQUIRES a
- * server-side UDP echo responder that does not yet exist (impl-plan Sequencing §6 /
- * Risks: Dependency 187). With the flag OFF this TU still compiles and links — it
- * returns the empty/no-data divergence result so the aggregator and the bypass test
- * build everywhere — but performs NO network I/O.
+ * server-side UDP echo responder that does not yet exist. With the flag OFF this TU
+ * still compiles and links — it returns the empty/no-data divergence result so the
+ * aggregator builds everywhere — but performs NO network I/O.
  */
 
 #include "horkos/net_timing.h"
@@ -70,8 +69,8 @@ hk_net_rtt_divergence probe_rtt_divergence(void)
     }
 
     /* HK-UNCERTAIN(probe-echo): the paired server-side UDP echo responder does not
-     * yet exist (impl-plan Risks: Dependency 187). backend_probe_* therefore
-     * report no-data on every platform today; this code path is exercised only so
+     * yet exist. backend_probe_* therefore report no-data on every platform today;
+     * this code path is exercised only so
      * the live wiring drops in without a structural change once the server echo
      * milestone lands. Until then probe_rtt_us stays 0 (no-data), never a
      * fabricated divergence. */

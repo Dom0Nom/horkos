@@ -116,7 +116,7 @@ bool build_usb_topology(UsbTopology &out)
      * handle-share semantics MUST be verified on the Phase-3 Win11 25H2 box before
      * relying on the hub-IOCTL path; if blocked, the fallback is
      * SetupDiGetDeviceProperty / cfgmgr32 (DEVPKEY_Device_*) for the subset of fields
-     * exposed there. Per guardrail #13 the live hub-IOCTL walk is NOT written here —
+     * exposed there. Per guardrail #12 the live hub-IOCTL walk is NOT written here —
      * the scaffold below enumerates the hub interface set and leaves the per-node
      * descriptor IOCTL exchange as the documented stub. Until verified, every node is
      * reported HK_DAUD_INCONCLUSIVE / query_failed so no sensor fabricates an anomaly

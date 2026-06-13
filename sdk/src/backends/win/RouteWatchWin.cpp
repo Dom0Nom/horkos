@@ -6,14 +6,14 @@
  *       positive is specifically (path identity changed) AND (no notification
  *       fired) — benign reroutes go through the OS stack and DO fire. The callbacks
  *       run on an OS worker thread, so the snapshot store is mutex-guarded and the
- *       callback never blocks (impl-plan Mechanism note — a THREADING concern, not
- *       an IRQL one; usermode, no kernel TU). All Win32 API confined to this
+ *       callback never blocks (a THREADING concern, not an IRQL one; usermode,
+ *       no kernel TU). All Win32 API confined to this
  *       backends/win/ TU (guardrail #1).
  * Target platforms: Windows.
  * Interface: implements `hk::net::probe_route_integrity` (Windows half) from
  *       `net_probes.h`. POSIX half: backends/posix/RouteWatchPosix.cpp.
  *
- * Cannot be compiled on the macOS dev host; written against the impl-plan +
+ * Cannot be compiled on the macOS dev host; written against
  * sibling backends/win sources.
  */
 
@@ -54,7 +54,7 @@ uint64_t fnv1a(const uint8_t* data, unsigned len, uint64_t seed)
 }
 
 /* OS-worker-thread callbacks. They do the MINIMUM — flip a guarded flag — and
- * return immediately (no blocking in the callback, impl-plan note). */
+ * return immediately (no blocking allowed in an OS-worker callback). */
 VOID CALLBACK on_route_change(PVOID, PMIB_IPFORWARD_ROW2, MIB_NOTIFICATION_TYPE)
 {
     std::lock_guard<std::mutex> lk(g_mtx);

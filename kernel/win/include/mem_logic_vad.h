@@ -3,10 +3,9 @@
  *       (unbacked executable region), 14 (oversized private executable commit),
  *       and 15 (exotic VadType / large-page executable). Each is structural
  *       arithmetic over an already-normalized HK_VAD_NODE; no kernel/Win32 API,
- *       so the decision logic is unit-tested on the host build
- *       (tests/unit/test_mem_vad_logic.cpp) without a WDK — the plan's "factor
- *       the FP-free decision logic out of the kernel TUs into pure functions"
- *       requirement. The kernel sampler (MemScanVad.c) feeds these the nodes from
+ *       so the decision logic is pure host-buildable without a WDK — the
+ *       "factor the FP-free decision logic out of the kernel TUs into pure
+ *       functions" pattern. The kernel sampler (MemScanVad.c) feeds these the nodes from
  *       VadWalk.c and emits the raw classification; NONE of these decide a ban —
  *       the client emits, the server fuses and decides.
  *       READ-ONLY: classifies observed state; mutates nothing.

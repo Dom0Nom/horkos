@@ -28,8 +28,7 @@
  * LIVE consumer surface below is a STUB: start() reports the session cannot be
  * opened without PPL/ELAM, and the real StartTrace/OpenTrace/ProcessTrace
  * plumbing is intentionally NOT written here. The correlation core IS implemented
- * and testable via replayed traces (the bypass tests under
- * bypass-tests/win/thread_origin/), which is the sanctioned bring-up path.
+ * and testable via replayed traces, which is the sanctioned bring-up path.
  * ============================================================================
  */
 
@@ -130,8 +129,8 @@ bool InjectCorrelator::feed(const TiEvent &ev, InjectChain &out)
         e->flags |= FLAG_OVERLAY;
     }
 
-    /* "Ready" once >=2 distinct stages fired for this TID (per the plan's
-     * threshold). Popcount of the three chain bits. Emit exactly once. */
+    /* "Ready" once >=2 distinct stages fired for this TID.
+     * Popcount of the three chain bits. Emit exactly once. */
     uint32_t stageBits = e->chain_flags & (CHAIN_ALLOCVM | CHAIN_SETCTX | CHAIN_RESUME);
     int stages = 0;
     for (uint32_t b = stageBits; b != 0; b &= (b - 1)) {
@@ -164,7 +163,7 @@ int start()
     /* HK-VERIFIED(etw-ti): see file header. PPL/ELAM cert requirement is fully
      * documented. Without the cert + PPL launch, StartTrace/OpenTrace on this
      * protected provider fails with access-denied. Production plumbing intentionally
-     * not written here; dev/test uses replayed traces in the bypass tests.
+     * not written here; dev/test uses replayed traces.
      * Returning -1 keeps the SDK in the documented "ETW-TI unavailable" mode. */
     return -1;
 }

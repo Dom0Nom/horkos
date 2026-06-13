@@ -13,7 +13,7 @@
 //!     audit record carries the exculpatory evidence) rather than failing the
 //!     whole call — one buggy analyzer must not blind the other eight.
 //!   - All thresholds/weights are conservative hand-set priors pending the
-//!     signed-rule bundle (guardrail #14; same posture as `loader_inject.rs`).
+//!     signed-rule bundle (guardrail #13; same posture as `loader_inject.rs`).
 //!     `FusionParams` is shaped like `CadenceParams` (struct + `validate()`)
 //!     so it is already the signed-bundle deserialization target.
 //!
@@ -32,7 +32,7 @@ use crate::error::BanEngineError;
 /// alongside the gamestate analyzers.
 pub const SIGNAL_ARRIVAL_CADENCE: u16 = 186;
 
-/// Fusion thresholds and weights. Conservative hand-set priors (guardrail #14):
+/// Fusion thresholds and weights. Conservative hand-set priors (guardrail #13):
 /// the live values arrive as a SIGNED rule through `crate::bundle`; these
 /// defaults preserve the catalog FP posture for the scaffold's own tests.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]

@@ -106,7 +106,7 @@ extern "C" bool HkDynamicValidityProbeSample(const HkCsProbeTarget *target,
      *   2. the exact transient-failure taxonomy (errSecCSGuestInvalid /
      *      errSecCSVmwMapping vs a real tamper) so a JIT region is not miscounted,
      *   3. SecCodeCopyGuestWithAttributes pid-attribute semantics on macOS 12-15.
-     * Per guardrail #13 these Security.framework calls are NOT guessed.
+     * Per guardrail #12 these Security.framework calls are NOT guessed.
      * (docs: SecCodeCopyGuestWithAttributes, SecCodeCheckValidity, and
      * kSecCSEnforceRevocation ARE all in the public SDK (Security/SecCode.h:135,
      * 217, 237). SecRequirementCreateWithString is in SecRequirement.h. The DR

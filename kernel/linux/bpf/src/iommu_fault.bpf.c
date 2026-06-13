@@ -22,7 +22,7 @@
  *   #4  Pure kernel eBPF TU — no userspace headers, no shared TU.
  *   #6  Compiled -Wall -Wextra -Werror (enforced in CMakeLists.txt).
  *
- * UNCERTAINTY (impl-plan Risk #3 / guardrail #13): the `iommu:io_page_fault`
+ * UNCERTAINTY (kernel-version-dependent; guardrail #12): the `iommu:io_page_fault`
  * tracepoint NAME and its FIELD LAYOUT have changed across kernel versions, and the
  * `report_iommu_fault` kprobe-fallback SIGNATURE is version-sensitive. ALL kernel-
  * struct field access here goes through BPF_CORE_READ / the CO-RE-relocated raw
@@ -167,7 +167,7 @@ int hk_tp_io_page_fault(void *ctx)
  * are NOT confirmed on the target BTF: the per-arch register calling-convention
  * mapping of each parameter to PT_REGS_PARM1/2/... must be verified against the
  * target kernel BTF before enabling this arm. The program body remains
- * intentionally empty per guardrail #13. The tracepoint arm above is the
+ * intentionally empty per guardrail #12. The tracepoint arm above is the
  * shippable path; this kprobe arm is a loader-enabled fallback for kernels that
  * do NOT export the tracepoint.
  */

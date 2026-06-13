@@ -21,7 +21,7 @@ Phase 2 (`phase-2-server`) is complete. Phase 3 starts after that PR merges.
 
 ### Snapshot-ready VM
 All kernel work happens in a snapshot-ready Windows VM. Before any IRQL-sensitive
-code change, take a snapshot. CLAUDE.md guardrail #13 applies: when uncertain
+code change, take a snapshot. CLAUDE.md guardrail #12 applies: when uncertain
 about a kernel API, stop and flag.
 
 ### Split decision

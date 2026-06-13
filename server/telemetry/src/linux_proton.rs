@@ -26,7 +26,7 @@
 //! with the Windows vm_access / kernel-event domains' provisional discriminants — the
 //! Schema phase assigns the final distinct values; this decoder must be dispatched by
 //! the resolved type, not by the provisional value, once Schema lands. The payload
-//! field layouts/sizes are pinned here against the impl-plan's documented byte counts
+//! field layouts/sizes are pinned here against the documented byte counts
 //! (24/32/40/32/32/24/24/40/24) so a future schema header diff is caught.
 
 use thiserror::Error;
@@ -157,7 +157,7 @@ fn read_u64(buf: &[u8], off: usize, what: &'static str) -> Result<u64, LinuxProt
 
 // ---------------------------------------------------------------------------
 // `#[repr(C)]` mirrors of the wire payloads. Field names/sizes track the
-// impl-plan's pinned layout exactly (24/32/40/32/32/24/24/40/24).
+// pinned layout exactly (24/32/40/32/32/24/24/40/24).
 // ---------------------------------------------------------------------------
 
 /// Mirror of `hk_event_proton_override` (24 bytes). (100)
@@ -400,7 +400,7 @@ pub enum LinuxProtonEvent {
 
 /// Decode one payload buffer given its wire event type. Unknown types yield a typed
 /// error; the caller degrades unknown types gracefully (this lets the decoder be used
-/// standalone in tests and in the bypass-test replay path).
+/// standalone in tests).
 pub fn decode_event(event_type: u32, payload: &[u8]) -> Result<LinuxProtonEvent, LinuxProtonError> {
     match event_type {
         HK_EVENT_PROTON_OVERRIDE => Ok(LinuxProtonEvent::ProtonOverride(ProtonOverride::decode(

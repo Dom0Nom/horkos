@@ -7,7 +7,7 @@
  *       is includable from a kernel TU and a userspace TU alike (never the
  *       same TU — guardrail #4).
  * Interface: kernel/win/src/IrpDispatch.c handles each code; the SDK
- *       (sdk/src/sdk.cpp) and tests/integration/win/ioctl_smoke.cpp issue them.
+ *       (sdk/src/sdk.cpp) issues them.
  *
  * Wire-format note: every field is a fixed-width <stdint.h> type. The Windows
  * CTL_CODE macro is reproduced here verbatim from the public WDK definition so

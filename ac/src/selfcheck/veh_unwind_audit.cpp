@@ -33,7 +33,7 @@ uint32_t veh_unwind_audit_run(uint64_t image_base, uint32_t exception_dir_rva) {
      * re-parse IMAGE_DIRECTORY_ENTRY_EXCEPTION via RtlLookupFunctionEntry per critical
      * function and compare against the on-disk RUNTIME_FUNCTION array. The raw-list
      * traversal (LdrpVectorHandlerList / RtlpCalloutEntryList) is UNDOCUMENTED and is
-     * NOT used (guardrail #13). FP gate (CLR/CEF/Crashpad/ASAN): assert only that OUR
+     * NOT used (guardrail #12). FP gate (CLR/CEF/Crashpad/ASAN): assert only that OUR
      * critical-fn unwind entries are unmodified and no foreign handler is ordered
      * ahead — not the mere presence of other handlers. Left unimplemented until the
      * documented ordering-validation path is confirmed on-box. */

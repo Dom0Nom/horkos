@@ -36,7 +36,7 @@ int sense_gdi_pressure(std::vector<hk_render_finding>& out)
      * count alone is shared by many legitimate capture/compositing tools, so
      * emitting it standalone would be noise. Left wired but inert: the multi-tick
      * churn correlation + the server-side fusion weight land with the scoring path
-     * (guardrail #14, /tdd). */
+     * (guardrail #13, /tdd). */
     (void)out;
     return 0;
 }

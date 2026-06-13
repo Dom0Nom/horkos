@@ -96,7 +96,7 @@ static BOOLEAN HkIsProtectedKey(_In_opt_ PCUNICODE_STRING Path)
  * (learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sequeryinformationtoken);
  * PsReferencePrimaryToken and ObDereferenceObject are also documented. However, their
  * IRQL requirements and token reference lifetime in a Cm callback context must be
- * confirmed on-box. Per guardrail #13 the precise token check is NOT implemented here;
+ * confirmed on-box. Per guardrail #12 the precise token check is NOT implemented here;
  * we approximate with PID == 4 (System) only, which is a strict subset (no false "is
  * system"). The writer_is_system field therefore UNDER-counts system writers (fails
  * toward HIGH weight), which is the safe direction for an observe-only sensor.

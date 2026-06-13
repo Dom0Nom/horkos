@@ -30,7 +30,7 @@ NTSYSAPI PVOID NTAPI RtlPcToFileHeader(_In_ PVOID PcValue, _Out_ PVOID* BaseOfIm
 /* Minimal PE header projection: we only need SizeOfImage from the optional
  * header. The full headers are in ntimage.h on the WDK; we read the field through
  * the documented IMAGE_* layout, guarded by __try because a tampered/paged header
- * read must not bugcheck (guardrail #13). Offsets are the stable, documented PE
+ * read must not bugcheck (guardrail #12). Offsets are the stable, documented PE
  * layout (e_lfanew at 0x3C; OptionalHeader.SizeOfImage). */
 static NTSTATUS HkReadImageSize(_In_ PVOID base, _Out_ uint64_t* sizeOut)
 {

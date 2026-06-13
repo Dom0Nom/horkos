@@ -9,8 +9,8 @@
  * Interface: declares the entry points the horkosd poll loop calls; implemented by
  *       IOHIDTransportAuditMac.mm + PointerDeltaStatsMac.mm. Runs in the USERSPACE
  *       daemon, NOT the ES auth path — there is no ES event to reply to here, so
- *       guardrail #7's reply-deadline does not apply (impl-plan §141). Findings ride
- *       the device-trust JSON plane (device_trust_schema.h).
+ *       guardrail #7's reply-deadline does not apply. Findings ride the device-trust
+ *       JSON plane (device_trust_schema.h).
  */
 
 #pragma once
@@ -34,7 +34,7 @@ struct IOHidTransportInput {
 
 /* Pure transport classifier. Conservative: a failed query or a device whose physical-
  * unique-id is simply absent is INCONCLUSIVE, never a synthetic-device signal
- * (impl-plan Risks §141 — key availability varies by device/macOS version). A USB/BT
+ * (key availability varies by device/macOS version). A USB/BT
  * transport WITH a location id is a real endpoint (benign); an IOHIDUserDevice/
  * DriverKit-virtual provider with no location id is the virtual-HID shape, reported
  * with HK_DAUD_NO_USB_PARENT + the providing dext bundle id (server allowlists

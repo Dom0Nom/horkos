@@ -13,7 +13,7 @@
  * walk itself (path matching ntdll.so/kernelbase.so/win32u.so, stat for dev:ino,
  * SHA256 of the backing file) is a straightforward proc parse but is NOT
  * implemented in this scaffolding pass — it depends on the per-Proton-version
- * dist manifest being produced (a data dependency flagged in the impl-plan Risks).
+ * dist manifest being produced (a data dependency not yet resolved).
  * The classifier here is the testable decision core; the maps-walk seam feeds it
  * ObservedVma rows. Wire the live walk when the manifest tooling lands.
  * (docs: /proc/pid/maps format and PTRACE_MODE_READ access confirmed in

@@ -15,7 +15,7 @@
  *   #4  Pure kernel eBPF TU — no userspace headers; the wire struct lives separately.
  *   #6  Compiled -Wall -Wextra -Werror (CMakeLists.txt).
  *   #13 The parent-chain usb_device walk and the creator-PID context are FLAGGED
- *       UNCERTAIN by the impl-plan (Risks §140) and are left as documented stubs
+ *       UNCERTAIN (kernel-version-dependent) and are left as documented stubs
  *       below — a wrong CO-RE read is a verifier reject or a bad signal; the on-box
  *       implementer confirms the chain on the target (Steam Deck) kernel BTF first.
  *
@@ -27,7 +27,7 @@
  * BPF-LSM / attach PREREQUISITE (document, do not assume): this program attaches a
  * kprobe on input_register_device. Whether that symbol is the stable, non-inlined
  * attach point for capturing the uinput creator on the target kernel is UNCERTAIN
- * (impl-plan Risks §140) — confirm via /sys/kernel/debug/tracing/available_filter_
+ * (kernel-version-dependent) — confirm via /sys/kernel/debug/tracing/available_filter_
  * functions or BTF before relying on creator-PID attribution.
  */
 
@@ -96,11 +96,11 @@ int BPF_KPROBE(hk_kp_input_register, struct input_dev *dev)
     evt->evbit_rel_key  = evbits;
 
     /*
-     * HK-UNCERTAIN(creator-pid): the impl-plan's FP gate (the entire Steam-Input
-     * allowlist) depends on creator_pid being the PID that created the uinput device.
+     * HK-UNCERTAIN(creator-pid): the FP gate (the entire Steam-Input allowlist)
+     * depends on creator_pid being the PID that created the uinput device.
      * Whether bpf_get_current_pid_tgid() in the input_register_device context is the
      * CREATOR (the process that issued UI_DEV_CREATE) vs a kernel worker thread is NOT
-     * verified across kernels (impl-plan Risks §140). Per guardrail #13 we do NOT
+     * verified across kernels (kernel-version-dependent). Per guardrail #12 we do NOT
      * assert it here: creator_pid is set to the current tgid as a CANDIDATE only, and
      * the userspace half re-validates it against /proc and the uinput fd owner before
      * trusting it. If the on-box check shows this context is a worker, the userspace
@@ -113,8 +113,8 @@ int BPF_KPROBE(hk_kp_input_register, struct input_dev *dev)
      * input_dev->dev.parent up the device tree to a usb_device, comparing
      * dev->bus == &usb_bus_type (or the device-type name) CO-RE-relocatably. The
      * pointer chain + struct shapes may not be CO-RE-relocatable on every target
-     * (impl-plan Risks §140 flags the Deck kernel specifically), and a wrong read is a
-     * verifier reject or a bad signal. Per guardrail #13 the walk is NOT written: we
+     * (kernel-version-dependent; the Deck kernel specifically is unconfirmed), and a wrong read is a
+     * verifier reject or a bad signal. Per guardrail #12 the walk is NOT written: we
      * report has_usb_parent = 0 (unknown) and the userspace half derives the USB-parent
      * fact from EVIOCGPHYS / sysfs (/sys/class/input/eventN/device/.. parent), which is
      * stable. The server treats 0 here as "unknown", never "no USB parent".

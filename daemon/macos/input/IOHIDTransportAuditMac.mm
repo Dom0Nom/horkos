@@ -7,7 +7,7 @@
  *       Reports the transport + (when virtual) the providing dext bundle id for
  *       server-side allowlisting (Karabiner, BetterTouchTool, remote-control apps
  *       create legitimate virtual HID). Runs in the userspace daemon, NOT the ES auth
- *       path — no ES reply deadline applies (impl-plan §141).
+ *       path — no ES reply deadline applies.
  * Target platforms: macOS (userspace daemon). Built ON for the bring-up path; no
  *       entitlement needed (IOHIDManager is userspace).
  * Interface: implements hk::daemon::mac::sense_iohid_transport from
@@ -119,7 +119,7 @@ int sense_iohid_transport(std::vector<hk_device_descriptor_audit> &out)
             facts.transport_bluetooth =
                 StrPropEquals(dev, CFSTR(kIOHIDTransportKey), "Bluetooth");
             /* kIOHIDPhysicalDeviceUniqueIDKey availability varies by device/macOS
-             * version (impl-plan Risks §141): treat absence as inconclusive. */
+             * version: treat absence as inconclusive. */
             facts.unique_id_missing =
                 IOHIDDeviceGetProperty(dev, CFSTR(kIOHIDPhysicalDeviceUniqueIDKey)) ==
                 nullptr;
@@ -157,9 +157,9 @@ int sense_iohid_transport(std::vector<hk_device_descriptor_audit> &out)
             /* HK-UNCERTAIN(dext-bundle-id): the providing dext/driver bundle id (for the
              * server allowlist pairing with the ES exec record of the dext loader) comes
              * from an IORegistry provider walk (IOHIDDeviceGetService -> parent ->
-             * kCFBundleIdentifierKey). That walk is the on-box-verified path (impl-plan
-             * §141 pairs it with the ES exec record server-side, not in this poll); per
-             * guardrail #13 it is left for the on-box implementer. The transport + virtual
+             * kCFBundleIdentifierKey). That walk is the on-box-verified path (bundle id
+             * is paired with the ES exec record server-side, not in this poll); per
+             * guardrail #12 it is left for the on-box implementer. The transport + virtual
              * shape are reported now; the bundle id is correlated server-side. */
             rec.creator_pid = 0;
             out.push_back(rec);

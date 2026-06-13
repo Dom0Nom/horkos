@@ -128,7 +128,7 @@ pub struct TickPayload {
     // `server/api/data-categories.md` §3 (Telemetry stream) in the same PR.
     // The Schema phase owns `data-categories.md`; that table currently lists
     // only the v1 fields, so the §3 rows for the v2 aim-feature groups below
-    // (sourcing/retention/legal-basis per the impl-plan §2.4 table) must be
+    // (sourcing/retention/legal-basis) must be
     // added by the Schema-phase owner before merge — this domain does not edit
     // `data-categories.md`.
     // ---------------------------------------------------------------------

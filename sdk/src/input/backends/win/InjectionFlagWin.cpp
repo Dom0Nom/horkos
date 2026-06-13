@@ -17,7 +17,7 @@
  * which Windows SILENTLY REMOVES the hook and may stop calling it. I am NOT certain
  * of the exact current-OS timeout semantics, nor whether a timed-out hook is
  * re-armed automatically or simply dropped (and thus whether a re-install watchdog
- * is required). Per guardrail #13 this is NOT guessed: the hook INSTALL and the
+ * is required). Per guardrail #12 this is NOT guessed: the hook INSTALL and the
  * re-arm watchdog are left unimplemented below; the callback body that reads
  * MSLLHOOKSTRUCT.flags is written O(1) and CallNextHookEx-prompt as a documented
  * shape, but it is never wired to a live SetWindowsHookEx here. Confirm the

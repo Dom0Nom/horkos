@@ -141,7 +141,7 @@ hk_net_route_integrity probe_route_integrity(void)
 /* HK-UNCERTAIN(macos-pf-route): on macOS the OS route/link event watch is a
  * PF_ROUTE socket reading RTM_* messages; the EXACT message set + parse needed to
  * mark hk_net_note_os_route_event() reliably for a "path changed without event" on
- * current macOS is UNVERIFIED (impl-plan Risks: macOS route-watch). Until verified
+ * current macOS is UNVERIFIED. Until verified
  * on-box, the macOS build never calls hk_net_note_os_route_event() from a live
  * reader, so g_os_event_since_snapshot stays false and a genuine OS reroute could
  * be mis-attributed as unattested. To avoid a false positive on macOS, the live

@@ -2,8 +2,7 @@
 //! 86400 so clients can compile against the URL surface but no false
 //! 202+SLA promise is made before durable persistence lands.
 //!
-//! See risk register entry R10 in plans/horkos-ac-drm-scaffold.md and the
-//! flip-to-202 follow-up phase named in docs/gdpr-17-rollout.md.
+//! See the flip-to-202 follow-up phase named in docs/gdpr-17-rollout.md.
 //!
 //! Target platforms: server.
 

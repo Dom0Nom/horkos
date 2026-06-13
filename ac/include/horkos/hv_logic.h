@@ -7,9 +7,9 @@
  *       report structural facts (e.g. "CPUID claims a hypervisor but exposes no
  *       leaves"), and the server does the FP-aware, population-relative
  *       classification. Pure arithmetic over the hv_signals.h POD structs, no
- *       platform API, so they are host-tested (tests/unit/test_hv_logic.cpp)
- *       without a Windows runner — the plan's "ship raw, server classifies"
- *       contract with the testable structural layer factored out.
+ *       platform API, so they are host-testable without a Windows runner — the
+ *       "ship raw, server classifies" contract with the testable structural
+ *       layer factored out.
  *       READ-ONLY: derives observations; mutates nothing.
  * Target platforms: all (decision math; the sampling that fills the inputs is
  *       Windows-only, in ac/src/hv/*.cpp).

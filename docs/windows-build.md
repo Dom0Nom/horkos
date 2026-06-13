@@ -61,7 +61,7 @@ call (FltMgr deref contract, ELAM registration timing, reloc normalization, the
 undocumented `PspCreateProcessNotifyRoutine`/`CmCallbackListHead` arrays, the
 unexported `KeServiceDescriptorTableShadow`, and big-pool executability). **Do not
 flip these ON until the flagged API contract is verified on-box** — a BSOD is
-worse than a missing signal (guardrail #13).
+worse than a missing signal (guardrail #12).
 
 ### 3b. Syscall/ETW/PatchGuard surface-integrity sensor flags (win-kernel-syscall-etw-integrity)
 

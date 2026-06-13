@@ -63,7 +63,7 @@ extern "C" uint32_t cs_flags_drifted(uint32_t baseline_mask, uint32_t observed_m
 
 /* HK-UNCERTAIN(csops-header): <sys/codesign.h> is NOT in the public macOS SDK on
  * the target toolchain (csops is the SYS_csops=169 syscall and its op constants
- * are effectively SPI — plan Risk 1). Per guardrail #13 we do NOT hardcode a
+ * are effectively SPI — plan Risk 1). Per guardrail #12 we do NOT hardcode a
  * guessed CS_OPS_STATUS op number and invoke the raw syscall against it. The live
  * status read is routed through hk_csops_status_read(), which is stubbed to
  * "unavailable" until the op-constant contract is verified against the target SDK

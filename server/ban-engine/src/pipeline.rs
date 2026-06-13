@@ -46,7 +46,7 @@ use crate::store::{DecisionRecord, DecisionStore, RecordKind};
 
 /// Pipeline tuning. Defaults are PoC-scale; the live values are deployment
 /// configuration (and, for the fusion/cadence members, signed-rule parameters
-/// per guardrail #14).
+/// per guardrail #13).
 #[derive(Debug, Clone)]
 pub struct PipelineConfig {
     /// Number of shard tasks (>=1). Sessions route by `player_id % shards`.

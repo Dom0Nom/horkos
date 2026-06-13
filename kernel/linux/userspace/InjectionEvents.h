@@ -1,12 +1,12 @@
 /*
  * Role: Provisional userspace-side event constants + fixed payload structs for
  *       the Linux injection correlators (signals 82-90), plus the BPF-side event
- *       struct mirrors the correlators consume. These mirror the schema the
- *       impl-plan §3.1 specifies (HK_EVENT_DSO_PROVENANCE=5 .. HK_EVENT_TEXT_PATCH
- *       =12 and the three 16-byte payloads hk_event_dso_anomaly /
- *       hk_event_got_anomaly / hk_event_loader_integrity).
+ *       struct mirrors the correlators consume. These mirror the schema
+ *       (HK_EVENT_DSO_PROVENANCE=5 .. HK_EVENT_TEXT_PATCH=12 and the three
+ *       16-byte payloads hk_event_dso_anomaly / hk_event_got_anomaly /
+ *       hk_event_loader_integrity).
  * Target platform: Linux userspace.
- * Interface: shared by all eight correlators + their unit tests.
+ * Interface: shared by all eight correlators.
  *
  * HK-TODO(schema): the event-type discriminants (5..12) and the three payload
  * structs are owned by the Schema phase and are NOT yet present in the frozen
@@ -16,7 +16,7 @@
  * assigns the final distinct values. Until it lands these are local provisional
  * consts so the correlator emit path is ready; the build-id PREFIX rides the
  * fixed record while the full soname/build-id string travels out-of-band on the
- * userspace->server JSON plane (impl-plan §3.1 option B).
+ * userspace->server JSON plane (JSON side-channel, option B).
  */
 
 #pragma once
@@ -37,7 +37,7 @@ inline constexpr uint32_t kEvtLoadorderInvert = 10;  /* signal 87 */
 inline constexpr uint32_t kEvtRdebugAnomaly   = 11;  /* signal 88 */
 inline constexpr uint32_t kEvtTextPatch       = 12;  /* signal 90 */
 
-/* ---- Fixed payload flag bits (impl-plan §3.1) ---------------------------- */
+/* ---- Fixed payload flag bits -------------------------------------------- */
 /* hk_event_dso_anomaly.flags (signals 82/87). */
 inline constexpr uint32_t HK_DSO_FLAG_NO_DT_NEEDED   = 0x1u;
 inline constexpr uint32_t HK_DSO_FLAG_ORDER_INVERT   = 0x2u;
@@ -57,7 +57,7 @@ inline constexpr uint32_t HK_LI_RELRO_WRITABLE    = 0x08u;
 inline constexpr uint32_t HK_LI_TEXT_COW_BROKEN   = 0x10u;
 inline constexpr uint32_t HK_LI_LD_AUDIT_ACTIVE   = 0x20u;
 
-/* ---- Fixed 16-byte payload structs (impl-plan §3.1) ---------------------- */
+/* ---- Fixed 16-byte payload structs -------------------------------------- */
 struct DsoAnomaly {        /* signals 82/87 */
     uint32_t pid;
     uint32_t flags;        /* HK_DSO_FLAG_* */
@@ -80,7 +80,7 @@ static_assert(sizeof(DsoAnomaly) == 16, "DsoAnomaly must be 16 bytes");
 static_assert(sizeof(GotAnomaly) == 16, "GotAnomaly must be 16 bytes");
 static_assert(sizeof(LoaderIntegrity) == 16, "LoaderIntegrity must be 16 bytes");
 
-/* ---- Variable-length JSON side-channel record (impl-plan §3.1 option B) ---
+/* ---- Variable-length JSON side-channel record (option B) ---
  * The fixed payloads above ride the C record; the full soname/path/build-id
  * strings travel out-of-band to the server on the userspace->server JSON plane.
  * This struct is the in-process hand-off the correlators fill; the loader/JSON

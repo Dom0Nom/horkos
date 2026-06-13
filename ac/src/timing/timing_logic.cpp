@@ -2,8 +2,8 @@
  * Role: The PURE timing classifier cores declared in timing_signals.h (modality,
  *       cadence, divergence, drift, leaf-fan spread). No platform API, no I/O — these
  *       are the platform-free functions the sampler TUs call, factored out so the
- *       divergence/modality/cadence math is unit-tested host-side without a debugger,
- *       a VM, or any OS hook (tests/unit/test_timing_logic.cpp). NONE decides a ban.
+ *       divergence/modality/cadence math is host-testable without a debugger,
+ *       a VM, or any OS hook. NONE decides a ban.
  * Target platforms: all (host-buildable; pure arithmetic over sampled scalars/vectors).
  * Interface: implements the pure cores of ac/include/horkos/timing/timing_signals.h.
  */

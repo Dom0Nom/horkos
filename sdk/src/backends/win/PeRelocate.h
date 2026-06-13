@@ -11,8 +11,7 @@
  * Target platforms: all (header-only, pure). Compiled SEPARATELY in this SDK TU
  *       and (independently) in the kernel image-load path — never the same object,
  *       so guardrail #4 (no shared kernel/userspace TU) holds.
- * Interface: included by PresentPrologueReconcileWin.cpp and the host unit test
- *       tests/unit/test_pe_relocate.cpp.
+ * Interface: included by PresentPrologueReconcileWin.cpp.
  *
  * NOTE: this parses UNTRUSTED on-disk PE bytes; every field offset is bounds-
  * checked against the supplied image length before use. A malformed header makes

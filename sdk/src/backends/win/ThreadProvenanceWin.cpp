@@ -27,7 +27,7 @@ namespace hk { namespace sdk { namespace threadprov {
 /* -------------------------------------------------------------------------
  * HK-UNCERTAIN(versioned-info-classes): the enrichment reads below depend on
  * ZwQueryInformationThread info classes whose exact contract is version-gated
- * (guardrail #13):
+ * (guardrail #12):
  *   - ThreadQuerySetWin32StartAddress: spoofable user start (signal 23 input).
  *   - ThreadHideFromDebugger: readable only Win10 1607+ (signal 25).
  *   - ThreadWow64Context: query semantics are version-sensitive (signal 22).

@@ -91,8 +91,8 @@ int BPF_PROG(hk_lsm_kmod_request, char *kmod_name, int ret)
 }
 
 /*
- * HK-UNCERTAIN(kernel-read-file-reading-module): the impl-plan adds an
- * lsm/kernel_read_file (READING_MODULE) arm to catch finit_module/init_module
+ * HK-UNCERTAIN(kernel-read-file-reading-module): an lsm/kernel_read_file
+ * (READING_MODULE) arm to catch finit_module/init_module
  * payload reads. I am NOT certain of (a) the exact lsm/kernel_read_file hook
  * signature on the target Deck kernel (it changed across versions — earlier:
  * (struct file *file, enum kernel_read_file_id id); later added bool contents
@@ -106,7 +106,7 @@ int BPF_PROG(hk_lsm_kmod_request, char *kmod_name, int ret)
  * lsm/kernel_read_file is BPF-attachable via the standard lsm/* mechanism.
  * Still needs on-target BTF enum-value verification before wiring.)
  * A wrong enum compare would silently mis-filter every kernel_read_file.
- * Per guardrail #13 this arm is NOT written —
+ * Per guardrail #12 this arm is NOT written —
  * confirm the signature + enum against the target kernel BTF, then add:
  *   SEC("lsm/kernel_read_file")
  *   int BPF_PROG(hk_lsm_kread_module, struct file *file,

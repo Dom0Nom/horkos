@@ -31,7 +31,7 @@ int sense_synthetic_artifact(std::vector<hk_input_finding>& out)
      * so it inherits the same unverified LowLevelHooksTimeout constraint (the callback
      * must do strictly O(1) work and chain promptly, and the re-arm semantics are not
      * confirmed on-box). The hook install is therefore deferred with signal 59 rather
-     * than guessed (guardrail #13). The verified per-event folding, once the hook is
+     * than guessed (guardrail #12). The verified per-event folding, once the hook is
      * confirmed safe, is pure and host-tested:
      *
      *   SyntheticArtifactInput sa{};

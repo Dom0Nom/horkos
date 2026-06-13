@@ -16,7 +16,7 @@
  * tap requires the Accessibility / Input-Monitoring (TCC) grant — NOT the Apple-
  * approved EndpointSecurity entitlement (plan R5). The not-granted path MUST leave
  * the 170 features at default and never crash. The grant-state check + the tap
- * create/run-loop attach are SDK bring-up integration; per guardrail #13 they are
+ * create/run-loop attach are SDK bring-up integration; per guardrail #12 they are
  * not assumed here.
  * (docs: CGEvent.h (CoreGraphics.framework) states that taps at kCGSessionEventTap
  * may only receive key up/down events if Accessibility is enabled; mouse events are

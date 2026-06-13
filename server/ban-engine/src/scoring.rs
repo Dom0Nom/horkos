@@ -6,7 +6,7 @@
 //! are server-side (catalog mandate: 166-169 are population/distributional,
 //! never client-evaluated).
 //!
-//! Fail-open posture (guardrail #14, ARCHITECTURE principle #3): when no model
+//! Fail-open posture (guardrail #13, ARCHITECTURE principle #3): when no model
 //! is configured (`HORKOS_AIM_MODEL` unset / unreadable / shape-mismatched),
 //! the scorer produces NO signal rather than a fabricated one — the
 //! deterministic statistical analyzers remain the only live evidence, exactly

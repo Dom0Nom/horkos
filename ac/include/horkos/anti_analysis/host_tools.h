@@ -4,10 +4,10 @@
  *       anti_analysis_signals.h) and the PURE, platform-free decision core that
  *       maps the sampled host-tool observables onto a severity tier. The core
  *       takes already-sampled facts and returns the raw tier the sensor ships;
- *       it has NO platform API and NO I/O, so it is host-unit-tested
- *       (tests/unit/test_anti_analysis_logic.cpp) — the "factor the decision
- *       logic out of the sensor TU into a pure function" requirement (guardrail
- *       #14). The core does not decide a ban: client emits, server decides (and
+ *       it has NO platform API and NO I/O, so it is host-testable — the
+ *       "factor the decision logic out of the sensor TU into a pure function"
+ *       requirement (guardrail #14). The core does not decide a ban: client
+ *       emits, server decides (and
  *       may override the tier with its allowlists).
  * Target platforms: the pure core is cross (host-tested everywhere); the sampler
  *       (HostToolFingerprint.cpp) is Windows-only — its C entry returns

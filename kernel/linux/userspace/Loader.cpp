@@ -288,7 +288,7 @@ struct HkBpfLaunchEvent {        /* genealogy.bpf.c + loader_trust.bpf.c */
 };
 
 /* ---- Module-trust server-side payload mirrors (HK-TODO(schema)) ------------ */
-/* Mirror the impl-plan's hk_event_devmem_access / hk_event_msr_write payloads
+/* Mirrors hk_event_devmem_access / hk_event_msr_write payloads
  * (each 16 bytes). Sizes pinned so a future schema header diff is caught. */
 struct HkEvtDevmemAccess {       /* 16 bytes */
     uint32_t requesting_pid;
@@ -408,10 +408,9 @@ struct HkBpfVmaRow {             /* iter_task_vma.bpf.c: hk_bpf_vma_row */
 
 /* ---- Provisional server-side payload mirrors (HK-TODO(schema)) ------------- */
 /*
- * These mirror the payload structs the impl-plan adds to event_schema.h once the
- * Schema phase lands them. They are defined locally here so the sink receives a
- * stable, sized payload now. Sizes are pinned with static_assert to the plan's
- * documented byte counts so a future schema header diff is caught.
+ * These mirror the payload structs in event_schema.h. They are defined locally
+ * here so the sink receives a stable, sized payload now. Sizes are pinned with
+ * static_assert to the documented byte counts so a future schema header diff is caught.
  */
 struct HkEvtPtrace {        /* 24 bytes */
     uint32_t caller_pid;
@@ -580,8 +579,8 @@ struct HkBpfPwSynthInput {
 };
 
 /* ---- Proton/Wine/Deck server-side payload mirrors (HK-TODO(schema)) --------
- * Mirror the impl-plan's event_schema.h payloads (sizes pinned to the documented
- * byte counts so a future schema header diff is caught). */
+ * Mirrors event_schema.h payloads (sizes pinned to the documented byte counts
+ * so a future schema header diff is caught). */
 struct HkEvtProtonOverride {   /* 24 bytes */
     uint32_t pid;
     uint32_t flags;
@@ -688,7 +687,7 @@ struct LoaderState {
     struct bpf_link       *vma_link      = nullptr; /* iterator link (owns vma_iter_fd) */
     int                    vma_iter_fd   = -1;     /* iterator link fd for the scan trigger */
 
-    /* memfd<->exec correlation LRU (impl-plan §77). Keyed by (tgid, inode); the
+    /* memfd<->exec correlation LRU (cross-hook join). Keyed by (tgid, inode); the
      * value is the create timestamp so stale entries TTL out. A HK_BPF_FILELESS_
      * EXEC tag is only promoted to a confirmed fileless-exec emit when a matching
      * recent memfd create exists for the same (tgid, inode). */
@@ -1059,7 +1058,7 @@ static int on_ringbuf_sample(void *ctx, void *data, size_t data_sz)
         HkBpfMemfdEvent bpf_evt {};
         std::memcpy(&bpf_evt, data, sizeof(bpf_evt));
 
-        /* CROSS-HOOK JOIN (impl-plan §77): only promote to a confirmed fileless-
+        /* CROSS-HOOK JOIN: only promote to a confirmed fileless-
          * exec when this tgid created a memfd with a matching inode inside the
          * TTL window. An empty-name exec with no recorded matching create is a
          * non-memfd anon exec (or a missed create) — not emitted here to hold the
@@ -1365,7 +1364,7 @@ static int libbpf_print_fn(enum libbpf_print_level level,
  * loads and attaches. The FIRST memory skeleton to load creates hk_protected;
  * the rest reuse it via bpf_map__reuse_fd, mirroring the hk_ringbuf sharing
  * pattern. iter/task_vma is best-effort: a load failure (kernel < 5.13) is
- * logged and signal 80 is disabled, not fatal (impl-plan §8).
+ * logged and signal 80 is disabled, not fatal (by design: graceful degradation).
  *
  * Returns 0 on success (or partial success with only signal 80 disabled), a
  * negative errno only on a failure that should abort the whole loader. The
@@ -1445,7 +1444,7 @@ static int start_memory_programs(void)
 
     /* iter/task_vma (signal 80) — BEST EFFORT. A load failure means the runtime
      * kernel lacks the task_vma iterator (< 5.13); disable signal 80 and
-     * continue (impl-plan §8). The iterator is NOT auto-attached — it is driven
+     * continue (graceful degradation). The iterator is NOT auto-attached — it is driven
      * on demand by hk_bpf_loader_trigger_vma_scan(). */
     {
         g_state.vma_skel = iter_task_vma_bpf__open();

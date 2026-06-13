@@ -75,7 +75,7 @@ extern "C" bool HkEntitlementDiffProbeSample(const HkCsProbeTarget *target,
      * requires SecCodeCopySigningInformation(kSecCSRequirementInformation) ->
      * kSecCodeInfoEntitlementsDict plist parsing into the HK_ENT_* mask. Both the
      * blob parse and the dict parse are unverified, so the probe does NOT guess
-     * them (guardrail #13).
+     * them (guardrail #12).
      * (docs: kSecCodeInfoEntitlementsDict IS in the public SDK (Security/SecCode.h:
      * line 399,482) and SecCodeCopySigningInformation is publicly declared; the
      * csops blob op numbers and buffer format remain SPI — still needs on-box

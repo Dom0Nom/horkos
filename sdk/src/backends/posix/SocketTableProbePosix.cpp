@@ -104,7 +104,7 @@ hk_net_flow_owner probe_flow_owner(void)
      * or a /proc/net/{tcp,udp} + /proc/<pid>/fd inode-match walk. The exact
      * inet_diag_req_v2 / inet_diag_msg parse and the privileged /proc walk are
      * UNVERIFIED on the target (Steam Deck / self-hosted) kernels and must not be
-     * guessed (guardrail #13). The safe loopback-foreign-address read has no clean
+     * guessed (guardrail #12). The safe loopback-foreign-address read has no clean
      * non-root userspace equivalent to the macOS proc_pidfdinfo self-read here, so
      * Linux 189 ships no-data until the sock_diag path is written + verified under
      * /tdd with the bypass fixture. Returning the cleared (no-data) result. */

@@ -5,8 +5,8 @@
  *       start address / TLS callback resolving into an unbacked region). Each is
  *       a structural decision over already-normalized inputs (resolved bases,
  *       backing-state flags, resolved VadType), no kernel/Win32 API — so the
- *       logic is unit-tested host-side (tests/unit/test_mem_image_logic.cpp)
- *       without a WDK. The kernel samplers (LdrCrosscheck.c / HollowDetect.c /
+ *       logic is pure host-buildable / no WDK needed. The kernel samplers
+ *       (LdrCrosscheck.c / HollowDetect.c /
  *       ExecOrigin.c) feed these the sampled state and emit the raw match; NONE
  *       decide a ban — the client emits, the server fuses.
  *       READ-ONLY: classifies observed state; mutates nothing.
