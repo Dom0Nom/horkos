@@ -7,6 +7,10 @@ and owns the ban decision.
 
 Proof of concept — untested, not verified on real target hardware, not production code.
 
+## Status
+
+Personal research **proof of concept**. Nothing here has been tested or verified on real target hardware, and none of it is production-ready. Where individual commit messages say "tested", that means local compilation or unit-level checks only — treat the project as untested end-to-end. Provided as-is, no warranty.
+
 ## Quickstart
 
 ```sh
