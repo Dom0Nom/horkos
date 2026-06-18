@@ -2,8 +2,9 @@
 
 A from-scratch, cross-platform anti-cheat + DRM system. Client kernel/usermode
 sensors (Windows, Linux, macOS), hardware attestation, an LLVM obfuscation
-toolchain, and an async Rust server that ingests client telemetry, scores it,
-and owns the ban decision.
+toolchain, and an async Rust server that ingests client telemetry, scores it
+(including optional ONNX anomaly and aim scorers trained on synthetic data; see
+`server/ml`), and owns the ban decision.
 
 Proof of concept: untested, not verified on real target hardware, not production code.
 
