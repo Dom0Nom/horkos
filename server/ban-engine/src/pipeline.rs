@@ -39,6 +39,7 @@ use telemetry::snapshot::Snapshot;
 use tokio::sync::mpsc;
 
 use crate::aim_kinematics::{segment_flicks, segment_reactions, segment_switches};
+use crate::anomaly::{behavior_observation, AnomalyScorer};
 use crate::arrival_cadence::{Arrival, ArrivalRing, CadenceParams};
 use crate::fusion::{fuse, FusionParams, Verdict};
 use crate::scoring::{observations_from_segments, AimScorer};
@@ -133,6 +134,30 @@ pub struct PipelineHandle {
     snap_txs: Vec<mpsc::Sender<Snapshot>>,
 }
 
+/// Optional model scorers shared across every pipeline shard.
+#[derive(Clone)]
+pub struct PipelineScorers {
+    aim: Arc<Option<AimScorer>>,
+    anomaly: Arc<Option<AnomalyScorer>>,
+}
+
+impl PipelineScorers {
+    pub fn new(aim: Arc<Option<AimScorer>>, anomaly: Arc<Option<AnomalyScorer>>) -> Self {
+        Self { aim, anomaly }
+    }
+
+    pub fn from_env() -> Self {
+        Self::new(
+            Arc::new(AimScorer::from_env()),
+            Arc::new(AnomalyScorer::from_env()),
+        )
+    }
+
+    pub fn aim_only(aim: Arc<Option<AimScorer>>) -> Self {
+        Self::new(aim, Arc::new(None))
+    }
+}
+
 impl PipelineHandle {
     /// Senders for the ingest sink (`telemetry::sink::TickSink::new`).
     pub fn tick_senders(&self) -> Vec<mpsc::Sender<TickPayload>> {
@@ -160,18 +185,27 @@ impl PipelineHandle {
     }
 }
 
-/// Spawn the pipeline shard tasks. Requires a running tokio runtime. The
-/// aim-kinematics ONNX scorer is loaded once from `HORKOS_AIM_MODEL` and shared
-/// read-only across shards; absent/invalid = no aim-model signal (fail-open).
+/// Spawn the pipeline shard tasks. Requires a running tokio runtime. Optional
+/// ONNX scorers are loaded once from their environment paths and shared across
+/// shards; absent/invalid models contribute no model-derived signal.
 pub fn spawn(cfg: PipelineConfig, store: Arc<DecisionStore>) -> PipelineHandle {
-    spawn_with_scorer(cfg, store, Arc::new(AimScorer::from_env()))
+    spawn_with_scorers(cfg, store, PipelineScorers::from_env())
 }
 
-/// `spawn` with an explicit scorer (tests inject a fixture model).
+/// Backward-compatible `spawn` with an explicit aim scorer only.
 pub fn spawn_with_scorer(
     cfg: PipelineConfig,
     store: Arc<DecisionStore>,
     scorer: Arc<Option<AimScorer>>,
+) -> PipelineHandle {
+    spawn_with_scorers(cfg, store, PipelineScorers::aim_only(scorer))
+}
+
+/// `spawn` with explicit optional model scorers.
+pub fn spawn_with_scorers(
+    cfg: PipelineConfig,
+    store: Arc<DecisionStore>,
+    scorers: PipelineScorers,
 ) -> PipelineHandle {
     let shards = cfg.shards.max(1);
     let alive = Arc::new(AtomicBool::new(true));
@@ -191,9 +225,9 @@ pub fn spawn_with_scorer(
         let decisions = Arc::clone(&decisions);
         let alive = Arc::clone(&alive);
         let stats = Arc::clone(&stats);
-        let scorer = Arc::clone(&scorer);
+        let scorers = scorers.clone();
         tokio::spawn(async move {
-            shard_loop(cfg, tick_rx, snap_rx, store, decisions, stats, scorer).await;
+            shard_loop(cfg, tick_rx, snap_rx, store, decisions, stats, scorers).await;
             // Any shard exiting means the pipeline can no longer analyze its
             // players: flag the whole pipeline unhealthy (fail closed).
             alive.store(false, Ordering::Release);
@@ -216,8 +250,8 @@ struct PlayerSession {
     arrivals: ArrivalRing,
     /// Not-yet-consumed authoritative snapshots, keyed by snapshot tick.
     snaps: BTreeMap<u64, Snapshot>,
-    /// Rolling window of recent ticks for the aim-kinematics segmenters
-    /// (signals 166-169). Bounded FIFO (DoS gate).
+    /// Rolling window for aim and broad behavioral model extraction
+    /// (signals 166-169 and 217). Bounded FIFO (DoS gate).
     tick_window: VecDeque<TickPayload>,
     latched: Verdict,
     session_start_ns: u64,
@@ -287,7 +321,7 @@ async fn shard_loop(
     store: Arc<DecisionStore>,
     decisions: Arc<RwLock<HashMap<u64, LatestDecision>>>,
     stats: Arc<PipelineStats>,
-    scorer: Arc<Option<AimScorer>>,
+    scorers: PipelineScorers,
 ) {
     let mut sessions: HashMap<u64, PlayerSession> = HashMap::new();
     let sweep_every = cfg.session_ttl.checked_div(4).unwrap_or(cfg.session_ttl);
@@ -299,7 +333,7 @@ async fn shard_loop(
         tokio::select! {
             tick = tick_rx.recv() => match tick {
                 Some(t) => {
-                    handle_tick(&cfg, &mut sessions, t, &store, &decisions, &stats, &scorer).await;
+                    handle_tick(&cfg, &mut sessions, t, &store, &decisions, &stats, &scorers).await;
                 }
                 // Ingest sink gone: the pipeline has no input plane left.
                 None => break,
@@ -348,7 +382,7 @@ async fn handle_tick(
     store: &DecisionStore,
     decisions: &RwLock<HashMap<u64, LatestDecision>>,
     stats: &PipelineStats,
-    scorer: &Option<AimScorer>,
+    scorers: &PipelineScorers,
 ) {
     let player_id = tick.player_id;
     let now = Instant::now();
@@ -397,7 +431,7 @@ async fn handle_tick(
     session.tick_window.push_back(tick);
 
     if session.ticks_received % cfg.score_interval_ticks == 0 {
-        score_session(cfg, session, store, decisions, scorer).await;
+        score_session(cfg, session, store, decisions, scorers).await;
     }
 }
 
@@ -427,19 +461,44 @@ fn aim_model_suspicions(
         .collect()
 }
 
+/// Score the complete broad behavior vector once all modality floors clear.
+fn anomaly_suspicion(
+    session: &PlayerSession,
+    scorer: &Option<AnomalyScorer>,
+    window_ticks: u64,
+    decision_floor: f64,
+) -> Option<SuspicionEvent> {
+    let scorer = scorer.as_ref()?;
+    let window: Vec<TickPayload> = session.tick_window.iter().cloned().collect();
+    let observation = behavior_observation(&window, window_ticks)?;
+    scorer.score(session.registry.player_id(), &observation, decision_floor)
+}
+
 async fn score_session(
     cfg: &PipelineConfig,
     session: &mut PlayerSession,
     store: &DecisionStore,
     decisions: &RwLock<HashMap<u64, LatestDecision>>,
-    scorer: &Option<AimScorer>,
+    scorers: &PipelineScorers,
 ) {
     let player_id = session.registry.player_id();
     let mut events = session.registry.collect_suspicions();
     let window_ticks = session
         .last_tick
         .saturating_sub(session.first_tick.unwrap_or(0));
-    events.extend(aim_model_suspicions(session, scorer, window_ticks));
+    events.extend(aim_model_suspicions(
+        session,
+        scorers.aim.as_ref(),
+        window_ticks,
+    ));
+    if let Some(event) = anomaly_suspicion(
+        session,
+        scorers.anomaly.as_ref(),
+        window_ticks,
+        cfg.fusion.z_weak,
+    ) {
+        events.push(event);
+    }
     let cadence = match crate::arrival_cadence::detect(&session.arrivals, &cfg.cadence) {
         Ok(obs) => obs,
         Err(e) => {
