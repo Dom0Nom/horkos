@@ -71,3 +71,4 @@ credentials.json
 
 # Local agent/tooling state
 .claude/
+CLAUDE.md
