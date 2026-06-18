@@ -1,11 +1,11 @@
-# Windows Kernel Anti-Cheat Detection Techniques — Deep Dive
+# Windows Kernel Anti-Cheat Detection Techniques - Deep Dive
 
 > **Audience**: Experienced Windows kernel developers. Assumes familiarity with NT kernel internals, WDK conventions, and x64 calling convention.
 > **Scope**: Windows 10 1607+ through Windows 11 24H2. Offsets target x64. Version-dependency warnings called out explicitly.
 
 ---
 
-## 1. Memory Scanning in Kernel — VAD Tree Walking
+## 1. Memory Scanning in Kernel - VAD Tree Walking
 
 ### 1.1 VAD Fundamentals
 
@@ -31,7 +31,7 @@ EPROCESS.VadRoot (offset varies; ~0x7d8 on Win10 21H2, ~0x808 on Win11 24H2)
       +0x068 Subsection      : Pointer
 ```
 
-> **CRITICAL**: The exact offsets shift between builds. The `VadFlags` field encodes the page protection in bits configured as `MMVAD_FLAGS`. On Win10 RS2+ this is 32 bits; on Win2004+ it was split into `MMVAD_FLAGS` (low 32) and `MMVAD_FLAGS1` (high 32 in a union). Never hardcode — resolve dynamically or use `NtQueryInformationProcess` as an alternative.
+> **CRITICAL**: The exact offsets shift between builds. The `VadFlags` field encodes the page protection in bits configured as `MMVAD_FLAGS`. On Win10 RS2+ this is 32 bits; on Win2004+ it was split into `MMVAD_FLAGS` (low 32) and `MMVAD_FLAGS1` (high 32 in a union). Never hardcode - resolve dynamically or use `NtQueryInformationProcess` as an alternative.
 
 ### 1.2 Traversal Algorithm
 
@@ -45,7 +45,7 @@ typedef struct _VAD_ENUM_CONTEXT {
 } VAD_ENUM_CONTEXT;
 
 // Use MmGetVirtualForPhysical for validating physical mappings
-// — only valid at IRQL <= APC_LEVEL
+// - only valid at IRQL <= APC_LEVEL
 NTSTATUS WalkVadTree(PEPROCESS Process, VAD_ENUM_CONTEXT* Ctx)
 {
     PMMVAD_SHORT VadRoot = *(PMMVAD_SHORT*)((PUCHAR)Process + EPROCESS_VadRoot_Offset);
@@ -62,7 +62,7 @@ NTSTATUS TraverseVadNode(PMMVAD_SHORT Node, VAD_ENUM_CONTEXT* Ctx)
     // Check protection in VadFlags
     ULONG Flags = Node->VadFlags;
     if (IsExecutable(Flags) && IsWritable(Flags)) {
-        // RWX region — flag for inspection
+        // RWX region - flag for inspection
         ULONG64 Start = ((ULONG64)Node->StartingVpn) << PAGE_SHIFT;
         ULONG64 End   = (((ULONG64)Node->EndingVpn) + 1) << PAGE_SHIFT;
         ReportSuspiciousRegion(Start, End, Flags);
@@ -97,7 +97,7 @@ NTSTATUS ValidateDllIntegrity(PEPROCESS Process, PVOID BaseAddress, SIZE_T Regio
         PsGetCurrentProcess(),           // TargetProcess
         &localDosHeader,                 // TargetAddress
         sizeof(IMAGE_DOS_HEADER),        // BufferSize
-        KernelMode,                      // PreviousMode — CRITICAL: use KernelMode
+        KernelMode,                      // PreviousMode - CRITICAL: use KernelMode
         &bytesRead                       // ReturnSize
     );
 
@@ -139,7 +139,7 @@ NTSTATUS ValidateDllIntegrity(PEPROCESS Process, PVOID BaseAddress, SIZE_T Regio
 | Stack overflow from deep recursion | VAD tree can be thousands of nodes deep on heavy processes | `KERNEL_STACK_INPAGE_ERROR` (0x77) |
 | PTE corruption | Reading PTEs for freed/transitioned pages | `PAGE_FAULT_IN_NONPAGED_AREA` (0x50) |
 
-**Mitigation**: Use iterative traversal (explicit stack on pool) instead of recursion. Always hold a reference to the target process (`ObReferenceObject`). Use `MmCopyVirtualMemory` with `KernelMode` — never `UserMode` from a kernel thread.
+**Mitigation**: Use iterative traversal (explicit stack on pool) instead of recursion. Always hold a reference to the target process (`ObReferenceObject`). Use `MmCopyVirtualMemory` with `KernelMode` - never `UserMode` from a kernel thread.
 
 ---
 
@@ -147,7 +147,7 @@ NTSTATUS ValidateDllIntegrity(PEPROCESS Process, PVOID BaseAddress, SIZE_T Regio
 
 ### 2.1 PsLoadedModuleList Walking
 
-`PsLoadedModuleList` is the head of a doubly-linked list of `KLDR_DATA_TABLE_ENTRY` structures (not `LDR_DATA_TABLE_ENTRY` — the kernel variant). This list contains all loaded kernel modules.
+`PsLoadedModuleList` is the head of a doubly-linked list of `KLDR_DATA_TABLE_ENTRY` structures (not `LDR_DATA_TABLE_ENTRY` - the kernel variant). This list contains all loaded kernel modules.
 
 ```c
 // PsLoadedModuleList is exported by ntoskrnl.exe
@@ -201,7 +201,7 @@ NTSTATUS ScanLoadedModulesForAnomalies(void)
 
         // Check 1: Is the module backed by a file on disk?
         if (pModule->FullDllName.Length == 0 || pModule->FullDllName.Buffer == NULL) {
-            // Module loaded without a file path — suspicious
+            // Module loaded without a file path - suspicious
             ReportUnsignedOrReconstructedModule(pModule);
             continue;
         }
@@ -268,30 +268,30 @@ BOOLEAN IsManuallyMappedDriver(PKLDR_DATA_TABLE_ENTRY Entry)
 
 ---
 
-## 3. Thread Internals — ETHREAD Analysis
+## 3. Thread Internals - ETHREAD Analysis
 
 ### 3.1 Key ETHREAD Fields
 
 ```c
-// ETHREAD offsets (Windows 10 21H2 x64 — ALWAYS verify for your build)
+// ETHREAD offsets (Windows 10 21H2 x64 - ALWAYS verify for your build)
 // Use dt nt!_ETHREAD in WinDbg to confirm
 
 typedef struct _ETHREAD {
-    THTREAD Tcb;                              // +0x000 — KTHREAD
+    THTREAD Tcb;                              // +0x000 - KTHREAD
     LARGE_INTEGER CreateTime;                  // +0x3xx
     // ...
-    PVOID StartAddress;                        // +0x450 (Win10 21H2) — actual start
+    PVOID StartAddress;                        // +0x450 (Win10 21H2) - actual start
     union {
-        PVOID Win32StartAddress;               // +0x458 — user-reported start
+        PVOID Win32StartAddress;               // +0x458 - user-reported start
     };
     // ...
     CLIENT_ID Cid;                             // +0x460 (Win10 21H2)
     //   Cid.UniqueProcess  : HANDLE
     //   Cid.UniqueThread   : HANDLE
     // ...
-    UCHAR State;                               // +0x490 — KTHREAD_STATE
+    UCHAR State;                               // +0x490 - KTHREAD_STATE
     //   Running = 0, Ready = 1, Waiting = 5, etc.
-    UCHAR WaitReason;                          // +0x491 — KWAIT_REASON
+    UCHAR WaitReason;                          // +0x491 - KWAIT_REASON
     // ...
     KAPC_STATE ApcState;                       // +0x498
     // ...
@@ -317,7 +317,7 @@ NTSTATUS ScanThreadsForInjection(PEPROCESS TargetProcess)
         PVOID startAddr = *(PVOID*)((PUCHAR)pThread + ETHREAD_StartAddress_Offset);
 
         if (!IsAddressInKnownModule(startAddr, TargetProcess)) {
-            // Thread starts in unknown memory — possible injection
+            // Thread starts in unknown memory - possible injection
             ReportSuspiciousThread(pThread, startAddr);
         }
 
@@ -342,7 +342,7 @@ NTSTATUS ScanThreadsForInjection(PEPROCESS TargetProcess)
         UCHAR waitReason = *(PUCHAR)((PUCHAR)pThread + ETHREAD_WaitReason_Offset);
 
         if (state == Waiting && waitReason == Suspended) {
-            // Thread is in suspended state — check if it was legitimately suspended
+            // Thread is in suspended state - check if it was legitimately suspended
             ReportSuspendedThread(pThread);
         }
 
@@ -404,14 +404,14 @@ typedef struct _HANDLE_TABLE {
     //   1 = two levels (TableCode & ~0x3 = array of pointers to arrays)
     //   2 = three levels (for > 512K handles)
     PEPROCESS QuotaProcess;                // +0x010
-    LIST_ENTRY HandleTableList;            // +0x018 — global list of all handle tables
+    LIST_ENTRY HandleTableList;            // +0x018 - global list of all handle tables
     ULONG UniqueProcessId;                 // +0x028
     // ... flags, handle contention event, etc.
 } HANDLE_TABLE, *PHANDLE_TABLE;
 
 typedef struct _HANDLE_TABLE_ENTRY {
     union {
-        volatile LONG_PTR Object;          // +0x000 — pointer to object header
+        volatile LONG_PTR Object;          // +0x000 - pointer to object header
         ULONG ObAttributes;                //   or object attributes
         // Bit 0x03 (KERNEL_HANDLE_FLAG = 0x08 on x64) indicates kernel handle
     };
@@ -541,7 +541,7 @@ BOOLEAN IsHandleSuspicious(PHANDLE_TABLE_ENTRY Entry, HANDLE Handle)
 
 ---
 
-## 5. IRP Monitoring — IOCTL Interception
+## 5. IRP Monitoring - IOCTL Interception
 
 ### 5.1 Anti-Cheat Device Object Setup
 
@@ -601,7 +601,7 @@ NTSTATUS AntiCheatIoctlDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     // Check 2: Validate the calling process
     PEPROCESS callingProcess = IoGetRequestorProcess(Irp);
     if (callingProcess != PsGetCurrentProcess()) {
-        // IRP was forwarded from another process — suspicious
+        // IRP was forwarded from another process - suspicious
         ReportIrpForwarding(Irp);
     }
 
@@ -663,20 +663,20 @@ BOOLEAN IsNtOpenProcessHooked(void)
 ```c
 // KAPC structure (partial)
 typedef struct _KAPC {
-    UCHAR Type;                    // +0x000 — 0x12 on Win10 (APC_OBJECT)
+    UCHAR Type;                    // +0x000 - 0x12 on Win10 (APC_OBJECT)
     UCHAR SpareByte0;
-    UCHAR Size;                    // +0x002 — 0x58 on Win10 x64
+    UCHAR Size;                    // +0x002 - 0x58 on Win10 x64
     UCHAR SpareByte1;
     ULONG SpareLong0;
     struct _KTHREAD* Thread;       // +0x008
     LIST_ENTRY ApcListEntry;       // +0x010
-    PKNORMAL_ROUTINE NormalRoutine; // +0x020 — callback function
-    PVOID NormalContext;           // +0x028 — first arg to NormalRoutine
+    PKNORMAL_ROUTINE NormalRoutine; // +0x020 - callback function
+    PVOID NormalContext;           // +0x028 - first arg to NormalRoutine
     PVOID SystemArgument1;         // +0x030
     PVOID SystemArgument2;         // +0x038
-    CCHAR ApcIndex;                // +0x040 — which APC slot
-    KPROCESSOR_MODE ApcMode;       // +0x044 — KernelMode or UserMode
-    UCHAR Inserted;                // +0x045 — TRUE if queued
+    CCHAR ApcIndex;                // +0x040 - which APC slot
+    KPROCESSOR_MODE ApcMode;       // +0x044 - KernelMode or UserMode
+    UCHAR Inserted;                // +0x045 - TRUE if queued
 } KAPC, *PKAPC;
 
 // KAPC_STATE within ETHREAD
@@ -703,7 +703,7 @@ NTSTATUS ScanForQueuedApcs(PEPROCESS TargetProcess)
 
         // Check UserApcPending flag
         if (apcState->UserApcPending) {
-            // User APCs are pending — enumerate them
+            // User APCs are pending - enumerate them
             PLIST_ENTRY head = &apcState->ApcListHead[UserMode];
 
             for (PLIST_ENTRY entry = head->Flink; entry != head; entry = entry->Flink) {
@@ -711,11 +711,11 @@ NTSTATUS ScanForQueuedApcs(PEPROCESS TargetProcess)
 
                 // Check if the NormalRoutine points to a known module
                 if (!IsAddressInKnownModule(Apc->NormalRoutine, TargetProcess)) {
-                    // APC callback in unknown memory — likely injection
+                    // APC callback in unknown memory - likely injection
                     ReportMaliciousApc(pThread, Apc);
                 }
 
-                // Check ApcMode — user-mode APCs injected from kernel
+                // Check ApcMode - user-mode APCs injected from kernel
                 // will have ApcMode == KernelMode but be in the user APC list
                 if (Apc->ApcMode == KernelMode && Apc->ApcIndex == UserMode) {
                     ReportKernelInjectedUserApc(pThread, Apc);
@@ -752,9 +752,9 @@ NTSTATUS ScanForQueuedApcs(PEPROCESS TargetProcess)
 
 `KiUserApcDispatcher` (in ntdll.dll) is the user-mode entry point for APCs. Anti-cheats can:
 
-1. **Hook ntdll.dll's `KiUserApcDispatcher`** — detect by comparing in-memory ntdll against disk
-2. **Monitor `NtQueueApcThread` syscalls** — detect via syscall hooking or ETW
-3. **Check for `NtQueueApcThreadEx`** — newer API that supports user-mode APCs with context
+1. **Hook ntdll.dll's `KiUserApcDispatcher`** - detect by comparing in-memory ntdll against disk
+2. **Monitor `NtQueueApcThread` syscalls** - detect via syscall hooking or ETW
+3. **Check for `NtQueueApcThreadEx`** - newer API that supports user-mode APCs with context
 
 ```c
 // Detect ntdll.dll hooking of KiUserApcDispatcher
@@ -796,7 +796,7 @@ typedef struct _POOL_HEADER {
         };
         ULONG ULong1;
     };
-    ULONG PoolTag;                     // +0x004 — 4-byte tag like 'ChEaT'
+    ULONG PoolTag;                     // +0x004 - 4-byte tag like 'ChEaT'
     union {
         PEPROCESS ProcessBilled;       // +0x008
         struct {
@@ -948,21 +948,21 @@ NTSTATUS ScanPhysicalPoolForTags(void)
 ```c
 // KDPC structure
 typedef struct _KDPC {
-    UCHAR Type;                    // +0x000 — 0x13 (DPC_OBJECT) or 0x17 (THREADED_DPC)
-    UCHAR Importance;              // +0x001 — Low, Medium, High
-    volatile USHORT Number;        // +0x002 — Processor number (for threaded DPC)
-    LIST_ENTRY DpcListEntry;       // +0x008 — Links into PRCB.DpcListHead
-    PKDEFERRED_ROUTINE DeferredRoutine; // +0x018 — The DPC function
+    UCHAR Type;                    // +0x000 - 0x13 (DPC_OBJECT) or 0x17 (THREADED_DPC)
+    UCHAR Importance;              // +0x001 - Low, Medium, High
+    volatile USHORT Number;        // +0x002 - Processor number (for threaded DPC)
+    LIST_ENTRY DpcListEntry;       // +0x008 - Links into PRCB.DpcListHead
+    PKDEFERRED_ROUTINE DeferredRoutine; // +0x018 - The DPC function
     PVOID DeferredContext;         // +0x020
     PVOID SystemArgument1;         // +0x028
     PVOID SystemArgument2;         // +0x030
-    PVOID DpcData;                 // +0x038 — Points to KDPC_DATA
+    PVOID DpcData;                 // +0x038 - Points to KDPC_DATA
 } KDPC, *PKDPC;
 
 // PRCB (Processor Control Block) DPC-related fields
-// KiProcessorBlock[n]->Prcb->DpcListHead — head of DPC queue
-// KiProcessorBlock[n]->Prcb->DpcRoutineActive — currently executing DPC
-// KiProcessorBlock[n]->Prcb->DpcRequestScheduled — DPC scheduled flag
+// KiProcessorBlock[n]->Prcb->DpcListHead - head of DPC queue
+// KiProcessorBlock[n]->Prcb->DpcRoutineActive - currently executing DPC
+// KiProcessorBlock[n]->Prcb->DpcRequestScheduled - DPC scheduled flag
 ```
 
 ### 8.2 Detecting Anomalous DPCs
@@ -997,7 +997,7 @@ NTSTATUS ScanDpcQueues(void)
                 ReportAnomalousDpc(Dpc, proc);
             }
 
-            // Check DPC rate — if a module queues DPCs at an abnormal rate,
+            // Check DPC rate - if a module queues DPCs at an abnormal rate,
             // it may be using DPCs for timing or synchronization
             static volatile ULONG DpcCountByModule[256] = {0};
             // ... track and report
@@ -1027,7 +1027,7 @@ typedef struct _DPC_RATE_TRACKER {
     ULONG DpcRate;  // DPCs per second
 } DPC_RATE_TRACKER;
 
-#define DPC_RATE_THRESHOLD 5000  // DPCs/sec — suspicious if exceeded
+#define DPC_RATE_THRESHOLD 5000  // DPCs/sec - suspicious if exceeded
 
 VOID MonitorDpcRate(PKDPC Dpc, PVOID DeferredContext, PVOID SysArg1, PVOID SysArg2)
 {
@@ -1067,7 +1067,7 @@ typedef struct _PROCESS_HANDLE_TRACKER {
     ULONG HandleOpenRate;  // Opens per second
 } PROCESS_HANDLE_TRACKER;
 
-#define HANDLE_OPEN_RATE_THRESHOLD 100  // Opens/sec — suspicious
+#define HANDLE_OPEN_RATE_THRESHOLD 100  // Opens/sec - suspicious
 
 // Hook or callback-based detection
 // Register a ObRegisterCallbacks pre-operation callback:
@@ -1312,7 +1312,7 @@ BOOLEAN AreCiCallbacksIntact(void)
 ```c
 // Check for common DSE bypass techniques:
 
-// 1. Vulnerable driver loading (BYOVD — Bring Your Own Vulnerable Driver)
+// 1. Vulnerable driver loading (BYOVD - Bring Your Own Vulnerable Driver)
 //    Tools load a signed but vulnerable driver to gain kernel access
 //    Then use it to patch g_CiOptions or disable DSE
 
@@ -1340,10 +1340,10 @@ BOOLEAN IsHypervisorPresent(void)
         vendor[12] = '\0';
 
         // Known hypervisors used for cheating:
-        // "KVMKVMKVM" — KVM
-        // "Microsoft Hv" — Hyper-V (legitimate)
-        // "VMwareVMware" — VMware (legitimate)
-        // "XenVMMXenVMM" — Xen
+        // "KVMKVMKVM" - KVM
+        // "Microsoft Hv" - Hyper-V (legitimate)
+        // "VMwareVMware" - VMware (legitimate)
+        // "XenVMMXenVMM" - Xen
 
         if (strncmp(vendor, "KVMKVMKVM", 12) == 0) {
             ReportSuspiciousHypervisor(vendor);
@@ -1366,11 +1366,11 @@ typedef struct _VULNERABLE_DRIVER_ENTRY {
 } VULNERABLE_DRIVER_ENTRY;
 
 // Known BYOVD drivers (partial list):
-// - RTCore64.sys (MSI Afterburner) — CVE-2019-16098
-// - DBUtil_2_3.sys (Dell) — CVE-2021-36276
-// - AsIO.sys (ASUS) — Arbitrary physical memory read/write
-// - WinRing0x64.sys (OpenHardwareMonitor) — Full kernel R/W
-// - MsIo64.sys (MSI) — Arbitrary physical memory access
+// - RTCore64.sys (MSI Afterburner) - CVE-2019-16098
+// - DBUtil_2_3.sys (Dell) - CVE-2021-36276
+// - AsIO.sys (ASUS) - Arbitrary physical memory read/write
+// - WinRing0x64.sys (OpenHardwareMonitor) - Full kernel R/W
+// - MsIo64.sys (MSI) - Arbitrary physical memory access
 
 BOOLEAN IsVulnerableDriverLoaded(void)
 {
@@ -1433,13 +1433,13 @@ VOID EvaluateCheatConfidence(PCHEAT_DETECTION_RESULT Result)
     ULONG count = __popcnt(Result->Indicators);
 
     if (count >= CHEAT_CONFIDENCE_THRESHOLD) {
-        // High confidence — take action
+        // High confidence - take action
         ReportCheatDetected(Result);
     } else if (count >= 2) {
-        // Medium confidence — increase monitoring
+        // Medium confidence - increase monitoring
         IncreaseMonitoringLevel(Result->SuspectProcess);
     } else {
-        // Low confidence — log for later analysis
+        // Low confidence - log for later analysis
         LogSuspiciousActivity(Result);
     }
 }
@@ -1513,7 +1513,7 @@ When implementing these techniques in a production anti-cheat driver:
 - [ ] **Rate limiting**: Don't scan continuously. Use timer-based scanning with appropriate intervals.
 - [ ] **False positive mitigation**: Whitelist known legitimate software (debuggers, overlays, etc.).
 - [ ] **Tamper resistance**: Protect your own driver's code and data from modification.
-- [ ] **Logging**: Use `WPP tracing` or `ETW` for detection events — never `DbgPrint` in production.
+- [ ] **Logging**: Use `WPP tracing` or `ETW` for detection events - never `DbgPrint` in production.
 - [ ] **Testing**: Test on all supported Windows versions with Driver Verifier enabled.
 
 ---

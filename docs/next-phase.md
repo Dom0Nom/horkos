@@ -1,4 +1,4 @@
-# Next Phase: Phase 3 — Windows KMDF Watchdog + SDK Wiring
+# Next Phase: Phase 3 - Windows KMDF Watchdog + SDK Wiring
 
 Phase 2 (`phase-2-server`) is complete. Phase 3 starts after that PR merges.
 
@@ -6,7 +6,7 @@ Phase 2 (`phase-2-server`) is complete. Phase 3 starts after that PR merges.
 
 ### Windows build environment
 - **Windows VM or CI runner** with Windows 11 24H2 (or later).
-- **WDK** (Windows Driver Kit) — installs to `C:\Program Files (x86)\Windows Kits\10\`.
+- **WDK** (Windows Driver Kit) - installs to `C:\Program Files (x86)\Windows Kits\10\`.
 - **Visual Studio Build Tools** with the Spectre-mitigated MSVC toolset.
 - **Test-signing enabled in the VM**: `bcdedit /set testsigning on`.
 - **`verifier.exe`** configured against the Horkos driver before any load.
@@ -15,7 +15,7 @@ Phase 2 (`phase-2-server`) is complete. Phase 3 starts after that PR merges.
 - **Test-signing for Phase 3 acceptance.** Documented in `docs/windows-signing.md`
   (created in Step 3.1).
 - **EV code-signing certificate** is a **ship prerequisite, not a Phase 3 prerequisite.**
-  Procurement was kicked off in Phase 0 (DigiCert/Sectigo lead time is 1–4 weeks
+  Procurement was kicked off in Phase 0 (DigiCert/Sectigo lead time is 1-4 weeks
   plus a hardware token). See risk register entry R11.
 - **WHQL submission** is a separate ship prerequisite tracked under R12.
 

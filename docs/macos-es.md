@@ -10,7 +10,7 @@ the macOS 12 SDK headers.
 
 `kernel/macos/es/EsClient.mm` is an Objective-C++ userspace client for
 Apple's [EndpointSecurity framework](https://developer.apple.com/documentation/endpointsecurity).
-It is **not** kernel code — it runs in the Horkos macOS daemon (userspace
+It is **not** kernel code - it runs in the Horkos macOS daemon (userspace
 System Extension) and observes process events through the ES API.
 
 Phase 4 is observation-only. The client subscribes to:
@@ -36,7 +36,7 @@ cmake -DHORKOS_MACOS_ES=ON …
 ```
 
 Compiles `EsClient.mm` and links `EndpointSecurity.framework`. The resulting
-binary still requires the entitlement at runtime — building with this flag
+binary still requires the entitlement at runtime - building with this flag
 does **not** grant the entitlement.
 
 Without this flag the `kernel/macos/es/` directory is entirely skipped and
@@ -69,7 +69,7 @@ During bring-up, before the provisioning profile arrives, you can load the ES
 client on a dev Mac by:
 
 1. **Disabling SIP** in recoveryOS (`csrutil disable`). This is destructive to
-   the host's security posture — use a dedicated VM or a throwaway machine.
+   the host's security posture - use a dedicated VM or a throwaway machine.
 2. Running the daemon as **root** (`sudo`). ES requires UID 0 regardless of SIP
    state.
 
@@ -80,14 +80,14 @@ logs an actionable error.
 
 ---
 
-## AUTH event reply deadline — CRITICAL
+## AUTH event reply deadline - CRITICAL
 
 EndpointSecurity delivers `AUTH_EXEC` events to the handler block on a
 kernel-managed serial queue. The originating process is **blocked** until the
 daemon calls `es_respond_auth_result`. If the reply is never sent:
 
 - The process hangs indefinitely from the user's perspective.
-- After Apple's undocumented deadline (empirically 10–60 s per Apple Tech Note
+- After Apple's undocumented deadline (empirically 10-60 s per Apple Tech Note
   [TN3137](https://developer.apple.com/documentation/technotes/tn3137-on-mac-runloops-and-the-endpointsecurity-framework))
   the kernel may assume an allow result, panic, or re-deliver.
 
@@ -96,7 +96,7 @@ daemon calls `es_respond_auth_result`. If the reply is never sent:
 1. `es_respond_auth_result` is called inside the same `case` branch that
    handles `ES_EVENT_TYPE_AUTH_EXEC`, before any early exit.
 2. No exceptions (`@throw`, C++ throw) are allowed in the handler block.
-3. The handler block does no blocking I/O — only a `mach_continuous_time()`
+3. The handler block does no blocking I/O - only a `mach_continuous_time()`
    read and a sink callback (which must also be non-blocking).
 4. Any future phase that adds policy logic must call the respond function
    **first**, then do the policy book-keeping asynchronously if needed.
@@ -111,7 +111,7 @@ host. Treat it the same way you treat dropping an IRP in the Windows driver.
 Apple's Endpoint Security entitlement is gated behind a manual review:
 
 1. File a request at [developer.apple.com/system-extensions/](https://developer.apple.com/system-extensions/).
-2. Apple reviews the use case (typically 1–4 weeks).
+2. Apple reviews the use case (typically 1-4 weeks).
 3. On approval, the entitlement is added to your team's provisioning portal.
 4. Generate a provisioning profile that includes it and place the entitlement
    plist at `kernel/macos/es/entitlements/endpoint-security.entitlements`.

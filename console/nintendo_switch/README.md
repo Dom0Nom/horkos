@@ -1,4 +1,4 @@
-# Nintendo Switch — Platform Stub
+# Nintendo Switch - Platform Stub
 
 This directory is a placeholder. No NintendoSDK headers or implementation are present.
 
@@ -7,12 +7,12 @@ This directory is a placeholder. No NintendoSDK headers or implementation are pr
 The Nintendo Switch SDK (NintendoSDK) exposes the following anti-cheat-relevant surfaces per
 public Nintendo developer documentation:
 
-- **nn::account** — User and account identity. Provides `nn::account::OpenPreselectedUser` and
+- **nn::account** - User and account identity. Provides `nn::account::OpenPreselectedUser` and
   `nn::account::GetUserId` for binding a session to a device-resident user account.
-- **nn::nifm** (Network Interface Manager) — Network reachability, used to require an online
+- **nn::nifm** (Network Interface Manager) - Network reachability, used to require an online
   check before match entry.
-- **nn::fs** — File-system access control; relevant for detecting unauthorized file manipulation.
-- **Process isolation** — NintendoSDK does not expose a ptrace-equivalent; process observation
+- **nn::fs** - File-system access control; relevant for detecting unauthorized file manipulation.
+- **Process isolation** - NintendoSDK does not expose a ptrace-equivalent; process observation
   is limited to the SDK's own logging and crash-reporting hooks.
 
 ## Attestation mapping

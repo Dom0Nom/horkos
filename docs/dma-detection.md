@@ -1,4 +1,4 @@
-# DMA Detection — Design and Threat Model
+# DMA Detection - Design and Threat Model
 
 Subsystem: `dma_detect/`  
 Phase: 4, Step 4.6  
@@ -49,9 +49,9 @@ mapped"; the IOMMU has no actual page table for the new BDF.
 
 The backend cross-checks two independent sources:
 
-1. **Firmware claim** — DMAR/SMMU table present in ACPI (`/proc/iomem` on
+1. **Firmware claim** - DMAR/SMMU table present in ACPI (`/proc/iomem` on
    Linux; Kernel DMA Protection registry key on Windows).
-2. **Kernel corroboration** — OS-visible IOMMU groups (`/sys/kernel/iommu_groups/`
+2. **Kernel corroboration** - OS-visible IOMMU groups (`/sys/kernel/iommu_groups/`
    on Linux; KDP `iommu_groups_present` proxy on Windows).
 
 `high_confidence_flag` is set to 1 when **any** of the following are true:
@@ -74,7 +74,7 @@ system is in a normal state.  The server should still log the report but
 take no punitive action.
 
 When `high_confidence_flag == 1`, the server escalates to human review or
-a soft-ban workflow — it does not hard-ban automatically, because legitimate
+a soft-ban workflow - it does not hard-ban automatically, because legitimate
 hardware (custom NICs, FPGA development boards, Thunderbolt docking stations)
 can present as suspicious without malicious intent.
 

@@ -26,7 +26,7 @@ mode, and never on an end-user box.
 ## Production signing (ship prerequisite, not a Phase 3 gate)
 
 1. **EV code-signing certificate** on a hardware token (DigiCert / Sectigo).
-   Lead time 1–4 weeks. Procurement was kicked off at Phase 0 (risk register R11).
+   Lead time 1-4 weeks. Procurement was kicked off at Phase 0 (risk register R11).
 2. **Attestation signing / WHQL** via the Microsoft Hardware Dev Center: submit
    the driver + INF + `.cat` for attestation signing. Required for a boot-start
    kernel driver on Secure-Boot machines (risk register R12).
@@ -35,4 +35,4 @@ mode, and never on an end-user box.
    FSFilter Activity Monitor range).
 
 Production boot-start on Secure Boot requires the WHQL/attestation-signed catalog
-— a self-signed test cert will not boot there.
+- a self-signed test cert will not boot there.

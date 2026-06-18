@@ -1,4 +1,4 @@
-# Horkos — Codebase Architecture & Defensive Design
+# Horkos - Codebase Architecture & Defensive Design
 
 Single-file orientation for anyone landing in this repo cold. What Horkos is,
 where everything lives, how data flows, and the defensive principles every
@@ -19,17 +19,17 @@ No offensive capability is shipped.
 
 | Path | Role |
 |---|---|
-| `ac/` | Anti-cheat usermode core: self-integrity (`src/selfcheck/` — PE/text cross-view, IAT/GOT audits, retaddr provenance, W^X/PTE audits) and timing side-channel probes (`src/timing/`) |
+| `ac/` | Anti-cheat usermode core: self-integrity (`src/selfcheck/` - PE/text cross-view, IAT/GOT audits, retaddr provenance, W^X/PTE audits) and timing side-channel probes (`src/timing/`) |
 | `attestation/` | Stable `Attestation.h` interface; backends: tpm2-tss (Win/Linux), CryptoKit/Secure Enclave (macOS), console stubs. The interface never changes; backends do |
-| `console/` | `gdk_xbox/`, `nintendo_switch/`, `playstation/` — stubs whose signatures match public docs; every stub comments the documented function it maps to |
+| `console/` | `gdk_xbox/`, `nintendo_switch/`, `playstation/` - stubs whose signatures match public docs; every stub comments the documented function it maps to |
 | `daemon/macos/` | Userspace daemon (bring-up path until ES entitlement lands): task-handle/ptrace/mmap/exception-port/thread/text integrity, codesign ops (`csops/`), device trust (`trust/`), input provenance (`input/`) |
 | `dma_detect/` | DMA-cheat hardware forensics: PCIe config-space/BAR/MSI-X/option-ROM/ACS/TLP/hotplug audits, per-OS `backends/` |
 | `drm/` | DRM/licence core (obfuscation-attributed paths) |
-| `examples/` | `pc_basic` — minimal game integration |
+| `examples/` | `pc_basic` - minimal game integration |
 | `kernel/win/` | KMDF boot-start driver: process/thread/image callbacks, ObRegisterCallbacks, SSDT/syscall/ETW integrity, callback-residency self-checks, driver whitelist (BYOVD defense). Builds only with WDK/MSVC |
-| `kernel/linux/` | `bpf/` (LSM + tracepoints + fentry — primary; Steam Deck Game Mode requires eBPF), `lkm/` (optional, build-flag-gated, for self-hosted servers), `userspace/` loader + sensors |
+| `kernel/linux/` | `bpf/` (LSM + tracepoints + fentry - primary; Steam Deck Game Mode requires eBPF), `lkm/` (optional, build-flag-gated, for self-hosted servers), `userspace/` loader + sensors |
 | `kernel/macos/es/` | EndpointSecurity client (System Extension path, gated on Apple entitlement; `-DHORKOS_MACOS_ES=ON`). Never drops an ES auth event without a reply |
-| `obfuscator/` | Standalone LLVM-19 pass plugin (CFF, opaque predicates, string encryption). Never shipped; heavy on the AC binary, attribute-opt-in (`hk_obfuscate`) on GAME init/licence/integrity/attestation only — never hot loops |
+| `obfuscator/` | Standalone LLVM-19 pass plugin (CFF, opaque predicates, string encryption). Never shipped; heavy on the AC binary, attribute-opt-in (`hk_obfuscate`) on GAME init/licence/integrity/attestation only - never hot loops |
 | `platform/` | The PAL. **The only place raw OS APIs are allowed** (plus `backends/` folders). Everything else uses `HK_PLATFORM_*` macros, never `_WIN32`/`__linux__`/`__APPLE__` |
 | `sdk/` | Game-facing client SDK: wire schemas (`include/horkos/*.h`), usermode sensors (render-hook, input-provenance, net-timing probes), per-OS `backends/` |
 | `server/` | Rust workspace (axum + tokio): `telemetry/` (ingest + analyzers + snapshot ring), `ban-engine/` (fusion + ban path + ONNX scoring + Ed25519 bundle), `api/` (composed app + live pipeline), `license-server/` (Ed25519 licence lifecycle), `attestation-verify/` (TPM quote + SE signature verifier), `ml/` (aim/anomaly model training + evaluation) |
@@ -45,22 +45,22 @@ client sensors (kernel + usermode, per OS)
    ▼
 per-tick JSON plane: server/telemetry/src/schema.rs::TickPayload  (v6)
    ▼
-HTTP ingest (telemetry/src/lib.rs) — validate, stamp server_received_ts,
+HTTP ingest (telemetry/src/lib.rs) - validate, stamp server_received_ts,
    per-player token bucket; forwarded via telemetry/src/sink.rs into
    ▼
-pipeline shards (ban-engine/src/pipeline.rs — one tokio task per shard owns
+pipeline shards (ban-engine/src/pipeline.rs - one tokio task per shard owns
    its players' sessions; consume-once tick↔snapshot merge-join)
    ▼
-telemetry analyzers (server/telemetry/src/analyzers/ — signals scored
+telemetry analyzers (server/telemetry/src/analyzers/ - signals scored
    individually, z-scored against honest-population baselines)
    +
-game-state snapshot plane (snapshot_schema.h — server-internal, game server →
+game-state snapshot plane (snapshot_schema.h - server-internal, game server →
    AC server; the authoritative truth the client never sees)
    ▼
-ban-engine fusion (ban-engine/src/fusion.rs) — fail-closed ban path; verdicts
+ban-engine fusion (ban-engine/src/fusion.rs) - fail-closed ban path; verdicts
    latch upward per session (Clean→Review→Ban, transitions only)
    ▼
-decision store (ban-engine/src/store.rs — append-only audit records, JSONL
+decision store (ban-engine/src/store.rs - append-only audit records, JSONL
    via HORKOS_DECISION_LOG or in-memory) + GET /api/decisions/{player_id}
 ```
 
@@ -95,7 +95,7 @@ These recur everywhere; new code is expected to follow them.
 4. **Fail closed.** The ban path and ingest reject malformed/unknown-version
    payloads (400) rather than guessing.
 5. **Honest stubs.** Kernel/ES/signing APIs that could not be verified are
-   stubbed and marked `HK-UNCERTAIN`, never guessed — a BSOD or a
+   stubbed and marked `HK-UNCERTAIN`, never guessed - a BSOD or a
    mis-documented security interface is worse than a delay.
 6. **Privacy is a declared surface.** Every collected field is declared in
    `server/api/data-categories.md`; GDPR-13/17 are the legal floor, erasure
@@ -111,12 +111,12 @@ These recur everywhere; new code is expected to follow them.
 
 | Component | Toolchain | Verifiable on macOS host? |
 |---|---|---|
-| `server/` workspace | cargo | **Yes** — `cargo build && cargo clippy --all-targets -- -D warnings && cargo fmt --check` |
-| `ac/`, `sdk/` host parts, `daemon/macos/`, `dma_detect/` (linux/macos) | CMake + AppleClang | **Yes** — `cmake -S . -B <dir>` + `cmake --build` |
-| `obfuscator/` | LLVM 19 | **Yes** — build the pass plugin |
+| `server/` workspace | cargo | **Yes** - `cargo build && cargo clippy --all-targets -- -D warnings && cargo fmt --check` |
+| `ac/`, `sdk/` host parts, `daemon/macos/`, `dma_detect/` (linux/macos) | CMake + AppleClang | **Yes** - `cmake -S . -B <dir>` + `cmake --build` |
+| `obfuscator/` | LLVM 19 | **Yes** - build the pass plugin |
 | `kernel/macos/es/` | clang `-fsyntax-only` (full build needs ES entitlement + `-DHORKOS_MACOS_ES=ON`) | Syntax only |
-| `kernel/win/` + `sdk/src/backends/win/` | WDK/MSVC | **No** — build on a Windows box |
-| `kernel/linux/bpf/`, `lkm/` | clang-bpf + libbpf + kernel headers | **No** — needs a Linux box / Steam Deck |
+| `kernel/win/` + `sdk/src/backends/win/` | WDK/MSVC | **No** - build on a Windows box |
+| `kernel/linux/bpf/`, `lkm/` | clang-bpf + libbpf + kernel headers | **No** - needs a Linux box / Steam Deck |
 
 This is a proof of concept: the Windows kernel/usermode and Linux eBPF/LKM
 sources are **unverified** on their real targets, and `HK-UNCERTAIN` stubs mark

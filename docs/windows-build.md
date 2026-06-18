@@ -34,7 +34,7 @@ Two supported paths:
 
 ### 3a. Driver/module-integrity sensor flags (win-kernel-driver-integrity)
 
-Signals 28–36 are read-only kernel integrity sensors. Each is gated by a CMake
+Signals 28-36 are read-only kernel integrity sensors. Each is gated by a CMake
 option that maps to a `target_compile_definition`; when OFF, the sensor `.c`
 compiles to a no-op stub, so the driver links with any subset. `ModuleMap.c` and
 `HkIntegrityScan.c` are always compiled (the shared scan substrate). The MSBuild
@@ -60,16 +60,16 @@ The default-OFF sensors carry `// HK-UNCERTAIN(...)` stubs at the exact risky
 call (FltMgr deref contract, ELAM registration timing, reloc normalization, the
 undocumented `PspCreateProcessNotifyRoutine`/`CmCallbackListHead` arrays, the
 unexported `KeServiceDescriptorTableShadow`, and big-pool executability). **Do not
-flip these ON until the flagged API contract is verified on-box** — a BSOD is
+flip these ON until the flagged API contract is verified on-box** - a BSOD is
 worse than a missing signal (guardrail #12).
 
 ### 3b. Syscall/ETW/PatchGuard surface-integrity sensor flags (win-kernel-syscall-etw-integrity)
 
-Signals 208–216 are read-only kernel sensors that bounds-check the x64 syscall
+Signals 208-216 are read-only kernel sensors that bounds-check the x64 syscall
 dispatch surface (SSDT, LSTAR MSR, syscall prologue, IDT) and the kernel ETW
 telemetry surface (ETW-TI liveness, logger-session census, infinity-hook probe)
 against the ntoskrnl image range and a boot baseline. **No table/MSR/IDT writes,
-no hooks installed** — purely read-and-report; the server scores and bans. They
+no hooks installed** - purely read-and-report; the server scores and bans. They
 register as additional fan-out targets of the same `HkIntegrityScan.c` PASSIVE
 work item (no second timer). `KernelImageMap.c` is always compiled (the shared
 ntoskrnl/hal range cache). The per-CPU reads (210 LSTAR, 214 IDT) run inside
@@ -88,7 +88,7 @@ ntoskrnl/hal range cache). The per-CPU reads (210 LSTAR, 214 IDT) run inside
 
 `HK_ETW_KEEPALIVE_MIN_DELTA` (default `0`) sets the per-interval ETW-TI keepalive
 floor; `0` means any counter advance counts as liveness. Findings reuse the same
-`HK_EVENT_INTEGRITY_FINDING` record (finding codes `0x20..0x2F`) — no new event
+`HK_EVENT_INTEGRITY_FINDING` record (finding codes `0x20..0x2F`) - no new event
 type, no ring resize, no `ioctl.h` size change.
 
 Every uncertainty-gated sensor (and the ON-but-pending IDT path) carries a
@@ -96,7 +96,7 @@ Every uncertainty-gated sensor (and the ON-but-pending IDT path) carries a
 `KiSystemCall64[Shadow]`/`EtwThreatIntProvRegHandle` resolves, the KVA-shadow
 expected-LSTAR selection, the `__sidt` IPI IDT read, the kernel logger-table
 query, the `WMI_LOGGER_CONTEXT` walk, the shadow-table `KeStackAttachProcess`
-pairing, and the ETW-TI consumer location (ETW-TI is a **protected provider** — no
+pairing, and the ETW-TI consumer location (ETW-TI is a **protected provider** - no
 ordinary KMDF driver can consume it; the keepalive counter has no in-kernel
 bumper under current signing). **Do not flip the OFF sensors ON, and do not enable
 210/214's absolute-match halves, until the flagged contract is verified on-box.**
@@ -110,7 +110,7 @@ verifier /standard /driver horkos.sys
 ```
 
 Reboot, then load. Verifier catches IRQL violations, leaked allocations, and
-spinlock misuse — the exact failure classes this driver risks.
+spinlock misuse - the exact failure classes this driver risks.
 
 ## 5. Load / unload
 

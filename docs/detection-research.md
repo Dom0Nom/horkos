@@ -68,25 +68,25 @@ class(es) each one detects.
 - Cheats caught: bring-your-own-vulnerable-driver attacks
 - Limitation: empty blocklist in Phase 3; detect-only
 
-### 4. ETW-Ti (Extended Tracking — thread injection, APC, handle)  [NEW]
+### 4. ETW-Ti (Extended Tracking - thread injection, APC, handle)  [NEW]
 
 - API: `EtwTi` provider `(Microsoft-Windows-Threat-Intelligence)` via
   `EtwRegister` + `EtwSetInformation` with `EventSecurityDescriptor`
 - What ETW-Ti emits:
-  - `EventID 1`  — `KERNEL_THREATINT_TASK_ALLOCVM` (NtAllocateVirtualMemory
+  - `EventID 1`  - `KERNEL_THREATINT_TASK_ALLOCVM` (NtAllocateVirtualMemory
     cross-process)
-  - `EventID 2`  — `KERNEL_THREATINT_TASK_PROTECTVM` (NtProtectVirtualMemory)
-  - `EventID 3`  — `KERNEL_THREATINT_TASK_MAPVIEW` (NtMapViewOfSection — classic
+  - `EventID 2`  - `KERNEL_THREATINT_TASK_PROTECTVM` (NtProtectVirtualMemory)
+  - `EventID 3`  - `KERNEL_THREATINT_TASK_MAPVIEW` (NtMapViewOfSection - classic
     injection vector)
-  - `EventID 4`  — `KERNEL_THREATINT_TASK_QUEUEAPC` (user-mode APC)
-  - `EventID 5`  — `KERNEL_THREATINT_TASK_SETCONTEXT` (thread context hijack)
-  - `EventID 6`  — `KERNEL_THREATINT_TASK_REMOTEATTACH`
-  - `EventID 7`  — `KERNEL_THREATINT_TASK_SUSPEND` (process suspend via
+  - `EventID 4`  - `KERNEL_THREATINT_TASK_QUEUEAPC` (user-mode APC)
+  - `EventID 5`  - `KERNEL_THREATINT_TASK_SETCONTEXT` (thread context hijack)
+  - `EventID 6`  - `KERNEL_THREATINT_TASK_REMOTEATTACH`
+  - `EventID 7`  - `KERNEL_THREATINT_TASK_SUSPEND` (process suspend via
     NtSuspendProcess)
-  - `EventID 8`  — `KERNEL_THREATINT_TASK_RESUME`
-  - `EventID 11` — `KERNEL_THREATINT_TASK_HANDLE` (duplicate handle request)
-  - `EventID 12` — `KERNEL_THREATINT_TASK_SETTHREAD` (handle creation)
-- Cheats caught: nearly every injection technique in a single provider — DLL
+  - `EventID 8`  - `KERNEL_THREATINT_TASK_RESUME`
+  - `EventID 11` - `KERNEL_THREATINT_TASK_HANDLE` (duplicate handle request)
+  - `EventID 12` - `KERNEL_THREATINT_TASK_SETTHREAD` (handle creation)
+- Cheats caught: nearly every injection technique in a single provider - DLL
   injection via `MapViewOfSection`, thread hijack via `SetThreadContext`, APC
   injection, cross-process memory read/write
 - IRQL: `PASSIVE_LEVEL` delivery; subscriber callback runs at `PASSIVE_LEVEL`
@@ -95,14 +95,14 @@ class(es) each one detects.
 - Implementation: register a trace session with the TI provider GUID; events
   arrive as `EVENT_TRACE` callbacks.  Must run in a system worker thread, not
   in `DriverEntry`.
-- BSOD risk: low — ETW infrastructure is safe at `PASSIVE_LEVEL`; the risk is
+- BSOD risk: low - ETW infrastructure is safe at `PASSIVE_LEVEL`; the risk is
   only malformed event parsing.  Use safe string helpers per CLAUDE.md #5.
 
 ### 5. File System Minifilter                                        [NEW]
 
 - API: `FltRegisterFilter` + altitude registration (Microsoft-assigned)
 - Attach altitudes:
-  - `328000–329998` — generic activity monitor (Microsoft-reserved; third-party
+  - `328000-329998` - generic activity monitor (Microsoft-reserved; third-party
     filters must pick a non-conflicting altitude; contact Microsoft for one)
 - Cheats caught:
   - Game executable / config tampering (e.g., modified `.pak` files in UE4)
@@ -111,7 +111,7 @@ class(es) each one detects.
   - Modified game config that enables illegal FOV / no-recoil
 - IRQL: `PASSIVE_LEVEL` for pre/post callbacks on most operations; `APC_LEVEL`
   for some
-- Complexity: high — full filter driver with altitude collision handling, PnP
+- Complexity: high - full filter driver with altitude collision handling, PnP
   awareness, and detourUnload
 - Who uses it: EAC (confirmed), BattlEye (likely), anti-DRM products
   (Denuvo, VMProtect staging)
@@ -123,16 +123,16 @@ class(es) each one detects.
 
 - API: `CmRegisterCallbackEx` or `CmRegisterCallback`
 - What to watch:
-  - `RegNtPreSetValueKey` under `HKLM\SYSTEM\CurrentControlSet\Services` —
+  - `RegNtPreSetValueKey` under `HKLM\SYSTEM\CurrentControlSet\Services` -
     service installation (BYOVD staging)
   - `RegNtPreSetValueKey` under `HKLM\SOFTWARE\Microsoft\Windows
-    NT\CurrentVersion\Image File Execution Options` — debugger hijack (IFEO)
-  - `RegNtPreSetValueKey` under `HKCU\...\Run` — persistence
-  - `RegNtPreCreateKeyEx` under game-related keys — cheat config persistence
+    NT\CurrentVersion\Image File Execution Options` - debugger hijack (IFEO)
+  - `RegNtPreSetValueKey` under `HKCU\...\Run` - persistence
+  - `RegNtPreCreateKeyEx` under game-related keys - cheat config persistence
 - Cheats caught: service-based persistence, debugger hijack, cheat config
   persistence
 - IRQL: `PASSIVE_LEVEL`
-- BSOD risk: moderate — registry callbacks run in the context of the calling
+- BSOD risk: moderate - registry callbacks run in the context of the calling
   thread and can block; long operations cause timeouts.  Do minimal work, defer
   ring-buffer writes.
 - Who uses it: Vanguard (confirmed), Windows Defender
@@ -141,9 +141,9 @@ class(es) each one detects.
 
 - API: `FwpmEngineOpen0`, `FwpmCalloutAdd0`, `FwpsCalloutRegister0` + `FWPM_LAYER_*`
 - Layers:
-  - `FWPM_LAYER_ALE_AUTH_CONNECT_V4/V6` — outbound connection authorization
-  - `FWPM_LAYER_ALE_ACCEPT_RECV_ACCEPT_V4/V6` — inbound connection authorization
-  - `FWPM_LAYER_STREAM_V4/V6` — payload inspection (lightweight)
+  - `FWPM_LAYER_ALE_AUTH_CONNECT_V4/V6` - outbound connection authorization
+  - `FWPM_LAYER_ALE_ACCEPT_RECV_ACCEPT_V4/V6` - inbound connection authorization
+  - `FWPM_LAYER_STREAM_V4/V6` - payload inspection (lightweight)
 - Cheats caught:
   - Speedhack via network desync (detect anomalous tick rates)
   - Lag switches / packet manipulation
@@ -151,7 +151,7 @@ class(es) each one detects.
   - Packet replay attacks (timing correlation)
 - IRQL: `PASSIVE_LEVEL` for the callout function (if `FWP_CALLOUT_FLAG_CONDITIONAL_ON_FLOW`);
   otherwise `DISPATCH_LEVEL` for inspection callouts (limited API surface)
-- Complexity: very high — WFP is notoriously tricky to get signed and stable
+- Complexity: very high - WFP is notoriously tricky to get signed and stable
 - Recommendation: defer to post-production; start with userspace firewall
   (see Cross-Platform section)
 
@@ -160,16 +160,16 @@ class(es) each one detects.
 Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 - Check `KdDebuggerEnabled` and `KdDebuggerNotPresent` via `KdRefreshDebuggerNotPresent`
 - Validate the `KdDebuggerEnabled` flag at `PASSIVE_LEVEL` (must not read at
-  elevated IRQL — will bugcheck)
+  elevated IRQL - will bugcheck)
 - Patch `KeServiceDescriptorTable` shadow / check sysenter MSR: if an unknown
   MSR hook exists, hardware breakpoints or inline hooks are active on kernel
   services
-- Walk the loaded module list (`PsLoadedModuleList` — undocumented but stable)
+- Walk the loaded module list (`PsLoadedModuleList` - undocumented but stable)
   to find unsigned or unexpected kernel modules
 - Cheats caught: kernel debuggers, live kernel patching, driver-based cheats
   that hook SSDT or service table
 - Status: userspace stubs exist (`IsDebuggerPresent`, `TracerPid`,
-  `P_TRACED`) — deliberately weak per CLAUDE.md
+  `P_TRACED`) - deliberately weak per CLAUDE.md
 - BSOD risk: HIGH for SSDT/MSR probing.  `PsLoadedModuleList` walk must be
   under a guarded mutex.  Recommendation: **ship a reduced set + flag the
   MSR probe as a future phase.**
@@ -184,13 +184,13 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 ### 10. Hypervisor / VM Detection                                    [NEW]
 
 - Check CPUID.1:ECX[bit 31] (hypervisor present)
-- Check hypervisor vendor string (CPUID leaf 0x40000000–0x40000005)
+- Check hypervisor vendor string (CPUID leaf 0x40000000-0x40000005)
 - In kernel: read `HYPERVISOR_PRESENT_BIT` flag via `KeQueryAuxiliaryCounterFrequency`
   + timing anomaly detection
 - Validate MSR `HV_X64_MSR_GUEST_ID` for Hyper-V; `LGT` virtualization
 - Cheats caught: cheats running in lightweight VMs to sandbox the game (common
   in professional cheating rings); analysis environments
-- Note: legitimate users run Hyper-V / WSL — do not ban, just **flag** for
+- Note: legitimate users run Hyper-V / WSL - do not ban, just **flag** for
   risk scoring server-side
 
 ### 11. Timer / DPC / IO Timer Inspection                           [NEW]
@@ -200,7 +200,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 - Enumerate registered `IoInitializeTimer` / `IoStartTimer` objects
 - Cheats caught: timer-based aimbots and speedhacks that use `KeSetTimer` /
   `KeSetCoalescableTimer` with manipulated intervals
-- BSOD risk: HIGH — timer table structure is version-specific.  Avoid in
+- BSOD risk: HIGH - timer table structure is version-specific.  Avoid in
   Phase N unless targeting a single Windows build.
 
 ### 12. Thread Start-Address Validation (improvement to #1)         [NEW]
@@ -218,7 +218,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 - Cheats caught: Cheat Engine keeps handles open to the game process; debuggers
   hold `PROCESS_ALL_ACCESS` handles
 - Complexity: high (undocumented structures) but stable across Windows 10/11
-- BSOD risk: moderate — `ObjectTable` access must hold `EX_PUSH_LOCK`
+- BSOD risk: moderate - `ObjectTable` access must hold `EX_PUSH_LOCK`
 
 ### 14. Signed Driver Enforcement (Production)                      [NEW]
 
@@ -226,7 +226,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 - In development: verify that `PsLoadedModuleList` contains only
   `IMAGE_DOS_SIGNATURE` + `IMAGE_NT_SIGNATURE` modules with valid PE signing
 - Cheats caught: BYOVD attacks (unknown drivers in kernel)
-- **Production-only** — requires WHQL signing and MSFT attestation policy
+- **Production-only** - requires WHQL signing and MSFT attestation policy
 
 ### 15. Desktop Heap / Window Station Monitoring                     [NEW]
 
@@ -234,7 +234,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 - Cheats caught:
   - Overlay-based wallhacks (invisible window over game)
   - Input spoofing windows
-- Status: not recommended for kernel path — this is better handled from a
+- Status: not recommended for kernel path - this is better handled from a
   lightweight userspace component (see Cross-Platform)
 
 ---
@@ -243,8 +243,8 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 
 ### 1. Tracepoints (existing)                          [AUTHED]
 
-- `tracepoint/syscalls/sys_enter_ptrace` — anti-debug
-- `tracepoint/sched/sched_process_exec` — exec monitoring
+- `tracepoint/syscalls/sys_enter_ptrace` - anti-debug
+- `tracepoint/sched/sched_process_exec` - exec monitoring
 - Status: authored in `kernel/linux/bpf/src/tracepoints.bpf.c`
 
 ### 2. LSM file_open Hook (existing)                    [AUTHED]
@@ -267,7 +267,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 #### 3c. `kprobe/do_mmap` / `kprobe/__x64_sys_mmap`
 - Inspects `vm_area_struct` flags and permissions
 - Cheat class: reflective DLL injection via `mmap(PROT_READ|PROT_WRITE|PROT_EXEC)`
-- Flags to flag: `VM_EXEC` on anonymous mappings (not backed by a file) —
+- Flags to flag: `VM_EXEC` on anonymous mappings (not backed by a file) -
   classic shellcode injection marker
 - BPF type: `BPF_PROG_TYPE_KPROBE` (requires BTF)
 
@@ -278,11 +278,11 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 
 #### 3e. `kprobe/__x64_sys_process_vm_writev`
 - Cross-process memory write
-- Cheat class: `WriteProcessMemory` equivalent — Cheat Engine, GameGuardian
+- Cheat class: `WriteProcessMemory` equivalent - Cheat Engine, GameGuardian
 - BPF type: `BPF_PROG_TYPE_TRACEPOINT` (sys_enter tracepoint)
 
 #### 3f. `kprobe/__x64_sys_memfd_create`
-- Creates anonymous in-memory file descriptors — popular injection vector
+- Creates anonymous in-memory file descriptors - popular injection vector
 - Cheat class: reflective loading of cheat shared objects
 - Detection: flag `memfd_create()` calls with suspicious names (random chars)
   or from non-game processes
@@ -307,7 +307,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
   that isn't on an allowlist
 
 #### 3j. LSM `file_mprotect`
-- Fires on `mprotect()` syscalls — complement to kprobe version
+- Fires on `mprotect()` syscalls - complement to kprobe version
 - Can deny `PROT_EXEC` transitions
 - BPF type: `BPF_PROG_TYPE_LSM` (requires `CONFIG_BPF_LSM`)
 
@@ -331,13 +331,13 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
 ### 4. eBPF Map-Based Behavioral Heuristics                 [NEW]
 
 - Maintain per-PID maps in BPF:
-  - `ptrace_rate[pid]` — count ptrace calls per PID per window; flag > N
-  - `exec_rate[pid]`  — count exec/s; flag bursts
-  - `memfd_count[pid]` — count memfd_create calls
-  - `mprotect_rwx_count[pid]` — count RWX transitions
+  - `ptrace_rate[pid]` - count ptrace calls per PID per window; flag > N
+  - `exec_rate[pid]`  - count exec/s; flag bursts
+  - `memfd_count[pid]` - count memfd_create calls
+  - `mprotect_rwx_count[pid]` - count RWX transitions
 - Server-side: feed these counts into the existing telemetry pipeline for
   risk scoring
-- Zero additional kernel code — pure eBPF map logic
+- Zero additional kernel code - pure eBPF map logic
 
 ### 5. Namespace / Container Detection                       [NEW]
 
@@ -345,7 +345,7 @@ Beyond userspace `IsDebuggerPresent` (trivially bypassed):
   running in a different PID, mount, or network namespace than expected
 - Cheat class: some cheats try to run the game in a container to isolate
   memory access
-- Low priority — rare attack vector but trivial to detect
+- Low priority - rare attack vector but trivial to detect
 
 ### 6. BPF Map Tampering Detection                       [NEW]
 
@@ -359,7 +359,7 @@ Periodically validate that Horkos's own BPF maps haven't been modified:
 
 eBPF limitations on kernel 4.x Steam Deck, certain hardened kernels where
 `CONFIG_BPF_LSM=n`, or when you need attachment points BPf can't reach:
-- `sys_call_table` monitoring (detect syscall hooks — fragile, version-specific)
+- `sys_call_table` monitoring (detect syscall hooks - fragile, version-specific)
 - `filldir` interception for `/proc` hiding detection
 - Netfilter hook for kernel-level packet inspection
 - TTY ldisc hook for keylogger detection (old-school)
@@ -369,14 +369,14 @@ eBPF limitations on kernel 4.x Steam Deck, certain hardened kernels where
 ### 8. Anti-Debug Extensions (Linux)                     [NEW]
 
 Beyond `PTRACE_TRACEME` self-attach (existing stub):
-- `/proc/self/status` `TracerPid` check — periodically re-read from userspace
+- `/proc/self/status` `TracerPid` check - periodically re-read from userspace
 - `PR_SET_DUMPABLE` manipulation detection (prctl)
 - `seccomp` status inspection (confirm the process hasn't relaxed seccomp)
-- `LD_PRELOAD` read from `/proc/self/environ` + `/proc/self/maps` — detect
+- `LD_PRELOAD` read from `/proc/self/environ` + `/proc/self/maps` - detect
   injected shared objects
-- `perf_event_open` for hardware-breakpoint detection (HW breakpoint 0–3
+- `perf_event_open` for hardware-breakpoint detection (HW breakpoint 0-3
   held by another process)
-- `personality(ADDR_NO_RANDOMIZE)` — detect ASLR bypass attempts
+- `personality(ADDR_NO_RANDOMIZE)` - detect ASLR bypass attempts
 - All of these can run from the macOS/Linux daemon userspace component
   without kernel code
 
@@ -386,18 +386,18 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 1. ES NOTIFY_EXEC + AUTH_EXEC (existing)                [LIVE]
 
-- `ES_EVENT_TYPE_AUTH_EXEC` — gating exec (can deny)
-- `ES_EVENT_TYPE_NOTIFY_EXEC` — observe-only exec
+- `ES_EVENT_TYPE_AUTH_EXEC` - gating exec (can deny)
+- `ES_EVENT_TYPE_NOTIFY_EXEC` - observe-only exec
 - Status: authored in `kernel/macos/es/EsClient.mm`
 - Current behavior: observe-only (allows all)
 - Improvement: escalate to AUTH_EXEC + deny-list for known cheat binaries
 
 ### 2. ES OPEN / UNLINK / RENAME / CREATE Events            [NEW]
 
-- `ES_EVENT_TYPE_NOTIFY_OPEN` — intercept file-open attempts
-- `ES_EVENT_TYPE_NOTIFY_UNLINK` — deletion monitoring
-- `ES_EVENT_TYPE_NOTIFY_RENAME` — rename monitoring (cheat-stash-rename pattern)
-- `ES_EVENT_TYPE_NOTIFY_CREATE` — new-file creation (cheat write to disk)
+- `ES_EVENT_TYPE_NOTIFY_OPEN` - intercept file-open attempts
+- `ES_EVENT_TYPE_NOTIFY_UNLINK` - deletion monitoring
+- `ES_EVENT_TYPE_NOTIFY_RENAME` - rename monitoring (cheat-stash-rename pattern)
+- `ES_EVENT_TYPE_NOTIFY_CREATE` - new-file creation (cheat write to disk)
 - Filter: only observe paths under:
   - Game application bundle (`*.app/Contents/`)
   - Game support directories (`~/Library/Application Support/<game>`)
@@ -406,20 +406,20 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 3. ES AUTH_OPEN (FILE_OPEN Gating)                       [NEW]
 
-- `ES_EVENT_TYPE_AUTH_OPEN` — can deny file open
+- `ES_EVENT_TYPE_AUTH_OPEN` - can deny file open
 - Use: block open of game executable / config by non-game processes
 - This is the macOS equivalent of a Windows minifilter
-- Entitlement: required for AUTH events — must have Apple ES entitlement
+- Entitlement: required for AUTH events - must have Apple ES entitlement
   (self-gated on `HORKOS_MACOS_ES` per locked decision #4)
 
 ### 4. ES SIGNATURE / CODE SIGNING Events                     [NEW]
 
-- `ES_EVENT_TYPE_NOTIFY_CS_VALIDATED` — code-signing validation events
+- `ES_EVENT_TYPE_NOTIFY_CS_VALIDATED` - code-signing validation events
 - Inspect: `es_event_cs_validated_t.team_id`, `es_event_cs_validated_t.signing_id`
 - Flag: processes with:
   - `team_id == NULL` (unsigned)
   - `flags & CS_KILL` (kill-flag set by kernel)
-  - `flags & CS_FORCED_LV` (library validation forced — injection indicator)
+  - `flags & CS_FORCED_LV` (library validation forced - injection indicator)
 - Cheats caught: unsigned cheat binaries, code-signing bypass, library injection
   with forced library validation
 
@@ -427,7 +427,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 - `ES_EVENT_TYPE_NOTIFY_DYLD_NOTIFY` (dyld image-mapping events in older ES)
 - Newer ES: `ES_EVENT_TYPE_NOTIFY_EXEC` with `EXIT_REASON_INVALID_CS` flag
-- Flag: any `mmap(MAP_ANON | PROT_EXEC)` from `mach_vm_map()` — kernel
+- Flag: any `mmap(MAP_ANON | PROT_EXEC)` from `mach_vm_map()` - kernel
   reports as missing code signature
 - Cheats caught: reflective loading, JIT-spray attacks, memory-execution tricks
 
@@ -435,7 +435,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 - `es_message_t.exec.init_*` fields (available in macOS 13 Ventura+):
   - `es_event_exec_t.argv[0..N]`
-  - `es_event_exec_t.env` — full environment variable array
+  - `es_event_exec_t.env` - full environment variable array
 - Inspect for:
   - `DYLD_INSERT_LIBRARIES` (library injection)
   - `DYLD_LIBRARY_PATH` (library hijack)
@@ -447,17 +447,17 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 7. ES AUTH_VNODE / AUTH_EXTLOOKUP (SIP-aware paths)     [NEW]
 
-- `ES_EVENT_TYPE_AUTH_VNODE` — vnode-level authorization (macOS 13+)
-- `ES_EVENT_TYPE_AUTH_EXTLOOKUP` — lookups past mount points
+- `ES_EVENT_TYPE_AUTH_VNODE` - vnode-level authorization (macOS 13+)
+- `ES_EVENT_TYPE_AUTH_EXTLOOKUP` - lookups past mount points
 - Cheat class: accessing game binaries through unusual access paths
   (mount-loop attacks, bind mounts)
 
 ### 8. ES AUTH_MOUNT (macOS 13+)                            [NEW]
 
-- `ES_EVENT_TYPE_AUTH_MOUNT` — gating filesystem mount
+- `ES_EVENT_TYPE_AUTH_MOUNT` - gating filesystem mount
 - Cheat class: mount-based isolation attacks, overlay filesystems used to
   hide cheat binaries
-- Low priority — used by professional cheat vendors to hide their tools
+- Low priority - used by professional cheat vendors to hide their tools
 
 ### 9. ES NOTIFY_XPC / MACH Events                           [NEW]
 
@@ -470,7 +470,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 10. ES AUTH_IOKIT_OPEN                                    [NEW]
 
-- `ES_EVENT_TYPE_AUTH_IOKIT_OPEN` — gating IOKit user-client open
+- `ES_EVENT_TYPE_AUTH_IOKIT_OPEN` - gating IOKit user-client open
 - Cheat class: DMA attacks via PCIe, custom kernel extension loading,
   frame buffer access for wallhack overlays (via IOKit)
 - Block: non-Apple IOKit user-clients targeting the GPU class
@@ -478,13 +478,13 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 11. ES AUTH_TASK_FOR_PID (macOS 14+)                      [NEW]
 
-- `ES_EVENT_TYPE_AUTH_TASK_FOR_PID` — gating task port acquisition
-- **Critical** — this is the macOS equivalent of ObRegisterCallbacks for
+- `ES_EVENT_TYPE_AUTH_TASK_FOR_PID` - gating task port acquisition
+- **Critical** - this is the macOS equivalent of ObRegisterCallbacks for
   handle access.  `task_for_pid()` is required for memory inspection.
 - Deny: `task_for_pid()` requests targeting the game process from non-Apple,
   non-game processes
 - Cheats caught: nearly every memory hack on macOS requires `task_for_pid()`
-  — blocking it stops Cheat Engine, GameGuardian, and nearly all macOS cheats
+  - blocking it stops Cheat Engine, GameGuardian, and nearly all macOS cheats
   at once
 - Entitlement: `com.apple.security.get-task-allow` (development builds) or
   SIP-disabled (test environments).  Production requires Apple approval.
@@ -495,7 +495,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 - Or on x86_64: read `thread_get_state(..., x86_DEBUG_STATE64)`
 - Cheat class: hardware breakpoints used by anti-anti-cheat tools to bypass
   software breakpoints; also used by speedhacks to step-execute
-- Complexity: moderate — requires TASK_INSPECT_PORT (weaker than TASK_ALL_PORT)
+- Complexity: moderate - requires TASK_INSPECT_PORT (weaker than TASK_ALL_PORT)
 - Platform: Apple Silicon and x86_64 supported
 
 ### 13. Framebuffer / Screen Capture Detection              [NEW]
@@ -504,7 +504,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
   (requires EndpointSecurity `NOTIFY_RENAME` + code-signing checks)
 - Monitor `IOSurface` creation + `IOMobileFramebufferGetLayer` for
   screen-scraping bots (ESP bots)
-- Low priority — detection is noisy (legitimate screen recorders)
+- Low priority - detection is noisy (legitimate screen recorders)
 
 ### 14. System Extension Integrity Check                    [NEW]
 
@@ -519,7 +519,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 - Read `csr-active-config` via `sysctl kern.csr_active_config`
 - Or use `csr_check()` from libc for specific flags
 - Cheat class: SIP-disabled machines (required for some kernel-level cheats)
-- Recommendation: **flag** for risk scoring; do not ban — legitimate users
+- Recommendation: **flag** for risk scoring; do not ban - legitimate users
   disable SIP for development / Hackintosh builds
 
 ---
@@ -569,9 +569,9 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 5. Input Device Fingerprinting                          [NEW]
 
-- Windows: `Raw Input API` (`GetRawInputData`) — identify unique devices
-- Linux: `libevdev` — read `/dev/input/event*` device names, vendor/product IDs
-- macOS: `IOHIDManager` — iterate HID devices
+- Windows: `Raw Input API` (`GetRawInputData`) - identify unique devices
+- Linux: `libevdev` - read `/dev/input/event*` device names, vendor/product IDs
+- macOS: `IOHIDManager` - iterate HID devices
 - Check for:
   - Virtual input devices (VMware Virtual USB Mouse, vJoy)
   - VM-synthesized keyboards (VirtualBox, QEMU)
@@ -580,7 +580,7 @@ Beyond `PTRACE_TRACEME` self-attach (existing stub):
 
 ### 6. Network-Level Anomaly Detection                     [NEW]
 
-- No kernel WFP / eBPF needed to start — in userspace daemon:
+- No kernel WFP / eBPF needed to start - in userspace daemon:
   - Track packets/sec; flag > N standard deviations from mean
   - Monitor for unexpected outbound connections (non-game-server IPs)
   - Detect DNS-over-HTTPS / DoH usage (DPI evasion)
@@ -632,12 +632,12 @@ All push features into ONNX model via existing telemetry pipeline:
 
 ### 10. Process Hollowing Detection                       [NEW]
 
-- Windows: compare PEB `ImageBaseAddress` with the module from `LDR_DATA_TABLE_ENTRY` in `InMemoryOrderModuleList` — mismatch = hollowing
+- Windows: compare PEB `ImageBaseAddress` with the module from `LDR_DATA_TABLE_ENTRY` in `InMemoryOrderModuleList` - mismatch = hollowing
 - Linux: read `/proc/pid/exe` symlink and `/proc/pid/maps` text segment; mismatch
   between expected binary path and actual mapped text
 - macOS: `task_info(TASK_DYLD_INFO)` → compare `all_image_info_addr` base
   with the expected Mach-O address
-- Cheat class: process hollowing — a legitimate process (e.g., `notepad.exe`
+- Cheat class: process hollowing - a legitimate process (e.g., `notepad.exe`
   or `svchost.exe`) is hollowed out and replaced with the cheat in memory
 
 ---
@@ -672,7 +672,7 @@ All push features into ONNX model via existing telemetry pipeline:
 ### 4. Ghost / Shadow Banning                             [NEW]
 
 - Players flagged by ML model enter a pool matched only with other flagged
-- No explicit ban notification — cheats lose effectiveness (matched with
+- No explicit ban notification - cheats lose effectiveness (matched with
   other cheaters) without knowing they've been caught
 - Industry standard: Valve (VAC), Riot (Vanguard), Epic (EAC)
 
@@ -691,33 +691,33 @@ All push features into ONNX model via existing telemetry pipeline:
 Phase the new techniques roughly as follows, balancing detection value
 against implementation risk:
 
-### Tier 1 — High value, low kernel risk
+### Tier 1 - High value, low kernel risk
 
-1. **ETW-Ti subscription** (Windows) — massive injection coverage in one API
-2. **LSM bprm_check_security** deny-list (Linux) — blocks cheat execs entirely
-3. **ES AUTH_EXEC + AUTH_OPEN** escalation (macOS) — gate file/exec operations
-4. **Process hollowing detection** (all platforms) — high detection value
+1. **ETW-Ti subscription** (Windows) - massive injection coverage in one API
+2. **LSM bprm_check_security** deny-list (Linux) - blocks cheat execs entirely
+3. **ES AUTH_EXEC + AUTH_OPEN** escalation (macOS) - gate file/exec operations
+4. **Process hollowing detection** (all platforms) - high detection value
 5. **Environment integrity scan** (userspace, all platforms)
-6. **eBPF map behavioral heuristics** (Linux) — pure eBPF, no new hooks
+6. **eBPF map behavioral heuristics** (Linux) - pure eBPF, no new hooks
 
-### Tier 2 — Medium risk, fill coverage gaps
+### Tier 2 - Medium risk, fill coverage gaps
 
 7. **Registry callback** (Windows `CmRegisterCallbackEx`)
 8. **ES CODE_SIGNING validation** (macOS §4)
-9. **ES AUTH_TASK_FOR_PID** denial (macOS §11) — huge coverage on macOS
+9. **ES AUTH_TASK_FOR_PID** denial (macOS §11) - huge coverage on macOS
 10. **Filesystem HMAC + attestation** (all platforms)
 11. **Server-side feature extraction + ONNX logreg** (wire existing `ort` crate)
 
-### Tier 3 — Higher complexity, production gates
+### Tier 3 - Higher complexity, production gates
 
-12. **File system minifilter** (Windows — requires WHQL for production)
-13. **ES AUTH_IOKIT_OPEN** denial (macOS — blocks DMA + GPU abuse)
-14. **WFP callout** (Windows — very complex, defer to post-production)
-15. **Kernel Handle Table walking** (Windows — undoc structures)
+12. **File system minifilter** (Windows - requires WHQL for production)
+13. **ES AUTH_IOKIT_OPEN** denial (macOS - blocks DMA + GPU abuse)
+14. **WFP callout** (Windows - very complex, defer to post-production)
+15. **Kernel Handle Table walking** (Windows - undoc structures)
 16. **Hardware breakpoint monitoring** (macOS)
 17. **Server-side reputation system** (database + ML pipeline)
 
-### Tier 4 — Nice-to-have / research
+### Tier 4 - Nice-to-have / research
 
 18. **IDT/GDT inspection** (Windows)
 19. **Timer table walking** (Windows)

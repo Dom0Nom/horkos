@@ -1,7 +1,7 @@
 # Horkos Obfuscator (LLVM 19)
 
 A standalone, build-time LLVM-19 pass plugin. **Never shipped to end users**
-(Locked Decision #5) — it transforms the AC/DRM binaries during the build and
+(Locked Decision #5) - it transforms the AC/DRM binaries during the build and
 is then discarded.
 
 ## Passes
@@ -17,7 +17,7 @@ is then discarded.
 Passes only transform functions carrying
 `__attribute__((annotate("hk_obfuscate")))`. Clang lowers that attribute into
 the module-global `@llvm.global.annotations` array (not a function attribute the
-new PM can read), so the plugin walks that global — see `src/Annotations.h`. The
+new PM can read), so the plugin walks that global - see `src/Annotations.h`. The
 GAME binary's hot-loop functions never carry the annotation; only
 init/licence/integrity/attestation symbols do. The AC binary may be obfuscated
 broadly via a sweeping driver that annotates everything.

@@ -33,42 +33,42 @@ a user-space API for monitoring and authorizing security-relevant system
 events. The framework operates via a com.apple.endpointsecurity entitlement
 (ES_CLIENT_CONTRACTID).
 
-1.1 AUTH Events (blocking — client must reply)
+1.1 AUTH Events (blocking - client must reply)
 ------------------------------------------------
 
 AUTH_EXEC (ES_EVENT_TYPE_AUTH_EXEC)
   Struct: es_event_exec_t
-    es_file_t *target              — the executable being launched
-    uint64_t *reserved0             — internal use only
-    uint32_t *cookie               — pairs with NOTIFY_EXEC outcome
-    uint32_t *dsid                 — DirectoryService Session ID
-    es_token_t *build              — source_identity (CDHash, signing info)
-    es_token_t *base_determination — cached determination result
-    const es_process_t *caller     — process that called exec/fork+exec
-    es_fd_t *script_fd             — fd of script body (#! scripts)
-    uuid_t *signature              — CMS signature hash
-    es_range_t *text_offset_offset — TEXT offset in Mach-O
-    bool *is_platform_binary       — Apple-signed binary flag (csflags CS_PLATFORM_BINARY)
-    es_token_t *cdhash             — CodeDirectory hash
-    const char *executable_path    — resolved path
+    es_file_t *target              - the executable being launched
+    uint64_t *reserved0             - internal use only
+    uint32_t *cookie               - pairs with NOTIFY_EXEC outcome
+    uint32_t *dsid                 - DirectoryService Session ID
+    es_token_t *build              - source_identity (CDHash, signing info)
+    es_token_t *base_determination - cached determination result
+    const es_process_t *caller     - process that called exec/fork+exec
+    es_fd_t *script_fd             - fd of script body (#! scripts)
+    uuid_t *signature              - CMS signature hash
+    es_range_t *text_offset_offset - TEXT offset in Mach-O
+    bool *is_platform_binary       - Apple-signed binary flag (csflags CS_PLATFORM_BINARY)
+    es_token_t *cdhash             - CodeDirectory hash
+    const char *executable_path    - resolved path
   Deadline: 60 seconds. If the client doesn't reply in time, the system
   kills the process via SIGKILL in macOS 12+, or Deny-by-Default starting
   in macOS 13.
 
 AUTH_OPEN (ES_EVENT_TYPE_AUTH_OPEN)
   Struct: es_event_open_t
-    const es_file_t *file          — file being opened
-    int32_t fflag                  — open() flags (O_RDONLY, O_RDWR, O_CREAT, etc.)
-    uint32_t reserved[6]           — reserved
+    const es_file_t *file          - file being opened
+    int32_t fflag                  - open() flags (O_RDONLY, O_RDWR, O_CREAT, etc.)
+    uint32_t reserved[6]           - reserved
   Deadline: 30 seconds
 
 AUTH_MMAP (ES_EVENT_TYPE_AUTH_MMAP)
   Struct: es_event_mmap_t
-    int32_t prot                   — protection bits (PROT_READ, PROT_WRITE, PROT_EXEC)
-    int32_t flags                  — mmap flags (MAP_PRIVATE, MAP_SHARED, MAP_FIXED, MAP_ANON)
-    int64_t file_offset            — offset into the backing file
-    uint64_t max_protection        — max protection (as in maxprot)
-    const es_file_t *source_file   — the file being mmap'd (NULL for MAP_ANON)
+    int32_t prot                   - protection bits (PROT_READ, PROT_WRITE, PROT_EXEC)
+    int32_t flags                  - mmap flags (MAP_PRIVATE, MAP_SHARED, MAP_FIXED, MAP_ANON)
+    int64_t file_offset            - offset into the backing file
+    uint64_t max_protection        - max protection (as in maxprot)
+    const es_file_t *source_file   - the file being mmap'd (NULL for MAP_ANON)
   Note: Also fires for regions passed to mach_vm_map with a file backing
 
 AUTH_RENAME (ES_EVENT_TYPE_AUTH_RENAME)
@@ -84,8 +84,8 @@ AUTH_UNLINK (ES_EVENT_TYPE_AUTH_UNLINK)
 
 AUTH_SIGNAL (ES_EVENT_TYPE_AUTH_SIGNAL)
   Struct: es_event_signal_t
-    const es_process_t *target     — target process
-    int32_t sig                    — signal number
+    const es_process_t *target     - target process
+    int32_t sig                    - signal number
 
 AUTH_MOUNT (ES_EVENT_TYPE_AUTH_MOUNT)
   Struct: es_event_mount_t
@@ -94,22 +94,22 @@ AUTH_MOUNT (ES_EVENT_TYPE_AUTH_MOUNT)
 
 AUTH_TASK_FOR_PID (ES_EVENT_TYPE_AUTH_TASK_FOR_PID)
   Struct: es_event_task_for_pid_t
-    const es_process_t *target     — the process whose task port is requested
-    pid_t pid                      — the target PID
+    const es_process_t *target     - the process whose task port is requested
+    pid_t pid                      - the target PID
   Critical: Only one AUTH reply per lifetime per (caller, target) pair.
 
 AUTH_IOKIT_OPEN (ES_EVENT_TYPE_AUTH_IOKIT_OPEN)
   Struct: es_event_iokit_open_t
-    uint32_t user_client_type       — type passed to IOServiceOpen
-    uint64_t user_client_class_constant — or variable length string matching
+    uint32_t user_client_type       - type passed to IOServiceOpen
+    uint64_t user_client_class_constant - or variable length string matching
 
-AUTH_MACH_RIGHT (ES_EVENT_TYPE_AUTH_MACH_RIGHT) — macOS 13+
+AUTH_MACH_RIGHT (ES_EVENT_TYPE_AUTH_MACH_RIGHT) - macOS 13+
   Struct: es_event_mach_right_t
     const es_process_t *target
-    mach_port_name_t right           — port right being manipulated
-    uint32_t right_type              — MACH_PORT_TYPE_* constants
+    mach_port_name_t right           - port right being manipulated
+    uint32_t right_type              - MACH_PORT_TYPE_* constants
 
-AUTH_COPYFILE — macOS 14+
+AUTH_COPYFILE - macOS 14+
   Struct: es_event_copyfile_t
     const es_file_t *source
     const es_file_t *target_dir
@@ -121,23 +121,23 @@ AUTH_COPYFILE — macOS 14+
 NOTIFY_EXEC (ES_EVENT_TYPE_NOTIFY_EXEC)
   Struct: es_event_exec_t (same as AUTH but read-only post-execution)
   Additional result field (inherited from es_process_t struct):
-    uint32_t exit_code              — only populated after process exits
+    uint32_t exit_code              - only populated after process exits
   Fields are cached; snapshot taken at time of event.
 
 NOTIFY_FORK   (ES_EVENT_TYPE_NOTIFY_FORK)
   Struct: es_event_fork_t
-    const es_process_t *child       — the new child process
+    const es_process_t *child       - the new child process
 
 NOTIFY_EXIT   (ES_EVENT_TYPE_NOTIFY_EXIT)
   Struct: es_event_exit_t
-    int32_t stat                    — exit status
+    int32_t stat                    - exit status
 
-NOTIFY_CSU_INVALIDATED (ES_EVENT_TYPE_NOTIFY_CS_INVALIDATED) — CS flag only
+NOTIFY_CSU_INVALIDATED (ES_EVENT_TYPE_NOTIFY_CS_INVALIDATED) - CS flag only
   Telltale of code-signing bypasses.
 
 NOTIFY_CS_INVALIDATED (ES_EVENT_TYPE_NOTIFY_CS_INVALIDATED)
   Struct: es_event_cs_invalidated_t
-    uint64_t pid                    — PID whose CS flags were invalidated
+    uint64_t pid                    - PID whose CS flags were invalidated
   Fires when kernel invalidates CS cache for a process (e.g., after
   code-signing bypass or when a process is transformed).
 
@@ -148,7 +148,7 @@ NOTIFY_MPROTECT (ES_EVENT_TYPE_NOTIFY_MPROTECT)
   Struct: es_event_mprotect_t
     void *address
     size_t size
-    int32_t prot                    — new protection bits
+    int32_t prot                    - new protection bits
 
 NOTIFY_SIGNAL (ES_EVENT_TYPE_NOTIFY_SIGNAL)
 
@@ -158,17 +158,17 @@ NOTIFY_UNLINK (ES_EVENT_TYPE_NOTIFY_UNLINK)
 
 NOTIFY_OPEN (ES_EVENT_TYPE_NOTIFY_OPEN)
 
-NOTIFY_MACH_MSG (ES_EVENT_TYPE_NOTIFY_MACH_MSG) — macOS 13+
+NOTIFY_MACH_MSG (ES_EVENT_TYPE_NOTIFY_MACH_MSG) - macOS 13+
   Struct: es_event_mach_msg_t
-    mach_msg_header_t *msg          — the full Mach message header
+    mach_msg_header_t *msg          - the full Mach message header
     const es_process_t *sender
     const es_process_t *receiver
   Critical for detecting RPC injection.
 
 NOTIFY_MACH_RIGHT (ES_EVENT_TYPE_NOTIFY_MACH_RIGHT)
 
-NOTIFY_IPC_MSG (ES_EVENT_TYPE_NOTIFY_IPC_MSG) — macOS 13+
-  Struct: es_event_ipc_msg_t       — higher-level than NOTIFY_MACH_MSG
+NOTIFY_IPC_MSG (ES_EVENT_TYPE_NOTIFY_IPC_MSG) - macOS 13+
+  Struct: es_event_ipc_msg_t       - higher-level than NOTIFY_MACH_MSG
 
 NOTIFY_TRACER
   Fires when a process attempts to ptrace() another process.
@@ -176,45 +176,45 @@ NOTIFY_TRACER
     const es_process_t *target
     pid_t target_pid
 
-NOTIFY_REMOTE_THREAD_CREATE — macOS 14+
+NOTIFY_REMOTE_THREAD_CREATE - macOS 14+
 
-NOTIFY_PROC_SUSPEND_RESUME — macOS 15+
+NOTIFY_PROC_SUSPEND_RESUME - macOS 15+
 
-NOTIFY_GET_TASK — macOS 15+
+NOTIFY_GET_TASK - macOS 15+
   Fires on task_read_for_pid and related TFP acquisition.
   Struct: es_event_get_task_t
     const es_process_t *target
-    es_get_task_type_t type         — ES_GET_TASK_TYPE_TASK_* enum
+    es_get_task_type_t type         - ES_GET_TASK_TYPE_TASK_* enum
 
 1.3 es_process_t Fields (common across events)
 ------------------------------------------------
 
 typedef struct {
-  audit_token_t auditToken;         — (pid, version)
-  pid_t pid;                        — process ID
-  pid_t ppid;                       — parent process ID
-  pid_t original_ppid;              — before reparenting
-  pid_t group_pid;                  — process group
-  pid_t session_id;                 — session ID
-  bool is_es_client;                — is this the ES client itself?
-  const char *signing_id;           — signing identifier (teamid.bundleid)
-  const char *team_id;              — Apple Developer Team ID
-  const cs_blob_t *cs_blob;         — code-signing blob (internal)
-  uint32_t cs_flags;                — raw CS_VALID, CS_ADHOC, etc. flags
-  bool is_platorm_binary;           — CS_PLATFORM_BINARY set
-  bool is_adhoc_signed;             — CS_ADHOC set
-  uint8_t cs_signing_id_hash[32];   — SHA-256 of signing identity
-  uint8_t cs_team_id_hash[32];      — SHA-256 of team ID
-  const cdhash_t cdhash;            — code directory hash
-  bool cs_cdhash_trusted;           — trusted by the system
-  struct timespec exec_fail_time;   — last exec failure time
-  bool exec_done;                   — exec transition complete
-  uint64_t executable_path_length;  — (internal)
-  const char *executable_path;      — full path to executable
-  uint64_t tty_fd;                  — controlling tty
-  struct proc_identiier *proc;      — (internal kernel pointer)
-  const code_directory *cd;         — code directory data
-  es_uthread_t *thread;             — current thread structure (internal)
+  audit_token_t auditToken;         - (pid, version)
+  pid_t pid;                        - process ID
+  pid_t ppid;                       - parent process ID
+  pid_t original_ppid;              - before reparenting
+  pid_t group_pid;                  - process group
+  pid_t session_id;                 - session ID
+  bool is_es_client;                - is this the ES client itself?
+  const char *signing_id;           - signing identifier (teamid.bundleid)
+  const char *team_id;              - Apple Developer Team ID
+  const cs_blob_t *cs_blob;         - code-signing blob (internal)
+  uint32_t cs_flags;                - raw CS_VALID, CS_ADHOC, etc. flags
+  bool is_platorm_binary;           - CS_PLATFORM_BINARY set
+  bool is_adhoc_signed;             - CS_ADHOC set
+  uint8_t cs_signing_id_hash[32];   - SHA-256 of signing identity
+  uint8_t cs_team_id_hash[32];      - SHA-256 of team ID
+  const cdhash_t cdhash;            - code directory hash
+  bool cs_cdhash_trusted;           - trusted by the system
+  struct timespec exec_fail_time;   - last exec failure time
+  bool exec_done;                   - exec transition complete
+  uint64_t executable_path_length;  - (internal)
+  const char *executable_path;      - full path to executable
+  uint64_t tty_fd;                  - controlling tty
+  struct proc_identiier *proc;      - (internal kernel pointer)
+  const code_directory *cd;         - code directory data
+  es_uthread_t *thread;             - current thread structure (internal)
 } es_process_t;
 
 
@@ -229,30 +229,30 @@ code signature is trusted.
 2.1 Core CS Flags (from <sys/codesign.h>)
 ------------------------------------------
 
-CS_VALID             = 0x00000001  — Code signature is valid
-CS_ADHOC             = 0x00000002  — Ad-hoc signed (no CA chain, hash-based)
-CS_GET_TASK_ALLOW    = 0x00000004  — Entitled to call task_for_pid()
-CS_INSTALLER         = 0x00000008  — Entitled to install packages
-CS_INVALID_ALLOWED   = 0x00000010  — Explicit invalidation allowed (debug)
-CS_HARD              = 0x00000100  — Don't load invalid pages
-CS_KILL              = 0x00000200  — Kill process if invalid
-CS_CHECK_EXPIRATION  = 0x00000400  — Check certificate expiration
-CS_ENFORCEMENT       = 0x00001000  — Enforce code-signing (disable = allow unsigned)
-CS_REQUIRE_LV        = 0x00002000  — Require library validation (library loading)
-CS_ENTITLEMENTS_VALIDATED = 0x00004000  — Entitlements blob was validated
-CS_RUNTIME           = 0x00010000  — Apply runtime hardening (Apple Silicon)
-CS_LINKER_SIGNED     = 0x00020000  — Signed by the dynamic linker
-CS_PLATFORM_BINARY   = 0x00400000  — Apple platform binary
-CS_PLATFORM_PATH     = 0x00800000  — Platform path (Apple binary in /System)
+CS_VALID             = 0x00000001  - Code signature is valid
+CS_ADHOC             = 0x00000002  - Ad-hoc signed (no CA chain, hash-based)
+CS_GET_TASK_ALLOW    = 0x00000004  - Entitled to call task_for_pid()
+CS_INSTALLER         = 0x00000008  - Entitled to install packages
+CS_INVALID_ALLOWED   = 0x00000010  - Explicit invalidation allowed (debug)
+CS_HARD              = 0x00000100  - Don't load invalid pages
+CS_KILL              = 0x00000200  - Kill process if invalid
+CS_CHECK_EXPIRATION  = 0x00000400  - Check certificate expiration
+CS_ENFORCEMENT       = 0x00001000  - Enforce code-signing (disable = allow unsigned)
+CS_REQUIRE_LV        = 0x00002000  - Require library validation (library loading)
+CS_ENTITLEMENTS_VALIDATED = 0x00004000  - Entitlements blob was validated
+CS_RUNTIME           = 0x00010000  - Apply runtime hardening (Apple Silicon)
+CS_LINKER_SIGNED     = 0x00020000  - Signed by the dynamic linker
+CS_PLATFORM_BINARY   = 0x00400000  - Apple platform binary
+CS_PLATFORM_PATH     = 0x00800000  - Platform path (Apple binary in /System)
 
 EXEC_SET variants (written into csflags at exec time, not CS_VALID):
 CS_EXEC_SET_HARD        = 0x00100000
 CS_EXEC_SET_KILL        = 0x00200000
 CS_EXEC_SET_ENFORCEMENT = 0x00400000
-CS_EXEC_INHERIT_SIP     = 0x01000000  — Inherit System Integrity Protection status
+CS_EXEC_INHERIT_SIP     = 0x01000000  - Inherit System Integrity Protection status
 CS_EXEC_SET_INSTALLER   = 0x02000000
 
-CS_ALLOWED_MACHO        = 0x00020000  — Allowed Mach-O magic numbers mask
+CS_ALLOWED_MACHO        = 0x00020000  - Allowed Mach-O magic numbers mask
 
 2.2 How Cheats Abuse Each Flag
 -------------------------------
@@ -267,7 +267,7 @@ CS_GET_TASK_ALLOW:
 
 CS_ADHOC + CS_GET_TASK_ALLOW:
   The most common cheat pattern. A binary is ad-hoc signed (no Apple CA
-  chain — just a SHA-256 of the code embedded in the binary) with
+  chain - just a SHA-256 of the code embedded in the binary) with
   CS_GET_TASK_ALLOW. This bypasses distribution signing requirements
   while still gaining TFP access.
   Detection: Auth-exec events where is_adhoc_signed == true &&
@@ -318,7 +318,7 @@ if (message->process->is_adhoc_signed &&
     (message->process->cs_flags & CS_GET_TASK_ALLOW) &&
     strcmp(message->process->signing_id, "com.valve.Steam") != 0 &&
     strcmp(message->process->signing_id, "com.idsoftware...") != 0) {
-    // This is a likely cheat — ad-hoc signed with TFP access
+    // This is a likely cheat - ad-hoc signed with TFP access
     deny = true;
 }
 ```
@@ -350,9 +350,9 @@ game process to alter game behavior.
 
 x86_64 (Intel macOS):
   dyld_shared_cache base: 0x7FFF_0000_0000 (approximate, ASLR slide varies)
-  The cache occupies a contiguous region of ~1.4–1.8 GB.
+  The cache occupies a contiguous region of ~1.4-1.8 GB.
   To find the exact range at runtime:
-    _dyld_get_shared_cache_range(&size) — for your own process.
+    _dyld_get_shared_cache_range(&size) - for your own process.
     For another: parse their vmmap output or Mach VM region iteration.
 
 arm64e (Apple Silicon):
@@ -367,11 +367,11 @@ arm64e (Apple Silicon):
 3.3 Detection via ES Events
 ----------------------------
 
-Shared cache mmap events look like any other mmap — you can identify
+Shared cache mmap events look like any other mmap - you can identify
 them by:
 
 1. PATH MATCHING: source_file->path contains
-   "/dyld_shared_cache_" — but the shared cache is usually mapped by
+   "/dyld_shared_cache_" - but the shared cache is usually mapped by
    dyld itself, not your ES client (the client subscribes *after*
    the cache is already mapped). You *won't* see it via AUTH_MMAP
    for new processes.
@@ -385,7 +385,7 @@ them by:
      address falls within shared cache range
      && (prot & PROT_WRITE)
 
-   This is ALWAYS suspicious — the shared cache should be RX at most.
+   This is ALWAYS suspicious - the shared cache should be RX at most.
    Even patterns like: RX → RWX → RX (typical hook pattern) are visible.
 
 3. mmap of the shared cache file with MAP_PRIVATE:
@@ -447,10 +447,10 @@ through this channel.
 AUTH_MACH_MSG (macOS 13+):
   Fires on all Mach message sends. The es_event_mach_msg_t contains
   the full mach_msg_header_t. You can inspect:
-    msgh_id — message ID (XPC typically uses high IDs)
-    msgh_size — total message size
-    msgh_remote_port — target port
-    msgh_local_port — reply port
+    msgh_id - message ID (XPC typically uses high IDs)
+    msgh_size - total message size
+    msgh_remote_port - target port
+    msgh_local_port - reply port
 
   Detection of suspicious injection:
     If msgh_remote_port resolves to a port belonging to the game,
@@ -527,16 +527,16 @@ task_for_pid(mach_task_self(), pid, &task_port*) is the gateway to
 arbitrary memory read/write in another process. It returns a
 send right to the target's task port. Once held, the calling process
 can:
-  - mach_vm_read/mach_vm_write — arbitrary memory R/W (read-only for other procs w/o TFP)
-  - mach_vm_allocate/mach_vm_map — allocate/map memory in the target
-  - thread_create/terminate — create/terminate threads
+  - mach_vm_read/mach_vm_write - arbitrary memory R/W (read-only for other procs w/o TFP)
+  - mach_vm_allocate/mach_vm_map - allocate/map memory in the target
+  - thread_create/terminate - create/terminate threads
 
 5.2 ES AUTH_TASK_FOR_PID
 -------------------------
 
 The AUTH event fires *before* the TFP call returns to the caller.
 The client must reply with:
-  es_respond_auth_result(result, true/false)  — allow or deny
+  es_respond_auth_result(result, true/false)  - allow or deny
 
 Critical property: Once TFP is authorized, the task port is returned
 to the caller and can be used immediately. The AUTH event is
@@ -555,18 +555,18 @@ Attack 1: Stale Authorization
   T1: ES client approves AUTH_TASK_FOR_PID
   T2: Game modifies its own security posture (loads new code, patches)
   T3: Attacker uses the STALE task_port to modify the now-updated game
-  T4: ES has no visibility — TFP was already fully authorized
+  T4: ES has no visibility - TFP was already fully authorized
 
 Mitigation: ES cannot prevent this. Anti-cheat must:
   - Reset TFP authorization after each use (impossible in userspace)
   - Monitor NOTIFY_MMAP, NOTIFY_MPROTECT on the game for changes
-  - Revoke the port via mach_port_deallocate() — only works on your own task
+  - Revoke the port via mach_port_deallocate() - only works on your own task
 
 Attack 2: task_read_for_pid (macOS 15+)
   macOS 15 introduces task_read_for_pid() which returns a task_read_t
   task-inspection-only right. This cannot write memory but CAN read it.
   The new NOTIFY_GET_TASK fires on task_read_for_pid.
-  ES_AUTH_TASK_FOR_PID does NOT fire for task_read_for_pid — only for
+  ES_AUTH_TASK_FOR_PID does NOT fire for task_read_for_pid - only for
   the full task_for_pid write-access call.
 
 Mitigation: Subscribe to NOTIFY_GET_TASK (macOS 15+) to detect
@@ -587,15 +587,15 @@ Attack 4: Bootstrap-based TFP Delegation
 
 ES detection for this: AUTH_MACH_RIGHT where right_type includes
 MACH_PORT_TYPE_SEND and the associated Mach port resolves to a
-task port (MACH_PORT_TYPE_TASK — requires kernel inspection).
+task port (MACH_PORT_TYPE_TASK - requires kernel inspection).
 
 5.4 Mitigation: Port-Right Revocation
 --------------------------------------
 
 The anti-cheat daemon can proactively revoke access:
-  1. AUTH_TASK_FOR_PID fires — daemon records (caller_pid, target_pid)
+  1. AUTH_TASK_FOR_PID fires - daemon records (caller_pid, target_pid)
   2. Before replying, daemon suspends the target thread in the
-     ES_AUTH handler? No — cannot do that in ES handler (deadline).
+     ES_AUTH handler? No - cannot do that in ES handler (deadline).
   3. After allowing, perform in the daemon body:
      - Mach message inspection on the target task port
      - Periodic re-verification of game code integrity
@@ -637,7 +637,7 @@ Method 2: Detect ptrace PT_ATTACHEXC
   DTrace uses a specialized ptrace() for probe attachment. ES
   NOTIFY_TRACER fires on ptrace_attach. If the target is your game,
   and sig/type context matches DTrace probe attachment patterns:
-    PT_ATTACHEXC — exclusive access ptrace.
+    PT_ATTACHEXC - exclusive access ptrace.
 
 6.3 ES Events for kdebug / kprobe (NOT AVAILABLE)
 ---------------------------------------------------
@@ -645,11 +645,11 @@ Method 2: Detect ptrace PT_ATTACHEXC
 kdebug and kprobe are not visible in ES. Neither AUTH nor NOTIFY
 events fire for these. This requires:
 
-  Kauth package hooks (legacy, see Section 11) — KAUTH_FILEOP_EXEC
-  — but this wouldn't catch kdebug which operates below the VFS level.
+  Kauth package hooks (legacy, see Section 11) - KAUTH_FILEOP_EXEC
+  - but this wouldn't catch kdebug which operates below the VFS level.
 
-  MAC policy hooks (see Section 12) — mpo_proc_check_debug,
-  mpo_proc_check_fork — can hook into task-level operations.
+  MAC policy hooks (see Section 12) - mpo_proc_check_debug,
+  mpo_proc_check_fork - can hook into task-level operations.
 
   Kernel hooking via an actual kext (NOT SUPPORTED on Apple Silicon,
   except for USB/network drivers with special approval).
@@ -659,9 +659,9 @@ events fire for these. This requires:
 
 Cheats can:
   - Use kdebug_signpost (safe, tracing-only, requires entitlement)
-    This does NOT fire any ES event — it's a user-space API.
-  - Use os_signpost (replacement for kdebug_signpost) — also invisible
-  - Use DTrace via a kernel extension (kext) — not possible on Apple
+    This does NOT fire any ES event - it's a user-space API.
+  - Use os_signpost (replacement for kdebug_signpost) - also invisible
+  - Use DTrace via a kernel extension (kext) - not possible on Apple
     Silicon without a kernel exploit
   - Use eBPF (not yet available on macOS as of 15.x)
 
@@ -688,8 +688,8 @@ Fires when a process calls IOServiceOpen() to open a connection
 to an IOKit service. The event struct:
 
   es_event_iokit_open_t:
-    uint32_t user_client_type — the type argument to IOServiceOpen
-    uint64_t user_client_class_constant — or variable length string
+    uint32_t user_client_type - the type argument to IOServiceOpen
+    uint64_t user_client_class_constant - or variable length string
 
 The user_client_class_constant is the IOUserClient subclass name
 (e.g., "AppleSMC", "IOFramebufferSharedUserClient", "IOHIDSystem").
@@ -739,7 +739,7 @@ if (strcmp(class_name, "IOFramebufferSharedUserClient") == 0 ||
 ----------------------------------------------------
 
 These are the actual method invocation APIs. ES does NOT have
-AUTH events for individual IOConnectCallMethod invocations — only
+AUTH events for individual IOConnectCallMethod invocations - only
 AUTH_IOKIT_OPEN fires (at connection open time). Once the connection
 is open, the cheat can call any method on the user client.
 
@@ -773,7 +773,7 @@ is a kernel memory descriptor).
   driver with a known vulnerability) to gain kernel access,
   then use that to bypass ES entirely.
 
-- Use IOHIDSystem to inject input events — this is hard to
+- Use IOHIDSystem to inject input events - this is hard to
   distinguish from legitimate input injection (e.g., from
   accessibility tools).
 
@@ -802,10 +802,10 @@ ES AUTH_MPROTECT fires for:
   - mach_vm_protect() → YES
 
 ES does NOT have AUTH events for:
-  - mach_vm_write() — no AUTH event (only NOTIFY_MMAP for the
+  - mach_vm_write() - no AUTH event (only NOTIFY_MMAP for the
     underlying mapping)
-  - mach_vm_read() — no AUTH event
-  - mach_vm_allocate() — no AUTH event (but AUTH_MMAP may fire
+  - mach_vm_read() - no AUTH event
+  - mach_vm_allocate() - no AUTH event (but AUTH_MMAP may fire
     if the allocation is file-backed)
 
 8.3 mach_vm_write Detection
@@ -839,7 +839,7 @@ ES AUTH_MACH_RIGHT fires on this. Detection:
 8.5 mach_port_extract_right
 ----------------------------
 
-The reverse — extracting a port right from another task. Also
+The reverse - extracting a port right from another task. Also
 fires AUTH_MACH_RIGHT. Less common in cheat scenarios but
 relevant for anti-cheat self-protection.
 
@@ -861,8 +861,8 @@ not a practical bypass for ES-based detection.
 ----------------
 
 Many macOS games use Objective-C (or Swift, which uses ObjC runtime
-internals). Method swizzling — replacing an ObjC method's IMP
-(implementation function pointer) — is a common cheat technique.
+internals). Method swizzling - replacing an ObjC method's IMP
+(implementation function pointer) - is a common cheat technique.
 
 9.2 Method Swizzling Detection
 --------------------------------
@@ -936,7 +936,7 @@ Full ObjC runtime scanning is expensive. Recommended approach:
 com.apple.security.cs.allow-jit
   Allows the process to use MAP_JIT and mprotect with PROT_EXEC
   on JIT-allocated pages. Required for JavaScript engines, emulators,
-  and — unfortunately — cheats that generate code at runtime.
+  and - unfortunately - cheats that generate code at runtime.
 
 com.apple.security.cs.allow-unsigned-executable-memory
   Allows the process to create executable memory without a code
@@ -987,7 +987,7 @@ Attack 3: allow-jit for runtime code generation
 
 In AUTH_EXEC handler:
   1. Read the process's entitlements from the cs_blob
-     (es_process_t has cs_blob pointer — internal, but accessible
+     (es_process_t has cs_blob pointer - internal, but accessible
      via the csops() syscall from the daemon)
   2. Check for the dangerous entitlements listed above
   3. If found, and the process is not the game or a known tool,
@@ -1061,7 +1061,7 @@ KAUTH_SCOPE_FILEOP:
     KAUTH_FILEOP_RENAME
     KAUTH_FILEOP_EXCHANGE
     KAUTH_FILEOP_LINK
-    KAUTH_FILEOP_EXEC  — fires on exec(), useful for monitoring
+    KAUTH_FILEOP_EXEC  - fires on exec(), useful for monitoring
 
 KAUTH_SCOPE_GENERIC:
   Generic kernel authorization checks.
@@ -1127,7 +1127,7 @@ on Apple Silicon (except for specific driver types).
 MAC (Mandatory Access Control) is a kernel-level security framework
 that allows registering policy modules. Each policy module provides
 a set of hooks (mpo_* functions) that the kernel calls at various
-decision points. This is the most powerful — and most dangerous —
+decision points. This is the most powerful - and most dangerous -
 anti-cheat mechanism.
 
 12.2 mac_policy_ops Structure
@@ -1137,29 +1137,29 @@ The mac_policy_ops structure (from <security/mac_policy.h>) contains
 hundreds of function pointers. Key hooks for anti-cheat:
 
 Process hooks:
-  mpo_proc_check_debug          — ptrace() authorization
-  mpo_proc_check_fork           — fork() authorization
-  mpo_proc_check_get_task       — task_for_pid() authorization
-  mpo_proc_check_get_task_name  — task name access
-  mpo_proc_check_task_for_pid   — TFP authorization (legacy)
-  mpo_proc_check_run_cs_invalid — code-signing invalidation
+  mpo_proc_check_debug          - ptrace() authorization
+  mpo_proc_check_fork           - fork() authorization
+  mpo_proc_check_get_task       - task_for_pid() authorization
+  mpo_proc_check_get_task_name  - task name access
+  mpo_proc_check_task_for_pid   - TFP authorization (legacy)
+  mpo_proc_check_run_cs_invalid - code-signing invalidation
 
 File hooks:
-  mpo_vnode_check_create        — file creation
-  mpo_vnode_check_unlink        — file deletion
-  mpo_vnode_check_write         — file write
-  mpo_vnode_check_exec          — exec authorization
-  mpo_vnode_check_rename        — rename authorization
+  mpo_vnode_check_create        - file creation
+  mpo_vnode_check_unlink        - file deletion
+  mpo_vnode_check_write         - file write
+  mpo_vnode_check_exec          - exec authorization
+  mpo_vnode_check_rename        - rename authorization
 
 Network hooks:
-  mpo_socket_check_bind         — socket bind
-  mpo_socket_check_connect      — socket connect
-  mpo_socket_check_listen       — socket listen
+  mpo_socket_check_bind         - socket bind
+  mpo_socket_check_connect      - socket connect
+  mpo_socket_check_listen       - socket listen
 
 Mach IPC hooks:
-  mpo_port_labeling             — Mach port labeling
-  mpo_port_check_copy_send      — Mach message send
-  mpo_port_check_move_send      — Mach message send-once
+  mpo_port_labeling             - Mach port labeling
+  mpo_port_check_copy_send      - Mach message send
+  mpo_port_check_move_send      - Mach message send-once
 
 12.3 MAC Policy Registration
 -----------------------------
@@ -1196,8 +1196,8 @@ mac_policy_unregister(policy_handle);
 -----------------------------------------
 
 The kernel maintains:
-  struct mac_policy_list — a list of all registered policies
-  struct mac_policy_mtx   — a mutex protecting the list
+  struct mac_policy_list - a list of all registered policies
+  struct mac_policy_mtx   - a mutex protecting the list
 
 Policies are evaluated in order. The first policy that returns
 EACCES (deny) wins. If all policies return 0 (allow), the
@@ -1297,8 +1297,8 @@ void flush_batch(es_message_t **msgs, int count) {
 ----------------------------
 
 es_message_t is reference-counted. You MUST call:
-  es_release_message(msg) — when done with the message
-  es_retain_message(msg) — if you need to keep it beyond the handler
+  es_release_message(msg) - when done with the message
+  es_retain_message(msg) - if you need to keep it beyond the handler
 
 Failure to release causes memory leaks in the kernel ES queue.
 
@@ -1320,7 +1320,7 @@ To monitor: es_get_client_state() returns queue utilization.
 1. Process events on a dedicated high-priority thread
 2. Use a ring buffer for event queuing
 3. Batch AUTH replies (see above)
-4. Minimize work in the event handler — defer to worker threads
+4. Minimize work in the event handler - defer to worker threads
 5. Use es_copy_message() to snapshot events for later analysis
 6. Subscribe only to events you need (reduces queue pressure)
 7. Use es_clear_cache() to clear stale cached results
@@ -1332,7 +1332,7 @@ To monitor: es_get_client_state() returns queue utilization.
 ```c
 es_client_t *client;
 es_new_client_result_t result = es_new_client(&client, ^(es_client_t *c, const es_message_t *msg) {
-    // Event handler — keep this FAST
+    // Event handler - keep this FAST
     switch (msg->event_type) {
         case ES_EVENT_TYPE_AUTH_EXEC:
             handle_auth_exec(msg);
@@ -1371,7 +1371,7 @@ Mute specific processes or paths to reduce noise:
   es_mute_process(client, &audit_token);
   es_mute_path(client, "/path/to/noisy/file", ES_MUTE_PATH_TYPE_LITERAL);
 
-This is critical for performance — muting the game's own
+This is critical for performance - muting the game's own
 frequent file operations prevents queue saturation.
 
 
@@ -1397,7 +1397,7 @@ Technique 1: Remove com.apple.quarantine xattr
 
   ES detection: AUTH_OPEN on the app's executable + check for
   xattr operations. ES does NOT have AUTH events for xattr
-  operations — this requires Kauth or MAC policy.
+  operations - this requires Kauth or MAC policy.
 
 Technique 2: spctl --master-disable
   sudo spctl --master-disable
@@ -1424,7 +1424,7 @@ Technique 5: Dylib injection via DYLD_INSERT_LIBRARIES
   If the target binary has com.apple.security.cs.allow-environment-variables,
   DYLD_INSERT_LIBRARIES is honored even with Gatekeeper enabled.
 
-  ES detection: AUTH_EXEC — check the environment variables
+  ES detection: AUTH_EXEC - check the environment variables
   in the exec event (es_event_exec_t has env data).
 
 14.3 ES Detection of Gatekeeper Bypasses
@@ -1483,14 +1483,14 @@ addresses with a cryptographic MAC. Key implications for anti-cheat:
 
 - PAC instructions: PACIA, PACIB, AUTIA, AUTIB, etc.
   These are emitted by the compiler for:
-    - Function pointers (PACIA — sign with A-key)
-    - Return addresses (PACIASP — sign return address on stack)
-    - Data pointers (PACDA — sign data pointer with A-key)
+    - Function pointers (PACIA - sign with A-key)
+    - Return addresses (PACIASP - sign return address on stack)
+    - Data pointers (PACDA - sign data pointer with A-key)
 
 - Cheat impact: Method swizzling and vtable hooking are
   significantly harder because the replacement pointer must
   have a valid PAC signature. The cheat would need to either:
-  (a) Know the PAC key (impossible — it's in kernel-only registers)
+  (a) Know the PAC key (impossible - it's in kernel-only registers)
   (b) Use a gadget that already has a valid PAC signature
   (c) Disable PAC via kernel exploit (requires PPL bypass)
 

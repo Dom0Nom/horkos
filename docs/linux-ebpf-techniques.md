@@ -1,4 +1,4 @@
-# Linux eBPF Anti-Cheat Detection Techniques — Deep Dive
+# Linux eBPF Anti-Cheat Detection Techniques - Deep Dive
 
 > **Audience**: Experienced Linux kernel / eBPF developers. Assumes familiarity with
 > BPF program types, CO-RE, BTF, and kernel data structures.
@@ -13,8 +13,8 @@
 
 ```
 task_struct->mm (struct mm_struct*)
-  -> mmap (struct vm_area_struct*)  — head of the VMA linked list
-  -> mm_rb (struct rb_root)         — red-black tree of VMAs
+  -> mmap (struct vm_area_struct*)  - head of the VMA linked list
+  -> mm_rb (struct rb_root)         - red-black tree of VMAs
 ```
 
 Key vm_area_struct fields:
@@ -145,7 +145,7 @@ bool is_suspicious_vma(struct vm_area_struct *vma) {
 ```c
 // BPF_PROG_TYPE_KPROBE on kprobe/do_mprotect_pkey
 // Catches mprotect(PROT_WRITE) on regions that were previously PROT_EXEC only
-// — a sign the cheat is patching .text
+// - a sign the cheat is patching .text
 
 SEC("kprobe/do_mprotect_pkey")
 int BPF_KPROBE(mprotect_hook,
@@ -180,9 +180,9 @@ int BPF_KPROBE(mprotect_hook,
 
 ```c
 // When a cheat writes to a shared library's GOT in the game process:
-// — The GOT is in .got.plt, mapped from a shared library file
-// — It should be RW- (read-write, no exec)
-// — If mprotect adds PROT_EXEC to a library-backed region → GOT hooking
+// - The GOT is in .got.plt, mapped from a shared library file
+// - It should be RW- (read-write, no exec)
+// - If mprotect adds PROT_EXEC to a library-backed region → GOT hooking
 
 // In the mprotect kprobe, check if the VMA is file-backed by a .so:
 if (vma->vm_file) {
@@ -276,7 +276,7 @@ int BPF_KPROBE(do_mmap_check_memfd, struct file *file, ...)
 ### 2.4 Detecting memfd Sealing (Post-Load Hiding)
 
 ```c
-// kprobe/fcntl — F_ADD_SEALS = 1033
+// kprobe/fcntl - F_ADD_SEALS = 1033
 // Seal flags: F_SEAL_SEAL=0x0001, F_SEAL_SHRINK=0x0002,
 //             F_SEAL_GROW=0x0004, F_SEAL_WRITE=0x0008
 
@@ -308,7 +308,7 @@ PTRACE_ATTACH (16):
 PTRACE_SEIZE (0x4206):
   - Does NOT send SIGSTOP
   - Does NOT change TracerPid
-  - Stealthier — preferred by modern cheats
+  - Stealthier - preferred by modern cheats
   - Available since Linux 3.4
 ```
 
@@ -327,7 +327,7 @@ int hk_tp_ptrace(struct trace_event_raw_sys_enter *ctx)
     case PTRACE_ATTACH:  // 16
         report_ptrace_attach(caller_pid, pid_arg, false);
         break;
-    case PTRACE_SEIZE:   // 0x4206 — stealth attach
+    case PTRACE_SEIZE:   // 0x4206 - stealth attach
         report_ptrace_attach(caller_pid, pid_arg, true);
         break;
     case PTRACE_PEEKDATA:  // 2
@@ -441,13 +441,13 @@ void handle_vm_write(__u32 src_pid, __u32 dst_pid, __u64 addr, __u64 len) {
 Cheats run the game (or themselves) in a separate namespace to isolate memory access:
 
 ```
-CLONE_NEWUSER  — different UID/GID mappings
-CLONE_NEWPID   — different PID space (game sees itself as PID 1)
-CLONE_NEWNET   — different network stack
-CLONE_NEWNS    — different mount points (hide /proc entries)
-CLONE_NEWIPC   — different IPC namespace
-CLONE_NEWUTS   — different hostname
-CLONE_NEWCGROUP — different cgroup view
+CLONE_NEWUSER  - different UID/GID mappings
+CLONE_NEWPID   - different PID space (game sees itself as PID 1)
+CLONE_NEWNET   - different network stack
+CLONE_NEWNS    - different mount points (hide /proc entries)
+CLONE_NEWIPC   - different IPC namespace
+CLONE_NEWUTS   - different hostname
+CLONE_NEWCGROUP - different cgroup view
 ```
 
 ### 5.2 eBPF: Reading Namespace IDs
@@ -480,9 +480,9 @@ int check_namespaces(struct pt_regs *ctx)
 ### 5.3 Detecting Container-Based Evasion
 
 ```c
-// Check cgroup path — containers have distinct cgroup hierarchies
+// Check cgroup path - containers have distinct cgroup hierarchies
 // In BPF: read task_struct->cgroups->dfl_cgrp->id
-// In userspace: read /proc/pid/cgroup — if it contains "docker", "lxc", "podman", "flatpak"
+// In userspace: read /proc/pid/cgroup - if it contains "docker", "lxc", "podman", "flatpak"
 
 struct cgroup *cgrp = BPF_CORE_READ(task, cgroups, dfl_cgrp);
 if (cgrp) {
@@ -526,7 +526,7 @@ int BPF_KPROBE(prctl_seccomp_check, int option, unsigned long arg2, ...)
             report_seccomp_filter_change(pid);
     }
 
-    // PR_SET_NO_NEW_PRIVS = 38 — cheats may disable to allow priv escalation
+    // PR_SET_NO_NEW_PRIVS = 38 - cheats may disable to allow priv escalation
     if (option == 38 && arg2 == 0)
         report_no_new_privs_disabled(pid);
 
@@ -547,7 +547,7 @@ unsigned short count = prog.len < 8 ? prog.len : 8;
 bpf_probe_read_user(insns, sizeof(insns[0]) * count, prog.filter);
 
 // Check if filter allows ptrace (syscall 101), memfd_create (319), etc.
-// Requires a mini BPF interpreter in eBPF — complex but doable for
+// Requires a mini BPF interpreter in eBPF - complex but doable for
 // simple allow-all patterns.
 ```
 
@@ -574,7 +574,7 @@ BPF trampoline: eBPF programs attached via fentry/fexit
 
 ```c
 // ftrace_ops is a linked list (ftrace_ops_list)
-// Requires LKM — eBPF cannot walk ftrace_ops_list (not in BTF)
+// Requires LKM - eBPF cannot walk ftrace_ops_list (not in BTF)
 
 struct ftrace_ops *ops;
 mutex_lock(&ftrace_lock);
@@ -779,7 +779,7 @@ bpf_probe_read_kernel_str(buf, sizeof(buf), fname_ptr);
 ### 10.4 Per-Kernel Build Strategy
 
 ```cmake
-# CMakeLists.txt — compile separate .bpf.o per target kernel
+# CMakeLists.txt - compile separate .bpf.o per target kernel
 set(BPF_TARGET_KERNELS "5.15" "6.1" "6.6")
 foreach(kernel ${BPF_TARGET_KERNELS})
     set(VMLINUX_H "vmlinux-${kernel}.h")
@@ -807,7 +807,7 @@ Cheats use NETLINK_CONNECTOR or NETLINK_GENERIC sockets to query kernel process 
 struct sockaddr_nl sa = { .nl_family = AF_NETLINK, .nl_groups = CN_IDX_PROC };
 int fd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 bind(fd, (struct sockaddr *)&sa, sizeof(sa));
-// Listen for PROC_EVENT_FORK, PROC_EVENT_EXEC — real-time process notifications
+// Listen for PROC_EVENT_FORK, PROC_EVENT_EXEC - real-time process notifications
 // Used to hide child processes before Horkos scans
 ```
 
@@ -830,11 +830,11 @@ int BPF_KPROBE(socket_detect, int family, int type, int protocol)
 ### 11.3 Detecting NETLINK_CONNECTOR Event Subscription
 
 ```c
-// kprobe/bind — inspect sockaddr_nl for process event subscription
+// kprobe/bind - inspect sockaddr_nl for process event subscription
 struct sockaddr_nl sa;
 bpf_probe_read_user(&sa, sizeof(sa), (void *)addr);
 if (sa.nl_family == AF_NETLINK) {
-    // CN_IDX_PROC = 0x1 — process event subscription
+    // CN_IDX_PROC = 0x1 - process event subscription
     if (sa.nl_groups & (1 << (CN_IDX_PROC - 1)))
         report_proc_event_subscription(pid);
 }
@@ -849,9 +849,9 @@ if (sa.nl_family == AF_NETLINK) {
 Cheats use high-frequency timers for aimbots, speedhacks, or DMA timing:
 
 ```
-hrtimer:     High-resolution timer (nanosecond precision) — aimbot timing
-timerfd:     Timer file descriptor — event-loop-based cheats
-posix_timer: POSIX timer_create — signal-based timing
+hrtimer:     High-resolution timer (nanosecond precision) - aimbot timing
+timerfd:     Timer file descriptor - event-loop-based cheats
+posix_timer: POSIX timer_create - signal-based timing
 ```
 
 ### 12.2 eBPF: Detecting hrtimer Abuse
@@ -890,7 +890,7 @@ int hk_tp_timerfd_create(struct trace_event_raw_sys_enter *ctx)
     return 0;
 }
 
-// tracepoint/syscalls/sys_enter_timerfd_settime — check the interval
+// tracepoint/syscalls/sys_enter_timerfd_settime - check the interval
 SEC("tracepoint/syscalls/sys_enter_timerfd_settime")
 int hk_tp_timerfd_settime(struct trace_event_raw_sys_enter *ctx)
 {
@@ -931,8 +931,8 @@ cgroup detection                   | CONFIG_CGROUPS
 ```
 
 **Steam Deck (SteamOS 3.x) specific:**
-- Kernel 5.13 (SteamOS 3.4) — CONFIG_BPF_LSM=n by default
-- Kernel 6.1+ (SteamOS 3.5+) — CONFIG_BPF_LSM=y
+- Kernel 5.13 (SteamOS 3.4) - CONFIG_BPF_LSM=n by default
+- Kernel 6.1+ (SteamOS 3.5+) - CONFIG_BPF_LSM=y
 - CONFIG_DEBUG_INFO_BTF=y on both
 - CONFIG_KPROBES=y on both
 - **Recommendation:** Use tracepoints + kprobes on Steam Deck; LSM hooks only on 3.5+
@@ -965,11 +965,11 @@ I/O monitoring                     | KPROBE / TRACEPOINT     | Depends on specif
 - [ ] **CO-RE field guards**: Use `bpf_core_field_exists()` for all fields that may not exist on older kernels
 - [ ] **Stack overflow prevention**: Never allocate structs > 512 bytes on BPF stack; use ringbuf or per-cpu maps
 - [ ] **Verifier-friendly loops**: All loops must have compile-time-constant bounds; use `bpf_loop()` for runtime bounds
-- [ ] **Bounded string reads**: Always use `bpf_probe_read_kernel_str` with `sizeof(buf)` — never a runtime length
+- [ ] **Bounded string reads**: Always use `bpf_probe_read_kernel_str` with `sizeof(buf)` - never a runtime length
 - [ ] **LSM availability check**: At load time, verify `CONFIG_BPF_LSM` is available before attaching LSM programs; fall back to kprobes
 - [ ] **BTF at runtime**: Verify `/sys/kernel/btf/vmlinux` exists on the target; if not, CO-RE won't work
 - [ ] **Ringbuf vs perfbuf**: Use ringbuf (BPF_MAP_TYPE_RINGBUF) for all new programs; perfbuf is deprecated
-- [ ] **Userspace correlation**: Many detections (reflective load, GOT hooking) require correlating multiple BPF events in userspace — design the event schema accordingly
+- [ ] **Userspace correlation**: Many detections (reflective load, GOT hooking) require correlating multiple BPF events in userspace - design the event schema accordingly
 - [ ] **Rate limiting**: Don't emit events for every syscall; use BPF maps to count and only emit when thresholds are exceeded
 - [ ] **False positive testing**: Test against legitimate software (debuggers, IDEs, browsers with JIT, game engines) before enabling enforcement
 - [ ] **Graceful degradation**: If eBPF program load fails (wrong kernel, missing config), fall back to userspace-only detection rather than failing entirely
