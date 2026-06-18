@@ -1,0 +1,41 @@
+{
+  "_comment": "Role: canonical behavioral-anomaly window feature contract. Target: Horkos server. Consumed by Python training/evaluation and mirrored by ban-engine anomaly extraction.",
+  "version": 1,
+  "dimension": 10,
+  "feature_names": [
+    "mean_overshoot_ratio",
+    "mean_settle_ms",
+    "mean_abs_jerk",
+    "mean_direction_change_rt_ms",
+    "min_direction_change_rt_ms",
+    "mean_switch_latency_ms",
+    "mean_switch_ang_sep_rad",
+    "mean_log1p_hid_interval_var_ns",
+    "mean_injected_event_fraction",
+    "mean_abs_clock_ratio_ppm"
+  ],
+  "canonical_honest": [
+    0.24,
+    118.0,
+    8.5,
+    245.0,
+    165.0,
+    185.0,
+    0.55,
+    23.0,
+    0.0,
+    4.0
+  ],
+  "canonical_anomalous": [
+    0.01,
+    12.0,
+    48.0,
+    38.0,
+    20.0,
+    28.0,
+    0.9,
+    8.0,
+    0.75,
+    1200.0
+  ]
+}

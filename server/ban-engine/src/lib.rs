@@ -7,6 +7,7 @@
 //! Target platforms: server.
 
 pub mod aim_kinematics;
+pub mod anomaly;
 pub mod arrival_cadence;
 pub mod bundle;
 pub mod error;

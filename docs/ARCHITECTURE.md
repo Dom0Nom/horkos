@@ -32,8 +32,8 @@ No offensive capability is shipped.
 | `obfuscator/` | Standalone LLVM-19 pass plugin (CFF, opaque predicates, string encryption). Never shipped; heavy on the AC binary, attribute-opt-in (`hk_obfuscate`) on GAME init/licence/integrity/attestation only — never hot loops |
 | `platform/` | The PAL. **The only place raw OS APIs are allowed** (plus `backends/` folders). Everything else uses `HK_PLATFORM_*` macros, never `_WIN32`/`__linux__`/`__APPLE__` |
 | `sdk/` | Game-facing client SDK: wire schemas (`include/horkos/*.h`), usermode sensors (render-hook, input-provenance, net-timing probes), per-OS `backends/` |
-| `server/` | Rust workspace (axum + tokio): `telemetry/` (ingest + analyzers + snapshot ring), `ban-engine/` (fusion + ban path + ONNX scoring + Ed25519 bundle), `api/` (composed app + live pipeline), `license-server/` (Ed25519 licence lifecycle), `attestation-verify/` (TPM quote + SE signature verifier), `ml/` (aim-model training) |
-| `docs/` | Research + design docs; `detection-catalog.md` (216 signals) is the detection source of truth |
+| `server/` | Rust workspace (axum + tokio): `telemetry/` (ingest + analyzers + snapshot ring), `ban-engine/` (fusion + ban path + ONNX scoring + Ed25519 bundle), `api/` (composed app + live pipeline), `license-server/` (Ed25519 licence lifecycle), `attestation-verify/` (TPM quote + SE signature verifier), `ml/` (aim/anomaly model training + evaluation) |
+| `docs/` | Research + design docs; `detection-catalog.md` (217 signals) is the detection source of truth |
 
 ## Data flow
 
@@ -126,7 +126,7 @@ compiled on its real target.
 ## Source-of-truth index
 
 - Binding rules: `CLAUDE.md` (guardrails + locked decisions)
-- Detection catalog: `docs/detection-catalog.md` (216 signals), research in
+- Detection catalog: `docs/detection-catalog.md` (217 signals), research in
   `docs/detection-research*.md`
 - Wire formats: `sdk/include/horkos/event_schema.h` (+ per-domain headers),
   Rust mirror `server/telemetry/src/schema.rs`
