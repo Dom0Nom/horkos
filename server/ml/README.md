@@ -61,7 +61,7 @@ All training, calibration, and evaluation rows are **synthetic**. The anomalous
 generator is hand-defined alongside the honest generator, so ROC-AUC, false-
 positive rate, and detection rate are partly circular. They are pipeline sanity
 checks for deterministic generation, ONNX export/execution, calibration, and
-Rust integration—not evidence of real-cheater efficacy, bypass resistance, or
+Rust integration, not evidence of real-cheater efficacy, bypass resistance, or
 production false-positive performance.
 
 Production use requires an honestly collected, platform/cohort-aware baseline,
