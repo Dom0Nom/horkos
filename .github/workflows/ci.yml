@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -33,8 +33,18 @@ jobs:
       - name: Install libsodium (Windows)
         if: runner.os == 'Windows'
         run: vcpkg install libsodium:x64-windows
-      - name: Configure
-        run: cmake -S . -B build ${{ runner.os == 'Windows' && format('-DCMAKE_TOOLCHAIN_FILE={0}/scripts/buildsystems/vcpkg.cmake', env.VCPKG_INSTALLATION_ROOT) || '' }}
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: cmake -S . -B build
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $toolchain = "${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          if (-not (Test-Path $toolchain)) {
+            throw "vcpkg toolchain not found at $toolchain"
+          }
+          cmake -S . -B build "-DCMAKE_TOOLCHAIN_FILE=$toolchain"
       - name: Build
         run: cmake --build build --config Release -j
 
@@ -80,28 +90,12 @@ jobs:
           cmake --build obfuscator/build
 
   win-driver:
-    runs-on: windows-latest
+    # The canonical project targets VS2022. Keep this pinned: windows-latest
+    # moved to VS2026 in June 2026, while this image ships a matched VS2022,
+    # SDK, WDK, and WDK Visual Studio extension.
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-
-      # The windows-latest image ships VS2022 + the Windows SDK but not the WDK.
-      # Install the WDK MSI AND the WDK VS extension (.vsix) — without the vsix,
-      # the WindowsKernelModeDriver10.0 toolset will not resolve for msbuild.
-      # If this drifts, the self-contained EWDK (docs/windows-build.md) is the
-      # robust fallback.
-      - name: Install WDK
-        shell: pwsh
-        run: |
-          choco install windowsdriverkit11 --no-progress -y
-          # Best-effort: register the WDK VS project-system extension if present.
-          $vsix = Get-ChildItem -Recurse -ErrorAction SilentlyContinue `
-            "C:\Program Files (x86)\Windows Kits\10\Vsix" -Filter *.vsix |
-            Select-Object -First 1
-          if ($vsix) {
-            $installer = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
-              -latest -find **\VSIXInstaller.exe | Select-Object -First 1
-            if ($installer) { & $installer /quiet $vsix.FullName }
-          }
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2

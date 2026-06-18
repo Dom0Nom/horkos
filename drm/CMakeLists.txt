@@ -11,15 +11,18 @@ target_include_directories(hk_drm PUBLIC include)
 # /usr/local or /opt/homebrew). A real cross-platform build static-links it.
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)
-    pkg_check_modules(SODIUM QUIET libsodium)
+    pkg_check_modules(SODIUM QUIET IMPORTED_TARGET libsodium)
 endif()
-if(NOT SODIUM_FOUND)
+if(SODIUM_FOUND)
+    set(HK_SODIUM_LIBRARY PkgConfig::SODIUM)
+else()
     find_path(SODIUM_INCLUDE_DIRS sodium.h
         PATHS /usr/local/include /opt/homebrew/include /usr/include)
     find_library(SODIUM_LIBRARIES NAMES sodium libsodium
         PATHS /usr/local/lib /opt/homebrew/lib /usr/lib)
+    set(HK_SODIUM_LIBRARY ${SODIUM_LIBRARIES})
 endif()
-if(NOT SODIUM_LIBRARIES)
+if(NOT HK_SODIUM_LIBRARY)
     message(FATAL_ERROR "libsodium not found (needed by hk_drm for Ed25519). "
                         "Install it (brew install libsodium / apt install libsodium-dev).")
 endif()
@@ -27,4 +30,4 @@ endif()
 # PUBLIC so the host unit test (which signs licences with libsodium to exercise
 # drm_validate) inherits the include path + link without re-finding the lib.
 target_include_directories(hk_drm PUBLIC ${SODIUM_INCLUDE_DIRS})
-target_link_libraries(hk_drm PUBLIC hk_platform ${SODIUM_LIBRARIES})
+target_link_libraries(hk_drm PUBLIC hk_platform ${HK_SODIUM_LIBRARY})
